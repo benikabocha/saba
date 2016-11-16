@@ -29,7 +29,7 @@ namespace
 	int SingletonTest::m_construct = 0;
 }
 
-TEST(base_test, singleton)
+TEST(BaseTest, Singleton)
 {
 	auto inst = saba::Singleton<SingletonTest>::Get();
 

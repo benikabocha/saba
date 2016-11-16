@@ -1,5 +1,5 @@
-#ifndef SINGLETON_H_
-#define SINGLETON_H_
+#ifndef SABA_BASE_SINGLETON_H_
+#define SABA_BASE_SINGLETON_H_
 
 #include <functional>
 #include <mutex>
@@ -46,4 +46,4 @@ namespace saba
 	template <typename T> T* Singleton<T>::m_instance = nullptr;
 }
 
-#endif // !SINGLETON_H_
+#endif // !SABA_BASE_SINGLETON_H_
