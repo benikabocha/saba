@@ -1,6 +1,7 @@
 #include "UnicodeUtil.h"
 #include "Singleton.h"
 
+#include <locale>
 #include <codecvt>
 
 namespace saba
