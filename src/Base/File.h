@@ -64,6 +64,9 @@ namespace saba
 		}
 
 		template <typename T>
+		bool ReadAll(std::vector<char>* buffer);
+
+		template <typename T>
 		bool Write(T* buffer, size_t count = 1)
 		{
 			if (buffer == nullptr)

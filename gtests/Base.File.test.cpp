@@ -1,4 +1,4 @@
-#include <gtest/gtest.h>
+﻿#include <gtest/gtest.h>
 
 #include <Base/File.h>
 
@@ -49,6 +49,17 @@ TEST(BaseTest, FileTest)
 	EXPECT_EQ(true, file.Seek(2, saba::File::SeekDir::Begin));
 	EXPECT_EQ(false, file.Seek(-10, saba::File::SeekDir::Begin));
 	EXPECT_EQ(2, file.Tell());
+
+	std::vector<char> buffer;
+	EXPECT_EQ(true, file.ReadAll(&buffer));
+	EXPECT_EQ(4, buffer.size());
+	if (4 == buffer.size())
+	{
+		EXPECT_EQ('1', buffer[0]);
+		EXPECT_EQ('2', buffer[1]);
+		EXPECT_EQ('3', buffer[2]);
+		EXPECT_EQ('4', buffer[3]);
+	}
 
 	// Closeのテスト
 	file.Close();

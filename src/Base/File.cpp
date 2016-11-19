@@ -66,7 +66,25 @@ namespace saba
 
 	bool saba::File::ReadAll(std::vector<char>* buffer)
 	{
-		return false;
+		if (buffer == nullptr)
+		{
+			return false;
+		}
+
+		Seek(0, SeekDir::End);
+		auto fileSize = Tell();
+		if (fileSize == -1)
+		{
+			return false;
+		}
+		buffer->resize(fileSize);
+		Seek(0, SeekDir::Begin);
+		if (!Read(&(*buffer)[0], fileSize))
+		{
+			return false;
+		}
+
+		return true;
 	}
 
 	bool saba::File::Seek(Offset offset, SeekDir origin)
