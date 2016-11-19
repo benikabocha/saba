@@ -8,6 +8,11 @@ enable_testing()
 include_directories(${PROJECT_SOURCE_DIR}/src)
 include_directories(${PROJECT_SOURCE_DIR}/external/googletest/googletest/include)
 
+if(WIN32)
+    ADD_DEFINITIONS(-DUNICODE)
+    ADD_DEFINITIONS(-D_UNICODE)
+endif(WIN32)
+
 add_subdirectory(external)
 
 add_subdirectory(src)

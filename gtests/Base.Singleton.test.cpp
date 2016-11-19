@@ -44,10 +44,4 @@ TEST(BaseTest, Singleton)
 
 	// コンストラクターが一度しか呼ばれていないことを確認
 	EXPECT_EQ(1, SingletonTest::m_construct);
-
-	saba::SingletonFinalizer::Finalize();
-	saba::SingletonFinalizer::Finalize();
-
-	// デストラクターが呼ばれていることを確認
-	EXPECT_EQ(0, SingletonTest::m_construct);
 }
