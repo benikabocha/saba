@@ -32,3 +32,7 @@ else()
   message(STATUS
     "Google Mock was not found - tests based on that will not build")
 endif()
+
+if (IS_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/glfw)
+    add_subdirectory(glfw)
+endif()
