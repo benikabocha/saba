@@ -35,13 +35,13 @@ TEST(BaseTest, Singleton)
 
 	EXPECT_NE(nullptr, inst);
 
-	// �R���X�g���N�^���Ă΂�Ă��邱�Ƃ��m�F
+	// コンストラクタが呼ばれていることを確認
 	EXPECT_EQ(0, saba::Singleton<SingletonTest>::Get()->m_value);
 
-	// ����̃C���X�^���X��Add���Ă΂�Ă��邱�Ƃ��m�F
+	// 同一のインスタンスでAddが呼ばれていることを確認
 	saba::Singleton<SingletonTest>::Get()->Add();
 	EXPECT_EQ(1, saba::Singleton<SingletonTest>::Get()->m_value);
 
-	// �R���X�g���N�^�[����x�����Ă΂�Ă��Ȃ����Ƃ��m�F
+	// コンストラクターが一度しか呼ばれていないことを確認
 	EXPECT_EQ(1, SingletonTest::m_construct);
 }

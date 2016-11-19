@@ -18,16 +18,16 @@ TEST(BaseTest, FileTest)
 
 	saba::File file;
 
-	// ‰Šúó‘Ô‚ÌƒeƒXƒg
+	// åˆæœŸçŠ¶æ…‹ã®ãƒ†ã‚¹ãƒˆ
 	EXPECT_EQ(false, file.IsOpen());
 	EXPECT_EQ(nullptr, file.GetFilePointer());
 	EXPECT_EQ(-1, file.Tell());
 
-	EXPECT_EQ(true, file.Open(dataPath + u8"/“ú–{Œê.txt"));
+	EXPECT_EQ(true, file.Open(dataPath + u8"/æ—¥æœ¬èª.txt"));
 	EXPECT_EQ(true, file.IsOpen());
 	EXPECT_NE(nullptr, file.GetFilePointer());
 
-	// Read ‚ÌƒeƒXƒg
+	// Read ã®ãƒ†ã‚¹ãƒˆ
 	char ch = 0;
 	EXPECT_EQ(true, file.Read(&ch));
 	EXPECT_EQ('1', ch);
@@ -50,7 +50,7 @@ TEST(BaseTest, FileTest)
 	EXPECT_EQ(false, file.Seek(-10, saba::File::SeekDir::Begin));
 	EXPECT_EQ(2, file.Tell());
 
-	// Close‚ÌƒeƒXƒg
+	// Closeã®ãƒ†ã‚¹ãƒˆ
 	file.Close();
 	EXPECT_EQ(false, file.IsOpen());
 	EXPECT_EQ(nullptr, file.GetFilePointer());
