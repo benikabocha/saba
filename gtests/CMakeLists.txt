@@ -6,7 +6,7 @@ if (TARGET gmock)
     add_executable(gtests ${SOURCE})
     target_link_libraries(
         gtests
-        base
+        Saba
         gtest_main
     )
 

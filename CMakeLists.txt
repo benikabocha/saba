@@ -7,7 +7,7 @@ enable_testing()
 
 set(CMAKE_CXX_STANDARD 14)
 
-include_directories(${PROJECT_SOURCE_DIR}/src)
+include_directories(${PROJECT_SOURCE_DIR}/src/Saba)
 include_directories(${PROJECT_SOURCE_DIR}/external/googletest/googletest/include)
 
 if(WIN32)
