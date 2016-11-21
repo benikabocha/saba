@@ -6,6 +6,7 @@ project(saba)
 find_package(OpenGL REQUIRED)
 
 enable_testing()
+option(SABA_ENABLE_GL_TEST "OpenGL test." off)
 
 set(CMAKE_CXX_STANDARD 14)
 

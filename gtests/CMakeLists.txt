@@ -4,14 +4,24 @@ if (TARGET gmock)
     file (GLOB SOURCE *.cpp)
     file (GLOB HEADER *.h)
 
-    add_executable(gtests ${SOURCE} ${HEADER})
-    target_link_libraries(
-        gtests
+    if (SABA_ENABLE_GL_TEST)
+        file (GLOB GL_TEST_SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/GL.test/*.cpp)
+        file (GLOB GL_TEST_HEADER ${CMAKE_CURRENT_SOURCE_DIR}/GL.test/*.h)
+    endif()
+
+    add_executable(gtests ${SOURCE} ${HEADER} ${GL_TEST_SOURCE} ${GL_TEST_HEADER})
+    target_link_libraries(gtests
         Saba
         gtest_main
         glfw
         ${OPENGL_LIBRARY}
     )
+    if (SABA_ENABLE_GL_TEST)
+        target_link_libraries(gtests
+            glfw
+            ${OPENGL_LIBRARY}
+        )
+    endif()
 
     set(GLSLANG_TEST_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/../gtests/Data")
     target_compile_definitions(
