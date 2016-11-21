@@ -3,6 +3,8 @@ set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 
 project(saba)
 
+find_package(OpenGL REQUIRED)
+
 enable_testing()
 
 set(CMAKE_CXX_STANDARD 14)
