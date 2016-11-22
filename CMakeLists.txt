@@ -10,7 +10,7 @@ option(SABA_ENABLE_GL_TEST "OpenGL test." off)
 
 set(CMAKE_CXX_STANDARD 14)
 
-include_directories(${PROJECT_SOURCE_DIR}/src/Saba)
+include_directories(${PROJECT_SOURCE_DIR}/src)
 include_directories(${PROJECT_SOURCE_DIR}/external/gl3w/include)
 
 if(WIN32)
