@@ -74,7 +74,7 @@ TYPED_TEST_CASE(GLRefTypedTest, TestGLRefTypes);
 TYPED_TEST(GLRefTypedTest, Common)
 {
 	TypeParam glRef;
-	using GLObj = Saba::GLObject<TypeParam::Type>;
+	using GLObj = Saba::GLObject<typename TypeParam::Type>;
 
 	GLObj glObj;
 	EXPECT_EQ(true, glObj.Create());

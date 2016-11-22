@@ -115,7 +115,7 @@ namespace Saba
 			return *this;
 		}
 
-		GLObjectType(const GLObjectType& rhs) = delete;
+		GLObject(const GLObjectType& rhs) = delete;
 		GLObjectType& operator =(const GLObjectType& rhs) = delete;
 
 		~GLObject()
@@ -168,7 +168,6 @@ namespace Saba
 	class GLRef
 	{
 	private:
-		template <typename GLTraits>
 		class GLRefCount
 		{
 		public:
@@ -178,8 +177,8 @@ namespace Saba
 			{
 			}
 
-			GLRefCount(const GLRefCount<GLTraits>&) = delete;
-			GLRefCount<GLTraits>& operator = (const GLRefCount<GLTraits>&) = delete;
+			GLRefCount(const GLRefCount&) = delete;
+			GLRefCount& operator = (const GLRefCount&) = delete;
 
 			void IncRef()
 			{
@@ -265,12 +264,12 @@ namespace Saba
 		GLRef(const RefType& rhs)
 			: m_ref(nullptr)
 		{
-			Reset(const_cast<GLRefCount<GLTraits>*>(rhs.m_ref));
+			Reset(const_cast<GLRefCount*>(rhs.m_ref));
 		}
 
 		RefType& operator =(const RefType& rhs)
 		{
-			Reset(const_cast<GLRefCount<GLTraits>*>(rhs.m_ref));
+			Reset(const_cast<GLRefCount*>(rhs.m_ref));
 			return *this;
 		}
 
@@ -327,11 +326,11 @@ namespace Saba
 			Reset();
 			if (obj != 0)
 			{
-				m_ref = new GLRefCount<GLTraits>(obj);
+				m_ref = new GLRefCount(obj);
 			}
 		}
 
-		void Reset(GLRefCount<GLTraits>* refobj)
+		void Reset(GLRefCount* refobj)
 		{
 			Reset();
 			if (refobj != nullptr)
@@ -341,7 +340,7 @@ namespace Saba
 			}
 		}
 	private:
-		GLRefCount<GLTraits>*	m_ref;
+		GLRefCount*	m_ref;
 	};
 
 	template <GLenum ShaderType>
