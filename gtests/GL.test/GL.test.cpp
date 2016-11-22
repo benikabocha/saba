@@ -1,42 +1,109 @@
-#include "GL.test.h"
+#include <GL/GLObject.h>
 
+#include <gtest/gtest.h>
 
-GLTest::GLTest()
-	: m_window(nullptr)
+template <typename T>
+class GLObjectTypedTest : public testing::Test
 {
+};
+
+typedef ::testing::Types<
+	Saba::GLVertexShaderObject,
+	Saba::GLFragmentShaderObject,
+	Saba::GLProgramObject,
+	Saba::GLBufferObject,
+	Saba::GLVertexArrayObject,
+	Saba::GLTextureObject
+> TestGLObjectTypes;
+
+TYPED_TEST_CASE(GLObjectTypedTest, TestGLObjectTypes);
+
+TYPED_TEST(GLObjectTypedTest, Common)
+{
+	TypeParam glObj;
+
+	// create
+	EXPECT_EQ(0, glObj.Get());
+	EXPECT_EQ(true, glObj.Create());
+	EXPECT_NE(0, glObj.Get());
+
+	// move
+	{
+		auto id = glObj.Get();
+		TypeParam glObj2 = std::move(glObj);
+		EXPECT_EQ(0, glObj.Get());
+		EXPECT_EQ(id, glObj2.Get());
+		glObj = std::move(glObj2);
+		EXPECT_EQ(0, glObj2.Get());
+		EXPECT_EQ(id, glObj.Get());
+	}
+
+	// Destroy
+	glObj.Destroy();
+	EXPECT_EQ(0, glObj.Get());
+
+	// release/reset
+	{
+		TypeParam glObj2;
+		EXPECT_EQ(true, glObj.Create());
+		EXPECT_EQ(true, glObj2.Create());
+		auto id = glObj.Get();
+		EXPECT_TRUE(glObj.Get() != glObj2.Get());
+		glObj2.Reset(glObj.Release());
+		EXPECT_EQ(0, glObj.Get());
+		EXPECT_EQ(id, glObj2.Get());
+	}
 }
 
-void GLTest::SetUp()
+template <typename T>
+class GLRefTypedTest : public testing::Test
 {
-	if (!glfwInit())
-	{
-		return;
-	}
-	m_window = glfwCreateWindow(640, 480, "Hello World", NULL, NULL);
-	if (m_window == nullptr)
-	{
-		glfwTerminate();
-		return;
-	}
-	glfwMakeContextCurrent(m_window);
-}
+};
 
-void GLTest::TearDown()
+typedef ::testing::Types<
+	Saba::GLVertexShaderRef,
+	Saba::GLFragmentShaderRef,
+	Saba::GLProgramRef,
+	Saba::GLBufferRef,
+	Saba::GLVertexArrayRef,
+	Saba::GLTextureRef
+> TestGLRefTypes;
+
+TYPED_TEST_CASE(GLRefTypedTest, TestGLRefTypes);
+
+TYPED_TEST(GLRefTypedTest, Common)
 {
-	if (m_window != nullptr)
+	TypeParam glRef;
+	using GLObj = Saba::GLObject<TypeParam::Type>;
+
+	GLObj glObj;
+	EXPECT_EQ(true, glObj.Create());
+	auto id = glObj.Get();
+
+	TypeParam glRef1 = std::move(glObj);
+	EXPECT_EQ(0, glObj.Get());
+	EXPECT_EQ(id, glRef1.Get());
+
+	EXPECT_EQ(true, glObj.Create());
+	TypeParam glRef2;
+	EXPECT_EQ(0, glRef2.Get());
+	glRef2 = std::move(glObj);
+	EXPECT_TRUE(glRef1.Get() != glRef2.Get());
+
+	glRef2 = glRef1;
+	EXPECT_TRUE(glRef1.Get() == glRef2.Get());
+	EXPECT_EQ(2, glRef1.GetRefCount());
+	EXPECT_EQ(2, glRef2.GetRefCount());
+
 	{
-		glfwDestroyWindow(m_window);
-		m_window = nullptr;
-		glfwTerminate();
+		TypeParam glRef3 = glRef1;
+		EXPECT_EQ(3, glRef1.GetRefCount());
 	}
-}
+	EXPECT_EQ(2, glRef1.GetRefCount());
 
-TEST_F(GLTest, Initialize)
-{
-	EXPECT_NE(nullptr, m_window);
+	glRef1.Release();
+	EXPECT_EQ(0, glRef1.Get());
+	EXPECT_EQ(0, glRef1.GetRefCount());
 
-	GLuint tex;
-	glGenTextures(1, &tex);
-	EXPECT_NE(0, tex);
-	glDeleteTextures(1, &tex);
+	EXPECT_EQ(1, glRef2.GetRefCount());
 }

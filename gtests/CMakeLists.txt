@@ -1,6 +1,8 @@
 if (TARGET gmock)
     message(STATUS "Google Mock found - building tests")
 
+    include_directories(${CMAKE_CURRENT_SOURCE_DIR}/../external/googletest/googletest/include)
+
     file (GLOB SOURCE *.cpp)
     file (GLOB HEADER *.h)
 
@@ -12,7 +14,7 @@ if (TARGET gmock)
     add_executable(gtests ${SOURCE} ${HEADER} ${GL_TEST_SOURCE} ${GL_TEST_HEADER})
     target_link_libraries(gtests
         Saba
-        gtest_main
+        gtest
         glfw
         ${OPENGL_LIBRARY}
     )
@@ -20,6 +22,9 @@ if (TARGET gmock)
         target_link_libraries(gtests
             glfw
             ${OPENGL_LIBRARY}
+        )
+        target_compile_definitions(gtests
+            PRIVATE ENABLE_GLTEST=1
         )
     endif()
 
