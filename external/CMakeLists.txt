@@ -40,3 +40,7 @@ if (IS_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/glfw)
   set(GLFW_INSTALL off)
   add_subdirectory(glfw)
 endif()
+
+if (IS_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/glslang)
+  add_subdirectory(glslang)
+endif()
