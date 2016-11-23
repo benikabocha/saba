@@ -315,7 +315,9 @@ namespace saba
 	bool IsAlphaTexture(GLuint tex)
 	{
 		int alpha;
-		glGetTextureLevelParameteriv(tex, 0, GL_TEXTURE_ALPHA_SIZE, &alpha);
+		glBindTexture(GL_TEXTURE_2D, tex);
+		glGetTexLevelParameteriv(GL_TEXTURE_2D, 0, GL_TEXTURE_ALPHA_SIZE, &alpha);
+		glBindTexture(GL_TEXTURE_2D, 0);
 		return alpha != 0;
 	}
 
