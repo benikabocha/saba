@@ -1,4 +1,4 @@
-#include "UnicodeUtil.h"
+﻿#include "UnicodeUtil.h"
 #include "Singleton.h"
 
 #include <locale>

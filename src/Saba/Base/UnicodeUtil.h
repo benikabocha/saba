@@ -1,4 +1,4 @@
-#ifndef SABA_BASE_UNICODEUTIL_H_
+﻿#ifndef SABA_BASE_UNICODEUTIL_H_
 #define SABA_BASE_UNICODEUTIL_H_
 
 #include <string>

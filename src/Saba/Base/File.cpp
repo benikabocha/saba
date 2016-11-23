@@ -1,4 +1,4 @@
-#include "File.h"
+﻿#include "File.h"
 #include "UnicodeUtil.h"
 
 namespace saba

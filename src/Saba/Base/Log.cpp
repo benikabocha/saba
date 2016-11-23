@@ -1,4 +1,4 @@
-#include "Log.h"
+﻿#include "Log.h"
 #include "UnicodeUtil.h"
 
 #include <iostream>

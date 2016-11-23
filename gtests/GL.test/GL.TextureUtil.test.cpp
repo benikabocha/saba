@@ -1,4 +1,4 @@
-#include <Saba/GL/GLTextureUtil.h>
+ï»¿#include <Saba/GL/GLTextureUtil.h>
 #include <Saba/Base/Path.h>
 
 #include <gtest/gtest.h>
@@ -43,7 +43,7 @@ TEST(GLTest, TextureTest)
 	}
 
 	{
-		auto imagePath = saba::PathUtil::Combine(dataPath, u8"“ú–{Œê.png");
+		auto imagePath = saba::PathUtil::Combine(dataPath, u8"æ—¥æœ¬èª.png");
 		auto tex = saba::CreateTextureFromFile(imagePath.c_str());
 		EXPECT_NE(0, tex.Get());
 	}
@@ -55,7 +55,7 @@ TEST(GLTest, TextureTest)
 	}
 
 	{
-		auto imagePath = saba::PathUtil::Combine(dataPath, u8"“ú–{Œê.dds");
+		auto imagePath = saba::PathUtil::Combine(dataPath, u8"æ—¥æœ¬èª.dds");
 		auto tex = saba::CreateTextureFromFile(imagePath.c_str());
 		EXPECT_NE(0, tex.Get());
 	}
@@ -66,7 +66,7 @@ TEST(GLTest, TextureTest)
 		EXPECT_EQ(0, tex.Get());
 	}
 
-	// DEBUGƒo[ƒWƒ‡ƒ“‚Å‚ÍAGLI “à•”‚ÌAssert‚Å~‚Ü‚Á‚Ä‚µ‚Ü‚¤
+	// DEBUGãƒãƒ¼ã‚¸ãƒ§ãƒ³ã§ã¯ã€GLI å†…éƒ¨ã®Assertã§æ­¢ã¾ã£ã¦ã—ã¾ã†
 #if defined(NDEBUG)
 	{
 		auto imagePath = saba::PathUtil::Combine(dataPath, "error.dds");

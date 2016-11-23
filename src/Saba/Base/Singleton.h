@@ -1,4 +1,4 @@
-#ifndef SABA_BASE_SINGLETON_H_
+﻿#ifndef SABA_BASE_SINGLETON_H_
 #define SABA_BASE_SINGLETON_H_
 
 #include <functional>

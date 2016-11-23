@@ -1,4 +1,4 @@
-#ifndef SABA_BASE_LOG_H_
+﻿#ifndef SABA_BASE_LOG_H_
 #define SABA_BASE_LOG_H_
 
 #include "Singleton.h"

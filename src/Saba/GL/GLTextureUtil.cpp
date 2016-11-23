@@ -1,4 +1,4 @@
-#include "GLTextureUtil.h"
+﻿#include "GLTextureUtil.h"
 #include "../Base/File.h"
 #include "../Base/Path.h"
 #include "../Base/Log.h"

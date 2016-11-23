@@ -1,4 +1,4 @@
-#ifndef SABA_GL_GLOBJECT_H_
+﻿#ifndef SABA_GL_GLOBJECT_H_
 #define SABA_GL_GLOBJECT_H_
 
 #include <atomic>
