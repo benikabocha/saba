@@ -1,4 +1,4 @@
-#include <Saba/GL/GLObject.h>
+#include <saba/GL/GLObject.h>
 
 #include <gtest/gtest.h>
 
@@ -8,12 +8,12 @@ class GLObjectTypedTest : public testing::Test
 };
 
 typedef ::testing::Types<
-	Saba::GLVertexShaderObject,
-	Saba::GLFragmentShaderObject,
-	Saba::GLProgramObject,
-	Saba::GLBufferObject,
-	Saba::GLVertexArrayObject,
-	Saba::GLTextureObject
+	saba::GLVertexShaderObject,
+	saba::GLFragmentShaderObject,
+	saba::GLProgramObject,
+	saba::GLBufferObject,
+	saba::GLVertexArrayObject,
+	saba::GLTextureObject
 > TestGLObjectTypes;
 
 TYPED_TEST_CASE(GLObjectTypedTest, TestGLObjectTypes);
@@ -61,12 +61,12 @@ class GLRefTypedTest : public testing::Test
 };
 
 typedef ::testing::Types<
-	Saba::GLVertexShaderRef,
-	Saba::GLFragmentShaderRef,
-	Saba::GLProgramRef,
-	Saba::GLBufferRef,
-	Saba::GLVertexArrayRef,
-	Saba::GLTextureRef
+	saba::GLVertexShaderRef,
+	saba::GLFragmentShaderRef,
+	saba::GLProgramRef,
+	saba::GLBufferRef,
+	saba::GLVertexArrayRef,
+	saba::GLTextureRef
 > TestGLRefTypes;
 
 TYPED_TEST_CASE(GLRefTypedTest, TestGLRefTypes);
@@ -74,7 +74,7 @@ TYPED_TEST_CASE(GLRefTypedTest, TestGLRefTypes);
 TYPED_TEST(GLRefTypedTest, Common)
 {
 	TypeParam glRef;
-	using GLObj = Saba::GLObject<typename TypeParam::Type>;
+	using GLObj = saba::GLObject<typename TypeParam::Type>;
 
 	GLObj glObj;
 	EXPECT_EQ(true, glObj.Create());

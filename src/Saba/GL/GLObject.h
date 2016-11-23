@@ -4,7 +4,7 @@
 #include <atomic>
 #include <GL/gl3w.h>
 
-namespace Saba
+namespace saba
 {
 
 	template <GLenum ShaderType>
