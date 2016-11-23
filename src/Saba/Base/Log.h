@@ -97,13 +97,13 @@ namespace saba
 }
 
 #define SABA_INFO(message, ...)\
-	saba::Info(message, __VA_ARGS__)
+	saba::Info(message, ##__VA_ARGS__)
 
 #define SABA_WARN(message, ...)\
-	saba::Warn(message, __VA_ARGS__)
+	saba::Warn(message, ##__VA_ARGS__)
 
 #define SABA_ERROR(message, ...)\
-	saba::Error(message, __VA_ARGS__)
+	saba::Error(message, ##__VA_ARGS__)
 
 #endif // !SABA_BASE_LOG_H_
 
