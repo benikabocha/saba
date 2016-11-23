@@ -7,6 +7,3 @@
 [submodule "external/gli"]
 	path = external/gli
 	url = https://github.com/g-truc/gli.git
-[submodule "external/stb"]
-	path = external/stb
-	url = https://github.com/nothings/stb.git
