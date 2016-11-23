@@ -307,8 +307,6 @@ namespace saba
 			SABA_WARN("LoadTexture: [{}] Fail", filename);
 		}
 
-		IsAlphaTexture(tex);
-
 		return successed;
 	}
 
