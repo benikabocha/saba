@@ -67,3 +67,127 @@ TEST(BaseTest, FileTest)
 	EXPECT_EQ(nullptr, file.GetFilePointer());
 
 }
+
+TEST(BaseTest, TextFileReader)
+{
+	std::string dataPath = _u8(TEST_DATA_PATH);
+
+	{
+		saba::TextFileReader textFile;
+		EXPECT_EQ(false, textFile.IsOpen());
+		EXPECT_EQ(false, textFile.IsEof());
+	}
+
+	// Open
+	{
+		saba::TextFileReader textFile(dataPath + u8"/text_test1.txt");
+		EXPECT_EQ(true, textFile.IsOpen());
+	}
+
+	{
+		saba::TextFileReader textFile((dataPath + u8"/text_test1.txt").c_str());
+		EXPECT_EQ(true, textFile.IsOpen());
+	}
+
+	{
+		saba::TextFileReader textFile;
+		EXPECT_EQ(true, textFile.Open(dataPath + u8"/text_test1.txt"));
+		EXPECT_EQ(true, textFile.IsOpen());
+	}
+
+	{
+		saba::TextFileReader textFile;
+		EXPECT_EQ(true, textFile.Open((dataPath + u8"/text_test1.txt").c_str()));
+		EXPECT_EQ(true, textFile.IsOpen());
+	}
+
+	{
+		saba::TextFileReader textFile;
+		EXPECT_EQ(true, textFile.Open((dataPath + u8"/日本語.txt").c_str()));
+		EXPECT_EQ(true, textFile.IsOpen());
+	}
+
+	// Open -> Close
+	{
+		saba::TextFileReader textFile(dataPath + u8"/text_test1.txt");
+		EXPECT_EQ(true, textFile.IsOpen());
+		EXPECT_EQ(false, textFile.IsEof());
+		textFile.Close();
+		EXPECT_EQ(false, textFile.IsOpen());
+		EXPECT_EQ(false, textFile.IsEof());
+	}
+
+	// Reopen
+	{
+		saba::TextFileReader textFile(dataPath + u8"/text_test1.txt");
+		EXPECT_EQ(true, textFile.IsOpen());
+		textFile.Open(dataPath + u8"/text_test2.txt");
+		EXPECT_EQ(true, textFile.IsOpen());
+	}
+
+	// ReadLine
+	{
+		// return eof type
+		saba::TextFileReader textFile(dataPath + u8"/text_test1.txt");
+		EXPECT_EQ(true, textFile.IsOpen());
+		EXPECT_EQ(std::string("abc"), textFile.ReadLine());
+		EXPECT_EQ(false, textFile.IsEof());
+		EXPECT_EQ(std::string("def"), textFile.ReadLine());
+		EXPECT_EQ(false, textFile.IsEof());
+		EXPECT_EQ(std::string(""), textFile.ReadLine());
+		EXPECT_EQ(false, textFile.IsEof());
+		EXPECT_EQ(std::string("efg"), textFile.ReadLine());
+		EXPECT_EQ(true, textFile.IsEof());
+		EXPECT_EQ(std::string(""), textFile.ReadLine());
+		EXPECT_EQ(true, textFile.IsEof());
+	}
+
+	// ReadLine
+	{
+		// no return eof type
+		saba::TextFileReader textFile(dataPath + u8"/text_test2.txt");
+		EXPECT_EQ(true, textFile.IsOpen());
+		EXPECT_EQ(std::string("abc"), textFile.ReadLine());
+		EXPECT_EQ(false, textFile.IsEof());
+		EXPECT_EQ(std::string("def"), textFile.ReadLine());
+		EXPECT_EQ(false, textFile.IsEof());
+		EXPECT_EQ(std::string(""), textFile.ReadLine());
+		EXPECT_EQ(false, textFile.IsEof());
+		EXPECT_EQ(std::string("efg"), textFile.ReadLine());
+		EXPECT_EQ(true, textFile.IsEof());
+		EXPECT_EQ(std::string(""), textFile.ReadLine());
+		EXPECT_EQ(true, textFile.IsEof());
+	}
+
+	// ReadAll
+	{
+		saba::TextFileReader textFile;
+		EXPECT_EQ(std::string(""), textFile.ReadAll());
+	}
+
+	// ReadAll
+	{
+		saba::TextFileReader textFile(dataPath + u8"/text_test1.txt");
+		EXPECT_EQ(true, textFile.IsOpen());
+		std::string text =
+			"abc\n"
+			"def\n"
+			"\n"
+			"efg\n";
+		EXPECT_EQ(text, textFile.ReadAll());
+		EXPECT_EQ(true, textFile.IsEof());
+	}
+
+	// ReadAll
+	{
+		saba::TextFileReader textFile(dataPath + u8"/text_test2.txt");
+		EXPECT_EQ(true, textFile.IsOpen());
+		std::string text =
+			"abc\n"
+			"def\n"
+			"\n"
+			"efg";
+		EXPECT_EQ(text, textFile.ReadAll());
+		EXPECT_EQ(true, textFile.IsEof());
+	}
+}

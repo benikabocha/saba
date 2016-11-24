@@ -5,6 +5,7 @@
 #include <vector>
 #include <cstdint>
 #include <string>
+#include <fstream>
 
 namespace saba
 {
@@ -87,6 +88,26 @@ namespace saba
 
 	private:
 		FILE*	m_fp;
+	};
+
+	class TextFileReader
+	{
+	public:
+		TextFileReader() = default;
+		explicit TextFileReader(const char* filepath);
+		explicit TextFileReader(const std::string& filepath);
+
+		bool Open(const char* filepath);
+		bool Open(const std::string& filepath);
+		void Close();
+		bool IsOpen();
+
+		std::string ReadLine();
+		std::string ReadAll();
+		bool IsEof();
+
+	private:
+		std::ifstream	m_ifs;
 	};
 }
 

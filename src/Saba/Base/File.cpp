@@ -1,6 +1,8 @@
 ﻿#include "File.h"
 #include "UnicodeUtil.h"
 
+#include <streambuf>
+
 namespace saba
 {
 	saba::File::File()
@@ -126,6 +128,75 @@ namespace saba
 #else // _WIN32
 		return (Offset)ftell(m_fp);
 #endif // _WIN32
+	}
+
+	TextFileReader::TextFileReader(const char * filepath)
+	{
+		Open(filepath);
+	}
+
+	TextFileReader::TextFileReader(const std::string & filepath)
+	{
+		Open(filepath);
+	}
+
+	bool TextFileReader::Open(const char * filepath)
+	{
+#if _WIN32
+		std::wstring wFilepath = ToWString(filepath);
+		m_ifs.open(wFilepath);
+#else
+		m_ifs.open(filepath);
+#endif
+		return m_ifs.is_open();
+	}
+
+	bool TextFileReader::Open(const std::string & filepath)
+	{
+		return Open(filepath.c_str());
+	}
+
+	void TextFileReader::Close()
+	{
+		m_ifs.close();
+	}
+
+	bool TextFileReader::IsOpen()
+	{
+		return m_ifs.is_open();
+	}
+
+	std::string TextFileReader::ReadLine()
+	{
+		std::string line;
+		std::getline(m_ifs, line);
+		return line;
+	}
+
+	std::string TextFileReader::ReadAll()
+	{
+		std::istreambuf_iterator<char> begin(m_ifs);
+		std::istreambuf_iterator<char> end;
+		return std::string(begin, end);
+	}
+	bool TextFileReader::IsEof()
+	{
+		if (!m_ifs.is_open())
+		{
+			return m_ifs.eof();
+		}
+
+		if (m_ifs.eof())
+		{
+			return true;
+		}
+		int ch = m_ifs.peek();
+		if (ch == std::ifstream::traits_type::eof())
+		{
+			return true;
+		}
+
+		return false;
 	}
 }
 
