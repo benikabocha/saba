@@ -16,6 +16,7 @@ include_directories(${PROJECT_SOURCE_DIR}/external/gli/include)
 include_directories(${PROJECT_SOURCE_DIR}/external/glm/include)
 include_directories(${PROJECT_SOURCE_DIR}/external/stb/include)
 include_directories(${PROJECT_SOURCE_DIR}/external/spdlog/include)
+include_directories(${PROJECT_SOURCE_DIR}/external/glslang)
 
 if(WIN32)
     ADD_DEFINITIONS(-DUNICODE)

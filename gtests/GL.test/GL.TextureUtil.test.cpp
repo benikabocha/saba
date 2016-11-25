@@ -4,7 +4,6 @@
 #include <gtest/gtest.h>
 
 #define __u8(x) u8 ## x
-
 #define _u8(x)	__u8(x)
 
 TEST(GLTest, TextureTest)

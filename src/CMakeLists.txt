@@ -15,6 +15,7 @@ add_library(
     ${GL_HEADER}
     ${GL3W_SOURCE}
 )
+target_link_libraries(Saba glslang OSDependent SPIRV OGLCompiler HLSL)
 
 SOURCE_GROUP(Base FILES ${BASE_SOURCE} ${BASE_HEADER})
 SOURCE_GROUP(GL FILES ${GL_SOURCE} ${GL_HEADER})
