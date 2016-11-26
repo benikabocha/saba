@@ -1,4 +1,4 @@
-#ifndef VIEWER_GRID_H_
+﻿#ifndef VIEWER_GRID_H_
 #define VIEWER_GRID_H_
 
 #include "ViewerContext.h"

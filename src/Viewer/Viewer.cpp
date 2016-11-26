@@ -1,4 +1,4 @@
-#include "Viewer.h"
+ï»¿#include "Viewer.h"
 
 #include <Saba/Base/Singleton.h>
 #include <Saba/Base/Log.h>
@@ -40,7 +40,7 @@ namespace saba
 			return false;
 		}
 
-		// glfwƒR[ƒ‹ƒoƒbƒN‚Ì“o˜^
+		// glfwã‚³ãƒ¼ãƒ«ãƒãƒƒã‚¯ã®ç™»éŒ²
 		glfwSetWindowUserPointer(m_window, this);
 		glfwSetMouseButtonCallback(m_window, OnMouseButtonStub);
 		glfwSetScrollCallback(m_window, OnScrollStub);

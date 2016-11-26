@@ -1,4 +1,4 @@
-#include "GLSLUtil.h"
+ï»¿#include "GLSLUtil.h"
 #include "GLShaderUtil.h"
 #include "../Base/Path.h"
 #include "../Base/File.h"
@@ -350,7 +350,7 @@ namespace saba
 			return false;
 		}
 
-		// •s—v‚È•¶š—ñ‚ğíœ
+		// ä¸è¦ãªæ–‡å­—åˆ—ã‚’å‰Šé™¤
 		const char* removeTexts[] =
 		{
 			"#extension GL_GOOGLE_include_directive : require",

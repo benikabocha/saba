@@ -1,4 +1,4 @@
-#ifndef VIEWER_VIEWER_H_
+﻿#ifndef VIEWER_VIEWER_H_
 #define VIEWER_VIEWER_H_
 
 #include <GL/gl3w.h>

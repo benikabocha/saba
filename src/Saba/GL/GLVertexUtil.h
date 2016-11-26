@@ -1,4 +1,4 @@
-#ifndef GLVERTEXUTIL_H_
+﻿#ifndef GLVERTEXUTIL_H_
 #define GLVERTEXUTIL_H_
 
 #include "GLObject.h"

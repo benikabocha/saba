@@ -1,4 +1,4 @@
-#ifndef VIEWER_VIEWERCONTEXT_H_
+﻿#ifndef VIEWER_VIEWERCONTEXT_H_
 #define VIEWER_VIEWERCONTEXT_H_
 
 #include "Camera.h"

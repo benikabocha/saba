@@ -1,4 +1,4 @@
-#ifndef VIEWER_CAMERA_H_
+﻿#ifndef VIEWER_CAMERA_H_
 #define VIEWER_CAMERA_H_
 
 #include <glm/vec3.hpp>
