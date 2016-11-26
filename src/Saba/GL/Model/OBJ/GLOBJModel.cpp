@@ -1,4 +1,4 @@
-#include "GLObjModel.h"
+#include "GLOBJModel.h"
 
 #include "../../GLTextureUtil.h"
 
