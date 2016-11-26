@@ -4,10 +4,15 @@
 #include <GL/gl3w.h>
 #include <GLFW/glfw3.h>
 
-#include "../GL/GLObject.h"
-
 #include "ViewerContext.h"
 #include "Grid.h"
+#include "ModelDrawer.h"
+
+#include "../GL/GLObject.h"
+#include "../GL/Model/OBJ/GLOBJModelDrawContext.h"
+
+
+#include <memory>
 
 namespace saba
 {
@@ -52,6 +57,8 @@ namespace saba
 	private:
 		void Draw();
 
+		bool LoadOBJFile(const std::string& filename);
+
 		static void OnMouseButtonStub(GLFWwindow* window, int button, int action, int mods);
 		void OnMouseButton(int button, int action, int mods);
 
@@ -64,8 +71,14 @@ namespace saba
 		static void OnCharStub(GLFWwindow* window, unsigned int codepoint);
 		void OnChar(unsigned int codepoint);
 
+		static void OnDropStub(GLFWwindow* window, int count, const char** paths);
+		void OnDrop(int count, const char** paths);
+
 	private:
 		ViewerContext	m_context;
+		std::unique_ptr<GLOBJModelDrawContext>	m_objModelDrawContext;
+
+		std::unique_ptr<ModelDrawer>	m_modelDrawer;
 
 		bool		m_glfwInitialized;
 		GLFWwindow*	m_window;

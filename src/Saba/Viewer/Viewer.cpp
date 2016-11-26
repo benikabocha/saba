@@ -2,8 +2,13 @@
 
 #include <Saba/Base/Singleton.h>
 #include <Saba/Base/Log.h>
+#include <Saba/Base/Path.h>
 #include <Saba/GL/GLSLUtil.h>
 #include <Saba/GL/GLShaderUtil.h>
+
+#include <Saba/Model/OBJ/OBJModel.h>
+#include <Saba/GL/Model/OBJ/GLOBJModel.h>
+#include <Saba/GL/Model/OBJ/GLOBJModelDrawer.h>
 
 namespace saba
 {
@@ -46,6 +51,7 @@ namespace saba
 		glfwSetScrollCallback(m_window, OnScrollStub);
 		glfwSetKeyCallback(m_window, OnKeyStub);
 		glfwSetCharCallback(m_window, OnCharStub);
+		glfwSetDropCallback(m_window, OnDropStub);
 
 		glfwMakeContextCurrent(m_window);
 
@@ -75,6 +81,8 @@ namespace saba
 			SABA_ERROR("grid Init Fail.");
 			return false;
 		}
+
+		m_objModelDrawContext = std::make_unique<GLOBJModelDrawContext>(&m_context);
 
 		return true;
 	}
@@ -124,6 +132,8 @@ namespace saba
 
 	void Viewer::Draw()
 	{
+		glClear(GL_DEPTH_BUFFER_BIT);
+
 		glDisable(GL_DEPTH_TEST);
 		glBindVertexArray(m_bgVAO);
 		glUseProgram(m_bgProg);
@@ -133,7 +143,7 @@ namespace saba
 		glUseProgram(0);
 		glBindVertexArray(0);
 
-		//glEnable(GL_DEPTH_TEST);
+		glEnable(GL_DEPTH_TEST);
 
 		auto world = glm::mat4(1.0);
 		auto view = m_context.GetCamera()->GetViewMatrix();
@@ -145,6 +155,47 @@ namespace saba
 		wvit = glm::transpose(wvit);
 		m_grid.SetWVPMatrix(wvp);
 		m_grid.Draw();
+
+		if (m_modelDrawer != nullptr)
+		{
+			m_modelDrawer->Draw(&m_context);
+		}
+	}
+
+	bool Viewer::LoadOBJFile(const std::string & filename)
+	{
+		OBJModel objModel;
+		if (!objModel.Load(filename.c_str()))
+		{
+			SABA_WARN("OBJ Load Fail.");
+			return false;
+		}
+
+		auto glObjModel = std::make_shared<GLOBJModel>();
+		if (!glObjModel->Create(objModel))
+		{
+			SABA_WARN("GLOBJModel Create Fail.");
+			return false;
+		}
+
+		auto objDrawer = std::make_unique<GLOBJModelDrawer>(
+			m_objModelDrawContext.get(),
+			glObjModel
+			);
+		if (!objDrawer->Create())
+		{
+			SABA_WARN("GLOBJModelDrawer Create Fail.");
+			return false;
+		}
+		m_modelDrawer = std::move(objDrawer);
+
+		auto bboxMin = objModel.GetBBoxMin();
+		auto bboxMax = objModel.GetBBoxMax();
+		auto center = (bboxMax + bboxMin) * 0.5f;
+		auto radius = glm::length(bboxMax - center);
+		m_context.GetCamera()->Initialize(center, radius);
+
+		return true;
 	}
 
 	void Viewer::OnMouseButtonStub(GLFWwindow * window, int button, int action, int mods)
@@ -221,6 +272,29 @@ namespace saba
 
 	void Viewer::OnChar(unsigned int codepoint)
 	{
+	}
+
+	void Viewer::OnDropStub(GLFWwindow * window, int count, const char ** paths)
+	{
+		Viewer* viewer = (Viewer*)glfwGetWindowUserPointer(window);
+		if (viewer != nullptr)
+		{
+			viewer->OnDrop(count, paths);
+		}
+	}
+
+	void Viewer::OnDrop(int count, const char ** paths)
+	{
+		if (count > 0)
+		{
+			std::string filepath = paths[0];
+			std::string ext = PathUtil::GetExt(filepath);
+			SABA_INFO("Drop File. {}", filepath);
+			if (ext == "obj")
+			{
+				LoadOBJFile(filepath);
+			}
+		}
 	}
 
 	Viewer::Mouse::Mouse()
