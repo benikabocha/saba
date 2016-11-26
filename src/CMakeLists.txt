@@ -21,3 +21,21 @@ SOURCE_GROUP(Base FILES ${BASE_SOURCE} ${BASE_HEADER})
 SOURCE_GROUP(GL FILES ${GL_SOURCE} ${GL_HEADER})
 SOURCE_GROUP(GL3W FILES ${GL3W_SOURCE})
 
+# SabaViewer
+
+file (GLOB VIEWER_SOURCE Viewer/*.cpp)
+file (GLOB VIEWER_HEADER Viewer/*.h)
+
+add_executable(SabaViewer
+    ${VIEWER_SOURCE}
+    ${VIEWER_HEADER}
+)
+target_link_libraries(SabaViewer Saba glfw ${OPENGL_LIBRARY})
+
+SOURCE_GROUP(Viewer FILES ${VIEWER_SOURCE} ${VIEWER_HEADER})
+
+add_custom_command(TARGET SabaViewer POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E copy_directory
+    ${CMAKE_CURRENT_SOURCE_DIR}/Viewer/resource
+    ${CMAKE_CURRENT_BINARY_DIR}/resource
+)
