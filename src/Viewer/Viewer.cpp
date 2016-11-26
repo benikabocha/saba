@@ -107,7 +107,7 @@ namespace saba
 			}
 
 			int w, h;
-			glfwGetWindowSize(m_window, &w, &h);
+			glfwGetFramebufferSize(m_window, &w, &h);
 			m_context.GetCamera()->SetSize((float)w, (float)h);
 			m_context.GetCamera()->UpdateMatrix();
 
