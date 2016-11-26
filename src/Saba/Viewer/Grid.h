@@ -1,10 +1,10 @@
-﻿#ifndef VIEWER_GRID_H_
-#define VIEWER_GRID_H_
+﻿#ifndef SABA_VIEWER_GRID_H_
+#define SABA_VIEWER_GRID_H_
 
 #include "ViewerContext.h"
 
-#include <Saba/GL/GLObject.h>
-#include <Saba/GL/GLVertexUtil.h>
+#include "../GL/GLObject.h"
+#include "../GL/GLVertexUtil.h"
 
 namespace saba
 {
@@ -44,4 +44,4 @@ namespace saba
 	};
 }
 
-#endif // !VIEWER_GRID_H_
+#endif // !SABA_VIEWER_GRID_H_

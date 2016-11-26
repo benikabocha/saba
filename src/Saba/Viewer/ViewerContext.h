@@ -1,10 +1,10 @@
-﻿#ifndef VIEWER_VIEWERCONTEXT_H_
-#define VIEWER_VIEWERCONTEXT_H_
+﻿#ifndef SABA_VIEWER_VIEWERCONTEXT_H_
+#define SABA_VIEWER_VIEWERCONTEXT_H_
 
 #include "Camera.h"
 
 #include <string>
-#include <Saba/GL/GLSLUtil.h>
+#include "../GL/GLSLUtil.h"
 
 namespace saba
 {
@@ -28,4 +28,4 @@ namespace saba
 	};
 }
 
-#endif // !VIEWER_VIEWERCONTEXT_H_
+#endif // !SABA_VIEWER_VIEWERCONTEXT_H_

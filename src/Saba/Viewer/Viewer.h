@@ -1,10 +1,10 @@
-﻿#ifndef VIEWER_VIEWER_H_
-#define VIEWER_VIEWER_H_
+﻿#ifndef SABA_VIEWER_VIEWER_H_
+#define SABA_VIEWER_VIEWER_H_
 
 #include <GL/gl3w.h>
 #include <GLFW/glfw3.h>
 
-#include <Saba/GL/GLObject.h>
+#include "../GL/GLObject.h"
 
 #include "ViewerContext.h"
 #include "Grid.h"
@@ -81,4 +81,4 @@ namespace saba
 	};
 }
 
-#endif // !VIEWER_VIEWER_H_
+#endif // !SABA_VIEWER_VIEWER_H_

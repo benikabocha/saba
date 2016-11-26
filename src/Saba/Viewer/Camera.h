@@ -1,5 +1,5 @@
-﻿#ifndef VIEWER_CAMERA_H_
-#define VIEWER_CAMERA_H_
+﻿#ifndef SABA_VIEWER_CAMERA_H_
+#define SABA_VIEWER_CAMERA_H_
 
 #include <glm/vec3.hpp>
 #include <glm/mat4x4.hpp>
@@ -45,5 +45,5 @@ namespace saba
 	};
 }
 
-#endif // !VIEWER_CAMERA_H_
+#endif // !SABA_VIEWER_CAMERA_H_
 
