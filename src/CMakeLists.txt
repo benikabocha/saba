@@ -15,6 +15,8 @@ file (GLOB MODEL_OBJ_HEADER Saba/Model/OBJ/*.h)
 
 file (GLOB GL3W_SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/../external/gl3w/src/*.c)
 
+file (GLOB IMGUI_SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/../external/imgui/src/*.cpp)
+
 add_library(
     Saba
     ${BASE_SOURCE}
@@ -28,6 +30,7 @@ add_library(
     ${MODEL_OBJ_SOURCE}
     ${MODEL_OBJ_HEADER}
     ${GL3W_SOURCE}
+    ${IMGUI_SOURCE}
 )
 target_link_libraries(Saba glfw glslang OSDependent SPIRV OGLCompiler HLSL)
 
@@ -37,6 +40,7 @@ SOURCE_GROUP(GL\\Model\\OBJ FILES ${GL_MODEL_OBJ_SOURCE} ${GL_MODEL_OBJ_HEADER})
 SOURCE_GROUP(Viewer FILES ${VIEWER_SOURCE} ${VIEWER_HEADER})
 SOURCE_GROUP(Model\\OBJ FILES ${MODEL_OBJ_SOURCE} ${MODEL_OBJ_HEADER})
 SOURCE_GROUP(GL3W FILES ${GL3W_SOURCE})
+SOURCE_GROUP(IMGUI FILES ${IMGUI_SOURCE})
 
 # SabaViewer
 

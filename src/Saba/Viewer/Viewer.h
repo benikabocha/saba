@@ -11,11 +11,12 @@
 #include "../GL/GLObject.h"
 #include "../GL/Model/OBJ/GLOBJModelDrawContext.h"
 
-
 #include <memory>
 
 namespace saba
 {
+	class ImGUILogSink;
+
 	class Viewer
 	{
 	public:
@@ -56,6 +57,7 @@ namespace saba
 
 	private:
 		void Draw();
+		void DrawLogUI();
 
 		bool LoadOBJFile(const std::string& filename);
 
@@ -91,6 +93,10 @@ namespace saba
 		Mouse		m_mouse;
 		CameraMode	m_cameraMode;
 		Grid		m_grid;
+
+		// LogWindow
+		std::shared_ptr<ImGUILogSink>	m_imguiLogSink;
+		bool							m_enableLogUI;
 	};
 }
 

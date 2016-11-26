@@ -10,10 +10,55 @@
 #include <Saba/GL/Model/OBJ/GLOBJModel.h>
 #include <Saba/GL/Model/OBJ/GLOBJModelDrawer.h>
 
+#include <imgui.h>
+#include <imgui_impl_glfw_gl3.h>
+
+#include <deque>
+
 namespace saba
 {
+	class ImGUILogSink : public spdlog::sinks::sink
+	{
+	public:
+		explicit ImGUILogSink(size_t maxBufferSize = 100)
+			: m_maxBufferSize(maxBufferSize)
+			, m_added(false)
+		{
+		}
+
+		void log(const spdlog::details::log_msg& msg) override
+		{
+			while (m_buffer.size() >= m_maxBufferSize)
+			{
+				if (m_buffer.empty())
+				{
+					break;
+				}
+				m_buffer.pop_front();
+			}
+
+			m_buffer.push_back(msg.formatted.str());
+			m_added = true;
+		}
+
+		void flush() override
+		{
+		}
+
+		const std::deque<std::string>& GetBuffer() const { return m_buffer; }
+
+		bool IsAdded() const { return m_added; }
+		void ClearAddedFlag() { m_added = false; }
+
+	private:
+		size_t					m_maxBufferSize;
+		std::deque<std::string> m_buffer;
+		bool					m_added;
+	};
+
 	Viewer::Viewer()
 		: m_glfwInitialized(false)
+		, m_enableLogUI(true)
 	{
 		if (!glfwInit())
 		{
@@ -32,6 +77,9 @@ namespace saba
 
 	bool Viewer::Initialize()
 	{
+		auto logger = Singleton<saba::Logger>::Get();
+		m_imguiLogSink = logger->AddSink<ImGUILogSink>();
+
 		SABA_INFO("CurDir = {}", m_context.GetWorkDir());
 		glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
 		glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 2);
@@ -55,6 +103,10 @@ namespace saba
 
 		glfwMakeContextCurrent(m_window);
 
+		// imguiの初期化
+		ImGui_ImplGlfwGL3_Init(m_window, false);
+
+		// gl3wの初期化
 		if (gl3wInit() != 0)
 		{
 			SABA_ERROR("gl3w Init Fail.");
@@ -89,29 +141,40 @@ namespace saba
 
 	void Viewer::Uninitislize()
 	{
+		auto logger = Singleton<saba::Logger>::Get();
+		logger->RemoveSink(m_imguiLogSink.get());
+		m_imguiLogSink.reset();
+
+		ImGui_ImplGlfwGL3_Shutdown();
 	}
 
 	int Viewer::Run()
 	{
+
 		while (!glfwWindowShouldClose(m_window))
 		{
-			m_mouse.Update(m_window);
-			if (m_cameraMode == CameraMode::Orbit)
-			{
-				m_context.GetCamera()->Orbit((float)m_mouse.m_dx, (float)m_mouse.m_dy);
-			}
-			if (m_cameraMode == CameraMode::Dolly)
-			{
-				m_context.GetCamera()->Dolly((float)m_mouse.m_dx + (float)m_mouse.m_dy);
-			}
-			if (m_cameraMode == CameraMode::Pan)
-			{
-				m_context.GetCamera()->Pan((float)m_mouse.m_dx, (float)m_mouse.m_dy);
-			}
+			ImGui_ImplGlfwGL3_NewFrame();
 
-			if (m_mouse.m_scrollY != 0)
+			m_mouse.Update(m_window);
+			if (!ImGui::GetIO().WantCaptureMouse)
 			{
-				m_context.GetCamera()->Dolly((float)m_mouse.m_scrollY * 0.1f);
+				if (m_cameraMode == CameraMode::Orbit)
+				{
+					m_context.GetCamera()->Orbit((float)m_mouse.m_dx, (float)m_mouse.m_dy);
+				}
+				if (m_cameraMode == CameraMode::Dolly)
+				{
+					m_context.GetCamera()->Dolly((float)m_mouse.m_dx + (float)m_mouse.m_dy);
+				}
+				if (m_cameraMode == CameraMode::Pan)
+				{
+					m_context.GetCamera()->Pan((float)m_mouse.m_dx, (float)m_mouse.m_dy);
+				}
+
+				if (m_mouse.m_scrollY != 0)
+				{
+					m_context.GetCamera()->Dolly((float)m_mouse.m_scrollY * 0.1f);
+				}
 			}
 
 			int w, h;
@@ -121,7 +184,26 @@ namespace saba
 
 			glViewport(0, 0, w, h);
 
+			if (m_context.IsUIEnabled())
+			{
+				if (ImGui::BeginMainMenuBar())
+				{
+					if (ImGui::BeginMenu("Window"))
+					{
+						ImGui::MenuItem("Log", nullptr, &m_enableLogUI);
+						ImGui::EndMenu();
+					}
+					ImGui::EndMainMenuBar();
+				}
+			}
+
 			Draw();
+
+			if (m_context.IsUIEnabled())
+			{
+				DrawLogUI();
+				ImGui::Render();
+			}
 
 			glfwSwapBuffers(m_window);
 			glfwPollEvents();
@@ -162,6 +244,31 @@ namespace saba
 		}
 	}
 
+	void Viewer::DrawLogUI()
+	{
+		if (!m_enableLogUI)
+		{
+			return;
+		}
+
+		ImGui::SetNextWindowSize(ImVec2(500, 400), ImGuiSetCond_FirstUseEver);
+		ImGui::Begin("Log");
+		ImGui::BeginChild("scrolling", ImVec2(0, 0), false, ImGuiWindowFlags_HorizontalScrollbar);
+
+		for (const auto& log : m_imguiLogSink->GetBuffer())
+		{
+			ImGui::TextUnformatted(log.c_str());
+		}
+
+		if (m_imguiLogSink->IsAdded())
+		{
+			ImGui::SetScrollHere(1.0f);
+		}
+
+		ImGui::EndChild();
+		ImGui::End();
+	}
+
 	bool Viewer::LoadOBJFile(const std::string & filename)
 	{
 		OBJModel objModel;
@@ -200,6 +307,8 @@ namespace saba
 
 	void Viewer::OnMouseButtonStub(GLFWwindow * window, int button, int action, int mods)
 	{
+		ImGui_ImplGlfwGL3_MouseButtonCallback(window, button, action, mods);
+
 		Viewer* viewer = (Viewer*)glfwGetWindowUserPointer(window);
 		if (viewer != nullptr)
 		{
@@ -236,6 +345,8 @@ namespace saba
 
 	void Viewer::OnScrollStub(GLFWwindow * window, double offsetx, double offsety)
 	{
+		ImGui_ImplGlfwGL3_ScrollCallback(window, offsetx, offsety);
+
 		Viewer* viewer = (Viewer*)glfwGetWindowUserPointer(window);
 		if (viewer != nullptr)
 		{
@@ -250,6 +361,8 @@ namespace saba
 
 	void Viewer::OnKeyStub(GLFWwindow * window, int key, int scancode, int action, int mods)
 	{
+		ImGui_ImplGlfwGL3_KeyCallback(window, key, scancode, action, mods);
+
 		Viewer* viewer = (Viewer*)glfwGetWindowUserPointer(window);
 		if (viewer != nullptr)
 		{
@@ -259,10 +372,16 @@ namespace saba
 
 	void Viewer::OnKey(int key, int scancode, int action, int mods)
 	{
+		if (key == GLFW_KEY_F1 && action == GLFW_PRESS)
+		{
+			m_context.EnableUI(!m_context.IsUIEnabled());
+		}
 	}
 
 	void Viewer::OnCharStub(GLFWwindow * window, unsigned int codepoint)
 	{
+		ImGui_ImplGlfwGL3_CharCallback(window, codepoint);
+
 		Viewer* viewer = (Viewer*)glfwGetWindowUserPointer(window);
 		if (viewer != nullptr)
 		{

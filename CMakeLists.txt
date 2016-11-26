@@ -18,6 +18,7 @@ include_directories(${PROJECT_SOURCE_DIR}/external/stb/include)
 include_directories(${PROJECT_SOURCE_DIR}/external/spdlog/include)
 include_directories(${PROJECT_SOURCE_DIR}/external/glslang)
 include_directories(${PROJECT_SOURCE_DIR}/external/tinyobjloader/include)
+include_directories(${PROJECT_SOURCE_DIR}/external/imgui/include)
 
 if(WIN32)
     ADD_DEFINITIONS(-DUNICODE)

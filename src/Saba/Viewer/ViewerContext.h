@@ -10,6 +10,7 @@ namespace saba
 {
 	class ViewerContext
 	{
+		friend class Viewer;
 	public:
 		ViewerContext();
 
@@ -19,12 +20,19 @@ namespace saba
 
 		Camera* GetCamera() { return &m_camera; }
 
+		bool IsUIEnabled() const { return m_enableUI; }
+
+	private:
+		void EnableUI(bool enable) { m_enableUI = enable; }
+
 	private:
 		std::string	m_workDir;
 		std::string	m_resourceDir;
 		std::string	m_shaderDir;
 
 		Camera	m_camera;
+
+		bool	m_enableUI;
 	};
 }
 
