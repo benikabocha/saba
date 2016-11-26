@@ -1,4 +1,4 @@
-#include "OBJModel.h"
+ï»¿#include "OBJModel.h"
 #include "../../Base/Path.h"
 #include "../../Base/Log.h"
 
@@ -35,7 +35,7 @@ namespace saba
 			return false;
 		}
 
-		// Material‚ğƒRƒs[
+		// Materialã‚’ã‚³ãƒ”ãƒ¼
 		m_materials.clear();
 		m_materials.reserve(materials.size());
 		for (const auto& objMat : materials)
@@ -79,7 +79,7 @@ namespace saba
 			m_materials.push_back(mat);
 		}
 
-		// Mesh‚ğì¬
+		// Meshã‚’ä½œæˆ
 		size_t posCount = attrib.vertices.size() / 3;
 		size_t norCount = attrib.normals.size() / 3;
 		size_t uvCount = attrib.texcoords.size() / 2;

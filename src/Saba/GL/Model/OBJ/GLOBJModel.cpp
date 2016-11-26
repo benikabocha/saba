@@ -1,4 +1,4 @@
-#include "GLOBJModel.h"
+ï»¿#include "GLOBJModel.h"
 
 #include "../../GLTextureUtil.h"
 
@@ -15,7 +15,7 @@ namespace saba
 
 	bool GLOBJModel::Create(const OBJModel& objModel)
 	{
-		// Material‚ğƒRƒs[
+		// Materialã‚’ã‚³ãƒ”ãƒ¼
 		auto materials = objModel.GetMaterials();
 
 		m_materials.clear();
@@ -55,7 +55,7 @@ namespace saba
 			m_materials.push_back(mat);
 		}
 
-		// Mesh‚ğì¬
+		// Meshã‚’ä½œæˆ
 		using MB = MeshBuilder;
 		MB mb;
 		auto objPos = objModel.GetPositions();
