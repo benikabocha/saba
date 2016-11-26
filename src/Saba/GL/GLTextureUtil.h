@@ -3,11 +3,15 @@
 
 #include "GLObject.h"
 
+#include <string>
+
 namespace saba
 {
 	GLTextureObject CreateTextureFromFile(const char* filename, bool genMipMap = true, bool rgba = false);
+	GLTextureObject CreateTextureFromFile(const std::string& filename, bool genMipMap = true, bool rgba = false);
 
 	bool LoadTextureFromFile(const GLTextureObject& tex, const char* filename, bool genMipMap = true, bool rgba = false);
+	bool LoadTextureFromFile(const GLTextureObject& tex, const std::string& filename, bool genMipMap = true, bool rgba = false);
 
 	bool IsAlphaTexture(GLuint tex);
 }

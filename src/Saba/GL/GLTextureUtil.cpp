@@ -276,6 +276,11 @@ namespace saba
 		return tex;
 	}
 
+	GLTextureObject CreateTextureFromFile(const std::string & filename, bool genMipMap, bool rgba)
+	{
+		return CreateTextureFromFile(filename.c_str(), genMipMap, rgba);
+	}
+
 	bool LoadTextureFromFile(const GLTextureObject& tex, const char* filename, bool genMipMap, bool rgba)
 	{
 		SABA_INFO("LoadTexture: [{}]", filename);
@@ -308,6 +313,11 @@ namespace saba
 		}
 
 		return successed;
+	}
+
+	bool LoadTextureFromFile(const GLTextureObject & tex, const std::string & filename, bool genMipMap, bool rgba)
+	{
+		return LoadTextureFromFile(tex, filename.c_str(), genMipMap, rgba);
 	}
 
 	bool IsAlphaTexture(GLuint tex)
