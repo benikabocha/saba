@@ -81,7 +81,21 @@ namespace saba
 			return "";
 		}
 
-		return path.substr(pos + 1, path.size() - pos);
+		std::string ext = path.substr(pos + 1, path.size() - pos);
+		for (auto& ch : ext)
+		{
+			ch = (char)tolower(ch);
+		}
+		return ext;
+	}
+
+	std::string PathUtil::GetDelimiter()
+	{
+#if _WIN32
+		return "\\";
+#else // _WIN32
+		return "/";
+#endif
 	}
 
 }

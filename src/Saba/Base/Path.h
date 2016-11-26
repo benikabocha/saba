@@ -18,6 +18,7 @@ namespace saba {
 		static std::string GetFilename(const std::string& path);
 		static std::string GetFilenameWithoutExt(const std::string& path);
 		static std::string GetExt(const std::string& path);
+		static std::string GetDelimiter();
 	};
 }
 
