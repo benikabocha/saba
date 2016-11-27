@@ -478,13 +478,13 @@ namespace saba
 	{
 		if (count > 0)
 		{
-			std::string filepath = paths[0];
-			std::string ext = PathUtil::GetExt(filepath);
-			SABA_INFO("Drop File. {}", filepath);
-			if (ext == "obj")
+			std::vector<std::string> args;
+			for (int i = 0; i < count; i++)
 			{
-				LoadOBJFile(filepath);
+				SABA_INFO("Drop File. {}", paths[i]);
+				args.emplace_back(paths[i]);
 			}
+			CmdOpen(args);
 		}
 	}
 
