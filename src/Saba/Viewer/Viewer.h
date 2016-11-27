@@ -5,6 +5,7 @@
 #include <GLFW/glfw3.h>
 
 #include "ViewerContext.h"
+#include "ViewerCommand.h"
 #include "Grid.h"
 #include "ModelDrawer.h"
 
@@ -58,6 +59,11 @@ namespace saba
 	private:
 		void Draw();
 		void DrawLogUI();
+		void DrawCommandUI();
+
+		bool ExecuteCommand(const ViewerCommand& cmd);
+
+		bool CmdOpen(const std::vector<std::string>& args);
 
 		bool LoadOBJFile(const std::string& filename);
 

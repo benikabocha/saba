@@ -13,6 +13,7 @@
 #include <imgui.h>
 #include <imgui_impl_glfw_gl3.h>
 
+#include <array>
 #include <deque>
 
 namespace saba
@@ -202,6 +203,7 @@ namespace saba
 			if (m_context.IsUIEnabled())
 			{
 				DrawLogUI();
+				DrawCommandUI();
 				ImGui::Render();
 			}
 
@@ -267,6 +269,76 @@ namespace saba
 
 		ImGui::EndChild();
 		ImGui::End();
+	}
+
+	void Viewer::DrawCommandUI()
+	{
+		if (!m_enableLogUI)
+		{
+			return;
+		}
+
+		std::array<char, 256> inputBuffer;
+		inputBuffer.fill('\0');
+		ImGui::Begin("Command");
+		if (ImGui::InputText("Input", &inputBuffer[0], inputBuffer.size(), ImGuiInputTextFlags_EnterReturnsTrue, nullptr, nullptr))
+		{
+			const char* cmdLine = &inputBuffer[0];
+			ViewerCommand cmd;
+			if (cmd.Parse(&cmdLine[0]))
+			{
+				if (!ExecuteCommand(cmd))
+				{
+					SABA_INFO("Command Execute Error. [{}]", cmdLine);
+				}
+			}
+			else
+			{
+				SABA_INFO("Command Parse Error. [{}]", cmdLine);
+			}
+
+		}
+		ImGui::End();
+	}
+
+	bool Viewer::ExecuteCommand(const ViewerCommand & cmd)
+	{
+		if (strcmp("open", cmd.GetCommand().c_str()) == 0)
+		{
+			return CmdOpen(cmd.GetArgs());
+		}
+		else
+		{
+			SABA_INFO("Unknown Command. [{}]", cmd.GetCommand());
+			return false;
+		}
+
+		return true;
+	}
+
+	bool Viewer::CmdOpen(const std::vector<std::string>& args)
+	{
+		SABA_INFO("Cmd Open Execute.");
+		if (args.empty())
+		{
+			SABA_INFO("Cmd Open Args Empty.");
+			return false;
+		}
+
+		std::string filepath = args[0];
+		std::string ext = PathUtil::GetExt(filepath);
+		SABA_INFO("Open File. [{}]", filepath);
+		if (ext == "obj")
+		{
+			if (!LoadOBJFile(filepath))
+			{
+				return false;
+			}
+		}
+
+		SABA_INFO("Cmd Open Succeeded.");
+
+		return true;
 	}
 
 	bool Viewer::LoadOBJFile(const std::string & filename)
