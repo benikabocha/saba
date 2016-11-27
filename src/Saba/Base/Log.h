@@ -6,6 +6,7 @@
 #include <memory>
 #include <algorithm>
 #include <spdlog/spdlog.h>
+#include <assert.h>
 
 namespace saba
 {
@@ -104,6 +105,9 @@ namespace saba
 
 #define SABA_ERROR(message, ...)\
 	saba::Error(message, ##__VA_ARGS__)
+
+#define SABA_ASSERT(expr)\
+	assert(expr)
 
 #endif // !SABA_BASE_LOG_H_
 
