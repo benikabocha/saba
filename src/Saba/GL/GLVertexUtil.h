@@ -15,37 +15,55 @@
 namespace saba
 {
 	template <typename T>
-	GLBufferObject CreateVBO(const std::vector<T>& buf, GLenum usage = GL_STATIC_DRAW)
+	GLBufferObject CreateVBO(const T* buf, size_t count, GLenum usage = GL_STATIC_DRAW)
 	{
 		GLBufferObject vbo;
 		vbo.Create();
 
 		glBindBuffer(GL_ARRAY_BUFFER, vbo);
-		glBufferData(GL_ARRAY_BUFFER, sizeof(T) * buf.size(), &buf[0], usage);
+		glBufferData(GL_ARRAY_BUFFER, sizeof(T) * count, buf, usage);
 		glBindBuffer(GL_ARRAY_BUFFER, 0);
 
 		return vbo;
 	}
 
 	template <typename T>
-	void UpdateVBO(GLuint vbo, const std::vector<T>& buf)
+	GLBufferObject CreateVBO(const std::vector<T>& buf, GLenum usage = GL_STATIC_DRAW)
+	{
+		return CreateVBO(&buf[0], buf.size(), usage);
+	}
+
+	template <typename T>
+	void UpdateVBO(GLuint vbo, const T* buf, size_t count)
 	{
 		glBindBuffer(GL_ARRAY_BUFFER, vbo);
-		glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(T) * buf.size(), &buf[0]);
+		glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(T) * count, buf);
 		glBindBuffer(GL_ARRAY_BUFFER, 0);
 	}
 
 	template <typename T>
-	GLBufferObject CreateIBO(const std::vector<T>& buf, GLenum usage = GL_STATIC_DRAW)
+	void UpdateVBO(GLuint vbo, const std::vector<T>& buf)
+	{
+		UpdateVBO(vbo, &buf[0], buf.size());
+	}
+
+	template <typename T>
+	GLBufferObject CreateIBO(const T* buf, size_t count, GLenum usage = GL_STATIC_DRAW)
 	{
 		GLBufferObject ibo;
 		ibo.Create();
 
 		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ibo);
-		glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(T) * buf.size(), &buf[0], usage);
+		glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(T) * count, buf, usage);
 		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 
 		return ibo;
+	}
+
+	template <typename T>
+	GLBufferObject CreateIBO(const std::vector<T>& buf, GLenum usage = GL_STATIC_DRAW)
+	{
+		return CreateIBO(&buf[0], buf.size(), usage);
 	}
 
 	template <typename T>

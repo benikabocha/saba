@@ -1,0 +1,82 @@
+#version 140
+
+in vec3 vs_Pos;
+in vec3 vs_Nor;
+in vec2 vs_UV;
+
+out vec4 out_Color;
+
+uniform float u_Alpha;
+uniform vec3 u_Diffuse;
+uniform vec3 u_Ambient;
+uniform vec3 u_Specular;
+uniform float u_SpecularPower;
+uniform vec3 u_LightColor;
+uniform vec3 u_LightDir;
+
+uniform int u_TexMode;
+uniform sampler2D u_Tex;
+
+uniform int u_ToonTexMode;
+uniform sampler2D u_ToonTex;
+
+uniform int u_SphereTexMode;
+uniform sampler2D u_SphereTex;
+
+void main()
+{
+	vec3 eyeDir = normalize(vs_Pos);
+	vec3 lightDir = normalize(-u_LightDir);
+	vec3 nor = normalize(vs_Nor);
+    float ln = max(dot(nor, lightDir), 0.0);
+	vec3 color = vec3(0.0, 0.0, 0.0);
+	float alpha = u_Alpha;
+	vec3 diffuseColor = u_Diffuse * u_LightColor;
+	color = diffuseColor;
+	color += u_Ambient;
+	color = clamp(color, 0.0, 1.0);
+
+    if (u_TexMode != 0)
+    {
+		vec4 texColor = texture(u_Tex, vs_UV);
+        color *= texColor.rgb;
+		if (u_TexMode == 2)
+		{
+			alpha *= texColor.a;
+		}
+    }
+
+	if (u_SphereTexMode != 0)
+	{
+		vec2 spUV = vec2(0.0);
+		spUV.x = nor.x * 0.5 + 0.5;
+		spUV.y = nor.y * 0.5 + 0.5;
+		vec3 spColor = texture(u_SphereTex, spUV).rgb;
+		if (u_SphereTexMode == 1)
+		{
+			color *= spColor;
+		}
+		else if (u_SphereTexMode == 2)
+		{
+			color += spColor;
+		}
+	}
+
+	if (u_ToonTexMode != 0)
+	{
+		vec3 toonColor = texture(u_ToonTex, vec2(0.0, ln)).rgb;
+		color *= toonColor;
+	}
+
+	vec3 specular = vec3(0.0);
+	if (u_SpecularPower > 0)
+	{
+		vec3 halfVec = normalize(eyeDir + lightDir);
+		vec3 specularColor = u_Specular * u_LightColor;
+		specular += pow(max(0.0, dot(halfVec, nor)), u_SpecularPower) * specularColor;
+	}
+
+	color += specular;
+
+	out_Color = vec4(color, alpha);
+}

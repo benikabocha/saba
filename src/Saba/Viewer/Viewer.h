@@ -9,8 +9,9 @@
 #include "Grid.h"
 #include "ModelDrawer.h"
 
-#include "../GL/GLObject.h"
-#include "../GL/Model/OBJ/GLOBJModelDrawContext.h"
+#include <Saba/GL/GLObject.h>
+#include <Saba/GL/Model/OBJ/GLOBJModelDrawContext.h>
+#include <Saba/GL/Model/MMD/GLMMDModelDrawContext.h>
 
 #include <memory>
 
@@ -66,6 +67,7 @@ namespace saba
 		bool CmdOpen(const std::vector<std::string>& args);
 
 		bool LoadOBJFile(const std::string& filename);
+		bool LoadPMDFile(const std::string& filename);
 
 		static void OnMouseButtonStub(GLFWwindow* window, int button, int action, int mods);
 		void OnMouseButton(int button, int action, int mods);
@@ -85,6 +87,7 @@ namespace saba
 	private:
 		ViewerContext	m_context;
 		std::unique_ptr<GLOBJModelDrawContext>	m_objModelDrawContext;
+		std::unique_ptr<GLMMDModelDrawContext>	m_mmdModelDrawContext;
 
 		std::unique_ptr<ModelDrawer>	m_modelDrawer;
 

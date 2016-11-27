@@ -10,6 +10,10 @@
 #include <Saba/GL/Model/OBJ/GLOBJModel.h>
 #include <Saba/GL/Model/OBJ/GLOBJModelDrawer.h>
 
+#include <Saba/Model/MMD/PMDModel.h>
+#include <Saba/GL/Model/MMD/GLMMDModel.h>
+#include <Saba/GL/Model/MMD/GLMMDModelDrawer.h>
+
 #include <imgui.h>
 #include <imgui_impl_glfw_gl3.h>
 
@@ -136,6 +140,7 @@ namespace saba
 		}
 
 		m_objModelDrawContext = std::make_unique<GLOBJModelDrawContext>(&m_context);
+		m_mmdModelDrawContext = std::make_unique<GLMMDModelDrawContext>(&m_context);
 
 		return true;
 	}
@@ -335,6 +340,13 @@ namespace saba
 				return false;
 			}
 		}
+		else if (ext == "pmd")
+		{
+			if (!LoadPMDFile(filepath))
+			{
+				return false;
+			}
+		}
 
 		SABA_INFO("Cmd Open Succeeded.");
 
@@ -399,6 +411,70 @@ namespace saba
 		SABA_INFO("radisu [{}] grid [{}]", radius, gridSize);
 
 		return true;
+	}
+
+	bool Viewer::LoadPMDFile(const std::string & filename)
+	{
+		std::shared_ptr<PMDModel> pmdModel = std::make_shared<PMDModel>();
+		std::string mmdDataDir = PathUtil::Combine(
+			m_context.GetResourceDir(),
+			"mmd"
+		);
+		if (!pmdModel->Load(filename, mmdDataDir))
+		{
+			SABA_WARN("PMD Load Fail.");
+			return false;
+		}
+
+		std::shared_ptr<GLMMDModel> glMMDModel = std::make_shared<GLMMDModel>();
+		if (!glMMDModel->Create(pmdModel))
+		{
+			SABA_WARN("GLMMDModel Create Fail.");
+			return false;
+		}
+
+		auto mmdDrawer = std::make_unique<GLMMDModelDrawer>(
+			m_mmdModelDrawContext.get(),
+			glMMDModel
+			);
+		if (!mmdDrawer->Create())
+		{
+			SABA_WARN("GLMMDModelDrawer Create Fail.");
+			return false;
+		}
+		m_modelDrawer = std::move(mmdDrawer);
+
+		auto bboxMin = pmdModel->GetBBoxMin();
+		auto bboxMax = pmdModel->GetBBoxMax();
+		auto center = (bboxMax + bboxMin) * 0.5f;
+		auto radius = glm::length(bboxMax - center);
+		m_context.GetCamera()->Initialize(center, radius);
+
+		// グリッドのスケールを調節する
+		float gridSize = 1.0f;
+		if (radius < 1.0f)
+		{
+			while (!(gridSize <= radius && radius <= gridSize * 10.0f))
+			{
+				gridSize /= 10.0f;
+			}
+		}
+		else
+		{
+			while (!(gridSize <= radius && radius <= gridSize * 10.0f))
+			{
+				gridSize *= 10.0f;
+			}
+		}
+		if (!m_grid.Initialize(m_context, gridSize, 10, 5))
+		{
+			SABA_ERROR("grid Init Fail.");
+			return false;
+		}
+
+		SABA_INFO("radisu [{}] grid [{}]", radius, gridSize);
+
+		return false;
 	}
 
 	void Viewer::OnMouseButtonStub(GLFWwindow * window, int button, int action, int mods)
