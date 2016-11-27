@@ -374,6 +374,30 @@ namespace saba
 		auto radius = glm::length(bboxMax - center);
 		m_context.GetCamera()->Initialize(center, radius);
 
+		// グリッドのスケールを調節する
+		float gridSize = 1.0f;
+		if (radius < 1.0f)
+		{
+			while (!(gridSize <= radius && radius <= gridSize * 10.0f))
+			{
+				gridSize /= 10.0f;
+			}
+		}
+		else
+		{
+			while (!(gridSize <= radius && radius <= gridSize * 10.0f))
+			{
+				gridSize *= 10.0f;
+			}
+		}
+		if (!m_grid.Initialize(m_context, gridSize, 10, 5))
+		{
+			SABA_ERROR("grid Init Fail.");
+			return false;
+		}
+
+		SABA_INFO("radisu [{}] grid [{}]", radius, gridSize);
+
 		return true;
 	}
 
