@@ -7,6 +7,8 @@ namespace saba
 {
 	saba::File::File()
 		: m_fp(nullptr)
+		, m_fileSize(0)
+		, m_badFlag(false)
 	{
 	}
 
@@ -20,11 +22,29 @@ namespace saba
 		std::wstring wFilepath = ToWString(filepath);
 		std::wstring wMode = ToWString(mode);
 		auto err = _wfopen_s(&m_fp, wFilepath.c_str(), wMode.c_str());
-		return err == 0;
+		if (err != 0)
+		{
+			return false;
+		}
 #else
 		m_fp = fopen(filepath, mode);
-		return m_fp != nullptr;
+		if (m_fp == nullptr)
+		{
+			return false;
+		}
 #endif
+
+		ClearBadFlag();
+
+		Seek(0, SeekDir::End);
+		m_fileSize = Tell();
+		Seek(0, SeekDir::Begin);
+		if (IsBad())
+		{
+			Close();
+			return false;
+		}
+		return true;
 	}
 
 	bool File::Open(const char * filepath)
@@ -53,12 +73,29 @@ namespace saba
 		{
 			fclose(m_fp);
 			m_fp = nullptr;
+			m_fileSize = 0;
+			m_badFlag = false;
 		}
 	}
 
 	bool saba::File::IsOpen()
 	{
 		return m_fp != nullptr;
+	}
+
+	File::Offset File::GetSize() const
+	{
+		return m_fileSize;
+	}
+
+	bool File::IsBad() const
+	{
+		return m_badFlag;
+	}
+
+	void File::ClearBadFlag()
+	{
+		m_badFlag = false;
 	}
 
 	FILE * saba::File::GetFilePointer() const
@@ -73,15 +110,9 @@ namespace saba
 			return false;
 		}
 
-		Seek(0, SeekDir::End);
-		auto fileSize = Tell();
-		if (fileSize == -1)
-		{
-			return false;
-		}
-		buffer->resize(fileSize);
+		buffer->resize(m_fileSize);
 		Seek(0, SeekDir::Begin);
-		if (!Read(&(*buffer)[0], fileSize))
+		if (!Read(&(*buffer)[0], m_fileSize))
 		{
 			return false;
 		}
@@ -111,10 +142,19 @@ namespace saba
 			return false;
 		}
 #if _WIN32
-		return _fseeki64(m_fp, offset, cOrigin) == 0;
+		if (_fseeki64(m_fp, offset, cOrigin) != 0)
+		{
+			m_badFlag = true;
+			return false;
+		}
 #else // _WIN32
-		return fseek(m_fp, offset, cOrigin) == 0;
+		if (fseek(m_fp, offset, cOrigin) != 0)
+		{
+			m_badFlag = true;
+			return false;
+		}
 #endif // _WIN32
+		return true;
 	}
 
 	File::Offset File::Tell()

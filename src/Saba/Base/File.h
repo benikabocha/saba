@@ -31,6 +31,9 @@ namespace saba
 
 		void Close();
 		bool IsOpen();
+		Offset GetSize() const;
+		bool IsBad() const;
+		void ClearBadFlag();
 
 		FILE* GetFilePointer() const;
 
@@ -58,10 +61,19 @@ namespace saba
 				return false;
 			}
 #if _WIN32
-			return fread_s(buffer, sizeof(T) * count, sizeof(T), count, m_fp) == count;
+			if (fread_s(buffer, sizeof(T) * count, sizeof(T), count, m_fp) != count)
+			{
+				m_badFlag = true;
+				return false;
+			}
 #else // !_WIN32
-			return fread(buffer, sizeof(T), count, m_fp) == count;
+			if (fread(buffer, sizeof(T), count, m_fp) != count)
+			{
+				m_badFlag = true;
+				return false;
+			}
 #endif //!_WIN32
+			return true;
 		}
 
 		template <typename T>
@@ -80,7 +92,12 @@ namespace saba
 				return false;
 			}
 
-			return fwrite(buffer, sizeof(T), count, m_fp) == count;
+			if (fwrite(buffer, sizeof(T), count, m_fp) != count)
+			{
+				m_badFlag = true;
+				return false;
+			}
+			return true;
 		}
 
 	private:
@@ -88,6 +105,8 @@ namespace saba
 
 	private:
 		FILE*	m_fp;
+		Offset	m_fileSize;
+		bool	m_badFlag;
 	};
 
 	class TextFileReader
