@@ -44,7 +44,7 @@ namespace saba
 			{
 				timespec ts;
 				clock_gettime(CLOCK_MONOTONIC, &ts);
-				uint64_t time = (uint64_t)tv.tv_sec * 1000000000 + (uint64_t)tv.tv_usec;
+				uint64_t time = (uint64_t)ts.tv_sec * 1000000000 + (uint64_t)ts.tv_nsec;
 				return (double)time / 1000000000.0;
 			}
 		};
