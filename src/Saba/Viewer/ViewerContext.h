@@ -21,9 +21,11 @@ namespace saba
 		Camera* GetCamera() { return &m_camera; }
 
 		bool IsUIEnabled() const { return m_enableUI; }
+		double GetElapsed() const { return m_elapsed; }
 
 	private:
 		void EnableUI(bool enable) { m_enableUI = enable; }
+		void SetElapsedTime(double elapsed) { m_elapsed = elapsed; }
 
 	private:
 		std::string	m_workDir;
@@ -33,6 +35,8 @@ namespace saba
 		Camera	m_camera;
 
 		bool	m_enableUI;
+
+		double	m_elapsed;
 	};
 }
 

@@ -104,6 +104,8 @@ namespace saba
 		CameraMode	m_cameraMode;
 		Grid		m_grid;
 
+		double		m_prevTime;
+
 		// InfoUI
 		bool	m_enableInfoUI;
 

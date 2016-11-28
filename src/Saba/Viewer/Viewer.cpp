@@ -3,6 +3,7 @@
 #include <Saba/Base/Singleton.h>
 #include <Saba/Base/Log.h>
 #include <Saba/Base/Path.h>
+#include <Saba/Base/Time.h>
 #include <Saba/GL/GLSLUtil.h>
 #include <Saba/GL/GLShaderUtil.h>
 
@@ -144,6 +145,8 @@ namespace saba
 		m_objModelDrawContext = std::make_unique<GLOBJModelDrawContext>(&m_context);
 		m_mmdModelDrawContext = std::make_unique<GLMMDModelDrawContext>(&m_context);
 
+		m_prevTime = GetTime();
+
 		return true;
 	}
 
@@ -207,6 +210,9 @@ namespace saba
 				}
 			}
 
+			double time = GetTime();
+			double elapsed = time - m_prevTime;
+			m_context.SetElapsedTime(elapsed);
 			Draw();
 
 			if (m_context.IsUIEnabled())
@@ -433,6 +439,8 @@ namespace saba
 
 		SABA_INFO("radisu [{}] grid [{}]", radius, gridSize);
 
+		m_prevTime = GetTime();
+
 		return true;
 	}
 
@@ -496,6 +504,8 @@ namespace saba
 		}
 
 		SABA_INFO("radisu [{}] grid [{}]", radius, gridSize);
+
+		m_prevTime = GetTime();
 
 		return false;
 	}
