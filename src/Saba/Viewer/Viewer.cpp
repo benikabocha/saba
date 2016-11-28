@@ -63,7 +63,9 @@ namespace saba
 
 	Viewer::Viewer()
 		: m_glfwInitialized(false)
+		, m_enableInfoUI(true)
 		, m_enableLogUI(true)
+		, m_enableCommandUI(true)
 	{
 		if (!glfwInit())
 		{
@@ -196,7 +198,9 @@ namespace saba
 				{
 					if (ImGui::BeginMenu("Window"))
 					{
+						ImGui::MenuItem("Info", nullptr, &m_enableInfoUI);
 						ImGui::MenuItem("Log", nullptr, &m_enableLogUI);
+						ImGui::MenuItem("Command", nullptr, &m_enableCommandUI);
 						ImGui::EndMenu();
 					}
 					ImGui::EndMainMenuBar();
@@ -207,6 +211,7 @@ namespace saba
 
 			if (m_context.IsUIEnabled())
 			{
+				DrawInfoUI();
 				DrawLogUI();
 				DrawCommandUI();
 				ImGui::Render();
@@ -251,6 +256,24 @@ namespace saba
 		}
 	}
 
+	void Viewer::DrawInfoUI()
+	{
+		if (!m_enableCommandUI)
+		{
+			return;
+		}
+		ImGui::SetNextWindowPos(ImVec2(10, 30));
+		if (!ImGui::Begin("Info", &m_enableCommandUI, ImVec2(0, 0), 0.3f, ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoSavedSettings))
+		{
+			ImGui::End();
+			return;
+		}
+		ImGui::Text("Info");
+		ImGui::Separator();
+		ImGui::Text("Time %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
+		ImGui::End();
+	}
+
 	void Viewer::DrawLogUI()
 	{
 		if (!m_enableLogUI)
@@ -278,7 +301,7 @@ namespace saba
 
 	void Viewer::DrawCommandUI()
 	{
-		if (!m_enableLogUI)
+		if (!m_enableCommandUI)
 		{
 			return;
 		}

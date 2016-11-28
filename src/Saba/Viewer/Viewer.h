@@ -59,6 +59,7 @@ namespace saba
 
 	private:
 		void Draw();
+		void DrawInfoUI();
 		void DrawLogUI();
 		void DrawCommandUI();
 
@@ -103,9 +104,15 @@ namespace saba
 		CameraMode	m_cameraMode;
 		Grid		m_grid;
 
-		// LogWindow
+		// InfoUI
+		bool	m_enableInfoUI;
+
+		// LogUI
 		std::shared_ptr<ImGUILogSink>	m_imguiLogSink;
 		bool							m_enableLogUI;
+
+		// CommandUI
+		bool	m_enableCommandUI;
 	};
 }
 
