@@ -199,7 +199,7 @@ namespace saba
 				}
 			}
 
-			MMDIkSolver* GetMMDIKSolver(size_t idx)
+			MMDIkSolver* GetMMDIKSolver(size_t idx) override
 			{
 				return m_ikSolvers[idx].get();
 			}
