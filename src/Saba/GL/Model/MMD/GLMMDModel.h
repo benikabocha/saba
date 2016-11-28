@@ -6,6 +6,8 @@
 #include <Saba/Model/MMD/MMDModel.h>
 #include <Saba/Model/MMD/MMDMaterial.h>
 
+#include <Saba/Model/MMD/VMDAnimation.h>
+
 #include <memory>
 
 namespace saba
@@ -35,6 +37,10 @@ namespace saba
 		bool Create(std::shared_ptr<MMDModel> mmdModel);
 		void Destroy();
 
+		bool LoadAnimation(const VMDFile& vmd);
+
+		void Update(double elapsed);
+
 		const GLBufferObject& GetPositionVBO() const { return m_posVBO; }
 		const GLBufferObject& GetNormalVBO() const { return m_norVBO; }
 		const GLBufferObject& GetUVVBO() const { return m_uvVBO; }
@@ -51,6 +57,11 @@ namespace saba
 		const std::vector<MMDSubMesh>& GetSubMeshes() const { return m_subMeshes; }
 
 	private:
+		std::shared_ptr<MMDModel>		m_mmdModel;
+
+		std::unique_ptr<VMDAnimation>	m_vmdAnim;
+		double							m_animTime;
+
 		GLBufferObject	m_posVBO;
 		GLBufferObject	m_norVBO;
 		GLBufferObject	m_uvVBO;

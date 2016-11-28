@@ -76,6 +76,9 @@ namespace saba
 
 	void GLMMDModelDrawer::Draw(ViewerContext * ctxt)
 	{
+		double elapsed = ctxt->GetElapsed();
+		m_mmdModel->Update(elapsed);
+
 		const auto& view = ctxt->GetCamera()->GetViewMatrix();
 		const auto& proj = ctxt->GetCamera()->GetProjectionMatrix();
 

@@ -98,11 +98,63 @@ namespace saba
 			dest.m_materialID = src.m_materialID;
 		}
 
+		m_mmdModel = mmdModel;
+
 		return true;
 	}
 
 	void GLMMDModel::Destroy()
 	{
+		m_mmdModel.reset();
+
+		m_posVBO.Destroy();
+		m_norVBO.Destroy();
+		m_uvVBO.Destroy();
+		m_ibo.Destroy();
+	}
+
+	bool GLMMDModel::LoadAnimation(const VMDFile& vmd)
+	{
+		if (m_mmdModel == nullptr)
+		{
+			SABA_WARN("Loda Animation Fail. model is null");
+			return false;
+		}
+
+		m_vmdAnim = std::make_unique<VMDAnimation>();
+		if (!m_vmdAnim->Create(vmd, m_mmdModel))
+		{
+			m_vmdAnim.reset();
+			return false;
+		}
+
+		m_animTime = 0.0f;
+		return true;
+	}
+
+	void GLMMDModel::Update(double elapsed)
+	{
+		if (m_mmdModel == nullptr)
+		{
+			return;
+		}
+		if (m_vmdAnim == nullptr)
+		{
+			return;
+		}
+
+		if (m_vmdAnim != 0)
+		{
+			m_animTime += elapsed;
+			double frame = m_animTime * 30.0;
+			m_vmdAnim->Evaluate((float)frame);
+		}
+
+		m_mmdModel->Update((float)elapsed);
+
+		size_t vtxCount = m_mmdModel->GetVertexCount();
+		UpdateVBO(m_posVBO, m_mmdModel->GetUpdatePositions(), vtxCount);
+		UpdateVBO(m_norVBO, m_mmdModel->GetUpdateNormals(), vtxCount);
 	}
 
 }

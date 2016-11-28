@@ -12,6 +12,7 @@
 #include <Saba/GL/Model/OBJ/GLOBJModelDrawer.h>
 
 #include <Saba/Model/MMD/PMDModel.h>
+#include <Saba/Model/MMD/VMDFile.h>
 #include <Saba/GL/Model/MMD/GLMMDModel.h>
 #include <Saba/GL/Model/MMD/GLMMDModelDrawer.h>
 
@@ -212,6 +213,7 @@ namespace saba
 
 			double time = GetTime();
 			double elapsed = time - m_prevTime;
+			m_prevTime = time;
 			m_context.SetElapsedTime(elapsed);
 			Draw();
 
@@ -376,6 +378,18 @@ namespace saba
 				return false;
 			}
 		}
+		else if (ext == "vmd")
+		{
+			if (!LoadVMDFile(filepath))
+			{
+				return false;
+			}
+		}
+		else
+		{
+			SABA_INFO("Unknown File Ext [{}]", ext);
+			return false;
+		}
 
 		SABA_INFO("Cmd Open Succeeded.");
 
@@ -505,9 +519,28 @@ namespace saba
 
 		SABA_INFO("radisu [{}] grid [{}]", radius, gridSize);
 
+		m_mmdModel = glMMDModel;
+
 		m_prevTime = GetTime();
 
 		return false;
+	}
+
+	bool Viewer::LoadVMDFile(const std::string & filename)
+	{
+		if (m_mmdModel == nullptr)
+		{
+			SABA_INFO("MMD Model is null.");
+			return false;
+		}
+
+		VMDFile vmd;
+		if (!ReadVMDFile(&vmd, filename.c_str()))
+		{
+			return false;
+		}
+
+		return m_mmdModel->LoadAnimation(vmd);
 	}
 
 	void Viewer::OnMouseButtonStub(GLFWwindow * window, int button, int action, int mods)
