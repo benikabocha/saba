@@ -53,7 +53,7 @@ namespace saba
 			float stop = 1.0f;
 			float t = 0.5f;
 			float x = b.EvalX(t);
-			while (abs(time - x) > e)
+			while (std::abs(time - x) > e)
 			{
 				if (time < x)
 				{
