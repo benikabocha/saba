@@ -1,5 +1,5 @@
-﻿#ifndef VMDANIMATION_H_
-#define VMDANIMATION_H_
+﻿#ifndef SABA_MODEL_MMD_VMDANIMATION_H_
+#define SABA_MODEL_MMD_VMDANIMATION_H_
 
 #include "MMDModel.h"
 #include "MMDNode.h"
@@ -138,4 +138,4 @@ namespace saba
 
 }
 
-#endif // !VMDANIMATION_H_
+#endif // !SABA_MODEL_MMD_VMDANIMATION_H_

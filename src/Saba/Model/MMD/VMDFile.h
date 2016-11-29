@@ -1,5 +1,5 @@
-﻿#ifndef VMFILE_H_
-#define VMFILE_H_
+﻿#ifndef SABA_MODEL_MMD_VMDFILE_H_
+#define SABA_MODEL_MMD_VMDFILE_H_
 
 #include "MMDFileString.h"
 
@@ -90,4 +90,4 @@ namespace saba
 	bool ReadVMDFile(VMDFile* vmd, const char* filename);
 }
 
-#endif // !VMFILE_H_
+#endif // !SABA_MODEL_MMD_VMDFILE_H_
