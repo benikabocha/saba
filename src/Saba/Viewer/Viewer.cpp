@@ -297,6 +297,8 @@ namespace saba
 		{
 			ImGui::TextUnformatted(log.c_str());
 		}
+		// スクロールする場合、最後の行が見えなくなるため、ダミーの行を追加
+		ImGui::TextUnformatted("");
 
 		if (m_imguiLogSink->IsAdded())
 		{
