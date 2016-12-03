@@ -46,8 +46,8 @@ namespace saba
 					std::wstring_convert<std::codecvt_utf8<uint16_t>, uint16_t> utf8Conv;
 					*val = utf8Conv.to_bytes(&buffer[0], &buffer[0] + buffer.size());
 #else
-					std::u16string utf16Str(bufSize, u'\0');
-					file.Read(&utf16Str[0], bufSize);
+					std::u16string utf16Str(bufSize / 2, u'\0');
+					file.Read(&utf16Str[0], utf16Str.size());
 
 					std::wstring_convert<std::codecvt_utf8<char16_t>, char16_t> utf8Conv;
 					*val = utf8Conv.to_bytes(utf16Str);
