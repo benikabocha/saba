@@ -52,8 +52,7 @@ namespace saba
 		{
 			if (chain.m_enableAxisLimit)
 			{
-				//auto angle = (chain.m_limitMax - chain.m_limitMin) * 0.5f;
-				auto angle = chain.m_limitMax;
+				auto angle = (chain.m_limitMax - chain.m_limitMin) * 0.5f;
 				auto r = glm::rotate(glm::quat(), angle.x, glm::vec3(1, 0, 0));
 				r = glm::rotate(r, angle.y, glm::vec3(0, 1, 0));
 				r = glm::rotate(r, angle.z, glm::vec3(0, 0, 1));
