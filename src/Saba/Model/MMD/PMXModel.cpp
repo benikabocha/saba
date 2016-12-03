@@ -234,14 +234,60 @@ namespace saba
 		m_updatePositions.resize(m_positions.size());
 		m_updateNormals.resize(m_normals.size());
 
-		m_indices.reserve(pmx.m_faces.size() * 3);
-		for (const auto& face : pmx.m_faces)
+
+		m_indexElementSize = pmx.m_header.m_vertexIndexSize;
+		m_indices.resize(pmx.m_faces.size() * 3 * m_indexElementSize);
+		m_indexCount = pmx.m_faces.size() * 3;
+		switch (m_indexElementSize)
 		{
-			for (int i = 0; i < 3; i++)
+		case 1:
+		{
+			int idx = 0;
+			uint8_t* indices = (uint8_t*)m_indices.data();
+			for (const auto& face : pmx.m_faces)
 			{
-				auto vi = face.m_vertices[3 - i - 1];
-				m_indices.push_back(vi);
+				for (int i = 0; i < 3; i++)
+				{
+					auto vi = face.m_vertices[3 - i - 1];
+					indices[idx] = (uint8_t)vi;
+					idx++;
+				}
 			}
+			break;
+		}
+		case 2:
+		{
+			int idx = 0;
+			uint16_t* indices = (uint16_t*)m_indices.data();
+			for (const auto& face : pmx.m_faces)
+			{
+				for (int i = 0; i < 3; i++)
+				{
+					auto vi = face.m_vertices[3 - i - 1];
+					indices[idx] = (uint16_t)vi;
+					idx++;
+				}
+			}
+			break;
+		}
+		case 4:
+		{
+			int idx = 0;
+			uint32_t* indices = (uint32_t*)m_indices.data();
+			for (const auto& face : pmx.m_faces)
+			{
+				for (int i = 0; i < 3; i++)
+				{
+					auto vi = face.m_vertices[3 - i - 1];
+					indices[idx] = (uint32_t)vi;
+					idx++;
+				}
+			}
+			break;
+		}
+		default:
+			SABA_ERROR("Unsupported Index Size: [{}]", m_indexElementSize);
+			return false;
 		}
 
 		std::vector<std::string> texturePaths;

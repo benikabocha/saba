@@ -39,8 +39,8 @@ namespace saba
 		const glm::vec3* GetUpdateNormals() const override { return &m_updateNormals[0]; }
 		const glm::vec2* GetUpdateUVs() const override { return &m_uvs[0]; }
 
-		size_t GetIndexElementSize() const override { return sizeof(uint16_t); }
-		size_t GetIndexCount() const override { return m_indices.size(); }
+		size_t GetIndexElementSize() const override { return m_indexElementSize; }
+		size_t GetIndexCount() const override { return m_indexCount; }
 		const void* GetIndices() const override { return &m_indices[0]; }
 
 		size_t GetMaterialCount() const override { return m_materials.size(); }
@@ -79,7 +79,9 @@ namespace saba
 		std::vector<glm::vec3>	m_updatePositions;
 		std::vector<glm::vec3>	m_updateNormals;
 
-		std::vector<uint16_t> m_indices;
+		std::vector<char>	m_indices;
+		size_t				m_indexCount;
+		size_t				m_indexElementSize;
 
 		MMDBlendShape				m_baseShape;
 
