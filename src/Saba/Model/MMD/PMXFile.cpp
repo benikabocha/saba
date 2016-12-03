@@ -41,13 +41,19 @@ namespace saba
 #if _WIN32
 					// Visual C++ では、u16string ではリンクできないという問題がある
 					std::vector<uint16_t> buffer(bufSize / 2);
-					file.Read(buffer.data(), buffer.size());
+					if (!file.Read(buffer.data(), buffer.size()))
+					{
+						return false;
+					}
 
 					std::wstring_convert<std::codecvt_utf8<uint16_t>, uint16_t> utf8Conv;
 					*val = utf8Conv.to_bytes(&buffer[0], &buffer[0] + buffer.size());
 #else
 					std::u16string utf16Str(bufSize / 2, u'\0');
-					file.Read(&utf16Str[0], utf16Str.size());
+					if (!file.Read(&utf16Str[0], utf16Str.size()))
+					{
+						return false;
+					}
 
 					std::wstring_convert<std::codecvt_utf8<char16_t>, char16_t> utf8Conv;
 					*val = utf8Conv.to_bytes(utf16Str);
@@ -457,7 +463,8 @@ namespace saba
 						Read(&data.m_position, file);
 					}
 				}
-				else if (morph.m_morphType == PMXMorphType::AddUV1 ||
+				else if (morph.m_morphType == PMXMorphType::UV ||
+					morph.m_morphType == PMXMorphType::AddUV1 ||
 					morph.m_morphType == PMXMorphType::AddUV2 ||
 					morph.m_morphType == PMXMorphType::AddUV3 ||
 					morph.m_morphType == PMXMorphType::AddUV4
@@ -526,6 +533,11 @@ namespace saba
 						Read(&data.m_translateVelocity, file);
 						Read(&data.m_rotateTorque, file);
 					}
+				}
+				else
+				{
+					SABA_ERROR("Unsupported Morph Type:[{}]", (int)morph.m_morphType);
+					return false;
 				}
 			}
 
