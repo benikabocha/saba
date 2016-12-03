@@ -39,6 +39,8 @@ namespace saba
 
 		bool LoadAnimation(const VMDFile& vmd);
 
+		void SetAnimationTime(double time);
+		double GetAnimationTime() const;
 		void Update(double elapsed);
 
 		const GLBufferObject& GetPositionVBO() const { return m_posVBO; }

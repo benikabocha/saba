@@ -6,6 +6,8 @@
 #include <Saba/GL/GLShaderUtil.h>
 #include <Saba/GL/GLTextureUtil.h>
 
+#include <imgui.h>
+
 namespace saba
 {
 	GLMMDModelDrawer::GLMMDModelDrawer(GLMMDModelDrawContext * ctxt, std::shared_ptr<GLMMDModel> mmdModel)
@@ -14,6 +16,9 @@ namespace saba
 	{
 		SABA_ASSERT(ctxt != nullptr);
 		SABA_ASSERT(mmdModel != nullptr);
+
+		m_clipElapsed = true;
+		m_stepAnimMode = false;
 	}
 
 	GLMMDModelDrawer::~GLMMDModelDrawer()
@@ -77,7 +82,45 @@ namespace saba
 	void GLMMDModelDrawer::Draw(ViewerContext * ctxt)
 	{
 		double elapsed = ctxt->GetElapsed();
-		m_mmdModel->Update(elapsed);
+
+		ImGui::Begin("MMDDrawCtrl");
+		ImGui::Checkbox("Clip Elapsed", &m_clipElapsed);
+		float animFrame = (float)(m_mmdModel->GetAnimationTime() * 30.0);
+		if (ImGui::InputFloat("Frame", &animFrame))
+		{
+			m_mmdModel->SetAnimationTime(animFrame / 30.0);
+			m_mmdModel->Update(0.0);
+			elapsed = 0;
+			m_stepAnimMode = true;
+		}
+		ImGui::Checkbox("StepFrameMode", &m_stepAnimMode);
+		if (ImGui::Button("Step FF"))
+		{
+			m_stepAnimMode = true;
+			elapsed = 0;
+			m_mmdModel->Update(1.0f / 30.0f);
+		}
+		if (ImGui::Button("Step FR"))
+		{
+			m_stepAnimMode = true;
+			elapsed = 0;
+			m_mmdModel->Update(-1.0f / 30.0f);
+		}
+		ImGui::End();
+
+
+		if (m_clipElapsed)
+		{
+			if (elapsed > 1.0f / 30.0f)
+			{
+				elapsed = 1.0f / 30.0f;
+			}
+		}
+
+		if (!m_stepAnimMode)
+		{
+			m_mmdModel->Update(elapsed);
+		}
 
 		const auto& view = ctxt->GetCamera()->GetViewMatrix();
 		const auto& proj = ctxt->GetCamera()->GetProjectionMatrix();

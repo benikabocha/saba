@@ -11,6 +11,7 @@ namespace saba
 {
 	GLMMDModel::GLMMDModel()
 	{
+		m_animTime = 0;
 	}
 
 	GLMMDModel::~GLMMDModel()
@@ -163,6 +164,16 @@ namespace saba
 
 		m_animTime = 0.0f;
 		return true;
+	}
+
+	void GLMMDModel::SetAnimationTime(double time)
+	{
+		m_animTime = time;
+	}
+
+	double GLMMDModel::GetAnimationTime() const
+	{
+		return m_animTime;
 	}
 
 	void GLMMDModel::Update(double elapsed)

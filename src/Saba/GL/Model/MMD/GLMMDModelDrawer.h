@@ -41,6 +41,10 @@ namespace saba
 		std::vector<MaterialShader>	m_materialShaders;
 
 		glm::mat4	m_world;
+
+		// IMGui
+		bool	m_clipElapsed;
+		bool	m_stepAnimMode;
 	};
 }
 
