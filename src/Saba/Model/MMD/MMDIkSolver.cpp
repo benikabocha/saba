@@ -241,7 +241,7 @@ namespace saba
 			auto chainTargetVec = glm::normalize(chainTargetPos);
 
 			auto dot = glm::dot(chainTargetVec, chainIkVec);
-			if ((1.0f - dot) < std::numeric_limits<float>::epsilon())
+			if ((1.0f - dot) < 0.00001f)
 			{
 				continue;
 			}
