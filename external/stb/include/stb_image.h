@@ -4468,6 +4468,7 @@ static int stbi__parse_png_file(stbi__png *z, int scan, int req_comp)
                if ((1 << 30) / s->img_x / 4 < s->img_y) return stbi__err("too large","Corrupt PNG");
                // if SCAN_header, have to scan to see if we have a tRNS
             }
+			if (z->depth == 16) s->img_n *= 2;
             break;
          }
 
