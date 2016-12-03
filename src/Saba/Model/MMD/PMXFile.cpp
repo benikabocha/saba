@@ -1,4 +1,4 @@
-#include "PMXFile.h"
+ï»¿#include "PMXFile.h"
 
 #include <Saba/Base/Log.h>
 #include <Saba/Base/File.h>
@@ -36,7 +36,7 @@ namespace saba
 				if (pmx->m_header.m_encode == 0)
 				{
 					// UTF16
-					// wchat_t ‚Í 16bit‚Æ‚ÍŒÀ‚ç‚È‚¢‚Ì‚Å’ˆÓiMac‚âLinux‚Å‚Í32bitj
+					// wchat_t ã¯ 16bitã¨ã¯é™ã‚‰ãªã„ã®ã§æ³¨æ„ï¼ˆMacã‚„Linuxã§ã¯32bitï¼‰
 					std::vector<uint16_t> buffer(bufSize / 2);
 					file.Read(buffer.data(), buffer.size());
 

@@ -1,4 +1,4 @@
-#include "PMXModel.h"
+ï»¿#include "PMXModel.h"
 
 #include "PMXFile.h"
 
@@ -43,7 +43,7 @@ namespace saba
 		auto* updatePosition = m_updatePositions.data();
 		auto* updateNormal = m_updateNormals.data();
 
-		// ’¸“_‚ğƒRƒs[
+		// é ‚ç‚¹ã‚’ã‚³ãƒ”ãƒ¼
 		auto srcPos = position;
 		auto srcNor = normal;
 		auto destPos = updatePosition;
@@ -59,7 +59,7 @@ namespace saba
 			destNor++;
 		}
 
-		// BlendShape‚Ìˆ—
+		// BlendShapeã®å‡¦ç†
 		if (m_baseShape.m_vertices.empty())
 		{
 			for (const auto& keyShape : (*m_blendShapeMan.GetBlendKeyShapes()))
@@ -252,7 +252,7 @@ namespace saba
 			texturePaths.emplace_back(std::move(texPath));
 		}
 
-		// Material‚ğƒRƒs[
+		// Materialã‚’ã‚³ãƒ”ãƒ¼
 		m_materials.reserve(pmx.m_materials.size());
 		m_subMeshes.reserve(pmx.m_materials.size());
 		uint32_t beginIndex = 0;
@@ -306,7 +306,7 @@ namespace saba
 				}
 				else if (pmxMat.m_sphereMode == PMXSphereMode::SubTexture)
 				{
-					// TODO: SphareTexture ‚ª SubTexture ‚Ìˆ—
+					// TODO: SphareTexture ãŒ SubTexture ã®å‡¦ç†
 				}
 			}
 

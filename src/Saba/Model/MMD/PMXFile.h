@@ -1,4 +1,4 @@
-#ifndef SABA_MODEL_PMXFILE_H_
+ï»¿#ifndef SABA_MODEL_PMXFILE_H_
 #define SABA_MODEL_PMXFILE_H_
 
 #include "MMDFileString.h"
@@ -103,14 +103,14 @@ namespace saba
 	};
 
 	/*
-	0x01:—¼–Ê•`‰æ
-	0x02:’n–Ê‰e
-	0x04:ƒZƒ‹ƒtƒVƒƒƒhƒEƒ}ƒbƒv‚Ö‚Ì•`‰æ
-	0x08:ƒZƒ‹ƒtƒVƒƒƒhƒE‚Ì•`‰æ
-	0x10:ƒGƒbƒW•`‰æ
-	0x20:’¸“_ƒJƒ‰[(¦2.1Šg’£)
-	0x40:Point•`‰æ(¦2.1Šg’£)
-	0x80:Line•`‰æ(¦2.1Šg’£)
+	0x01:ä¸¡é¢æç”»
+	0x02:åœ°é¢å½±
+	0x04:ã‚»ãƒ«ãƒ•ã‚·ãƒ£ãƒ‰ã‚¦ãƒãƒƒãƒ—ã¸ã®æç”»
+	0x08:ã‚»ãƒ«ãƒ•ã‚·ãƒ£ãƒ‰ã‚¦ã®æç”»
+	0x10:ã‚¨ãƒƒã‚¸æç”»
+	0x20:é ‚ç‚¹ã‚«ãƒ©ãƒ¼(â€»2.1æ‹¡å¼µ)
+	0x40:Pointæç”»(â€»2.1æ‹¡å¼µ)
+	0x80:Lineæç”»(â€»2.1æ‹¡å¼µ)
 	*/
 	enum class PMXDrawModeFlags : uint8_t
 	{
@@ -125,10 +125,10 @@ namespace saba
 	};
 
 	/*
-	0:–³Œø
-	1:æZ
-	2:‰ÁZ
-	3:ƒTƒuƒeƒNƒXƒ`ƒƒ(’Ç‰ÁUV1‚Ìx,y‚ğUVQÆ‚µ‚Ä’ÊíƒeƒNƒXƒ`ƒƒ•`‰æ‚ğs‚¤)
+	0:ç„¡åŠ¹
+	1:ä¹—ç®—
+	2:åŠ ç®—
+	3:ã‚µãƒ–ãƒ†ã‚¯ã‚¹ãƒãƒ£(è¿½åŠ UV1ã®x,yã‚’UVå‚ç…§ã—ã¦é€šå¸¸ãƒ†ã‚¯ã‚¹ãƒãƒ£æç”»ã‚’è¡Œã†)
 	*/
 	enum class PMXSphereMode : uint8_t
 	{
@@ -140,8 +140,8 @@ namespace saba
 
 	enum class PMXToonMode : uint8_t
 	{
-		Separate,	//!< 0:ŒÂ•ÊToon
-		Common,		//!< 1:‹¤—LToon[0-9] toon01.bmp`toon10.bmp
+		Separate,	//!< 0:å€‹åˆ¥Toon
+		Common,		//!< 1:å…±æœ‰Toon[0-9] toon01.bmpï½toon10.bmp
 	};
 
 	struct PMXMaterial
@@ -172,24 +172,24 @@ namespace saba
 	};
 
 	/*
-	0x0001  : Ú‘±æ(PMDqƒ{[ƒ“w’è)•\¦•û–@ -> 0:À•WƒIƒtƒZƒbƒg‚Åw’è 1:ƒ{[ƒ“‚Åw’è
+	0x0001  : æ¥ç¶šå…ˆ(PMDå­ãƒœãƒ¼ãƒ³æŒ‡å®š)è¡¨ç¤ºæ–¹æ³• -> 0:åº§æ¨™ã‚ªãƒ•ã‚»ãƒƒãƒˆã§æŒ‡å®š 1:ãƒœãƒ¼ãƒ³ã§æŒ‡å®š
 
-	0x0002  : ‰ñ“]‰Â”\
-	0x0004  : ˆÚ“®‰Â”\
-	0x0008  : •\¦
-	0x0010  : ‘€ì‰Â
+	0x0002  : å›è»¢å¯èƒ½
+	0x0004  : ç§»å‹•å¯èƒ½
+	0x0008  : è¡¨ç¤º
+	0x0010  : æ“ä½œå¯
 
 	0x0020  : IK
 
-	0x0080  : ƒ[ƒJƒ‹•t—^ | •t—^‘ÎÛ 0:ƒ†[ƒU[•ÏŒ`’l^IKƒŠƒ“ƒN^‘½d•t—^ 1:e‚Ìƒ[ƒJƒ‹•ÏŒ`—Ê
-	0x0100  : ‰ñ“]•t—^
-	0x0200  : ˆÚ“®•t—^
+	0x0080  : ãƒ­ãƒ¼ã‚«ãƒ«ä»˜ä¸ | ä»˜ä¸å¯¾è±¡ 0:ãƒ¦ãƒ¼ã‚¶ãƒ¼å¤‰å½¢å€¤ï¼IKãƒªãƒ³ã‚¯ï¼å¤šé‡ä»˜ä¸ 1:è¦ªã®ãƒ­ãƒ¼ã‚«ãƒ«å¤‰å½¢é‡
+	0x0100  : å›è»¢ä»˜ä¸
+	0x0200  : ç§»å‹•ä»˜ä¸
 
-	0x0400  : ²ŒÅ’è
-	0x0800  : ƒ[ƒJƒ‹²
+	0x0400  : è»¸å›ºå®š
+	0x0800  : ãƒ­ãƒ¼ã‚«ãƒ«è»¸
 
-	0x1000  : •¨—Œã•ÏŒ`
-	0x2000  : ŠO•”e•ÏŒ`
+	0x1000  : ç‰©ç†å¾Œå¤‰å½¢
+	0x2000  : å¤–éƒ¨è¦ªå¤‰å½¢
 	*/
 	enum class PMXBoneFlags : uint16_t
 	{
@@ -213,9 +213,9 @@ namespace saba
 		int32_t			m_ikBoneIndex;
 		unsigned char	m_enableLimit;
 
-		//m_enableLimit‚ª1‚Ì‚Æ‚«‚Ì‚İ
-		glm::vec3	m_limitMin;	//ƒ‰ƒWƒAƒ“‚Å•\Œ»
-		glm::vec3	m_limitMax;	//ƒ‰ƒWƒAƒ“‚Å•\Œ»
+		//m_enableLimitãŒ1ã®ã¨ãã®ã¿
+		glm::vec3	m_limitMin;	//ãƒ©ã‚¸ã‚¢ãƒ³ã§è¡¨ç¾
+		glm::vec3	m_limitMax;	//ãƒ©ã‚¸ã‚¢ãƒ³ã§è¡¨ç¾
 	};
 
 	struct PMXBone
@@ -229,44 +229,44 @@ namespace saba
 
 		PMXBoneFlags	m_boneFlag;
 
-		glm::vec3	m_positionOffset;	//Ú‘±æ:0‚Ìê‡
-		int32_t		m_linkBoneIndex;	//Ú‘±æ:1‚Ìê‡
+		glm::vec3	m_positionOffset;	//æ¥ç¶šå…ˆ:0ã®å ´åˆ
+		int32_t		m_linkBoneIndex;	//æ¥ç¶šå…ˆ:1ã®å ´åˆ
 
-										//u‰ñ“]•t—^v‚Ü‚½‚ÍuˆÚ“®•t—^v‚ª—LŒø‚Ì‚İ
+										//ã€Œå›è»¢ä»˜ä¸ã€ã¾ãŸã¯ã€Œç§»å‹•ä»˜ä¸ã€ãŒæœ‰åŠ¹ã®ã¿
 		int32_t	m_giftBoneIndex;
 		float	m_giftWeight;
 
-		//u²ŒÅ’èv‚ª—LŒø‚Ì‚İ
+		//ã€Œè»¸å›ºå®šã€ãŒæœ‰åŠ¹ã®ã¿
 		glm::vec3	m_fixedAxis;
 
-		//uƒ[ƒJƒ‹²v‚ª—LŒø‚Ì‚İ
+		//ã€Œãƒ­ãƒ¼ã‚«ãƒ«è»¸ã€ãŒæœ‰åŠ¹ã®ã¿
 		glm::vec3	m_localXAxis;
 		glm::vec3	m_localZAxis;
 
-		//uŠO•”e•ÏŒ`v‚ª—LŒø‚Ì‚İ
+		//ã€Œå¤–éƒ¨è¦ªå¤‰å½¢ã€ãŒæœ‰åŠ¹ã®ã¿
 		int32_t	m_keyValue;
 
-		//uIKv‚ª—LŒø‚Ì‚İ
+		//ã€ŒIKã€ãŒæœ‰åŠ¹ã®ã¿
 		int32_t	m_ikTargetBoneIndex;
 		int32_t	m_ikIterationCount;
-		float	m_ikLimit;	//ƒ‰ƒWƒAƒ“‚Å•\Œ»
+		float	m_ikLimit;	//ãƒ©ã‚¸ã‚¢ãƒ³ã§è¡¨ç¾
 
 		std::vector<PMXIKLink>	m_ikLinks;
 	};
 
 
 	/*
-	0:ƒOƒ‹[ƒv
-	1:’¸“_
-	2:ƒ{[ƒ“,
+	0:ã‚°ãƒ«ãƒ¼ãƒ—
+	1:é ‚ç‚¹
+	2:ãƒœãƒ¼ãƒ³,
 	3:UV,
-	4:’Ç‰ÁUV1
-	5:’Ç‰ÁUV2
-	6:’Ç‰ÁUV3
-	7:’Ç‰ÁUV4
-	8:Ş¿
-	9:ƒtƒŠƒbƒv(¦2.1Šg’£)
-	10:ƒCƒ“ƒpƒ‹ƒX(¦2.1Šg’£)
+	4:è¿½åŠ UV1
+	5:è¿½åŠ UV2
+	6:è¿½åŠ UV3
+	7:è¿½åŠ UV4
+	8:æè³ª
+	9:ãƒ•ãƒªãƒƒãƒ—(â€»2.1æ‹¡å¼µ)
+	10:ã‚¤ãƒ³ãƒ‘ãƒ«ã‚¹(â€»2.1æ‹¡å¼µ)
 	*/
 	enum class PMXMorphType : uint8_t
 	{
@@ -288,7 +288,7 @@ namespace saba
 		std::string	m_name;
 		std::string	m_englishName;
 
-		uint8_t			m_controlPanel;	//1:”û(¶‰º) 2:–Ú(¶ã) 3:Œû(‰Eã) 4:‚»‚Ì‘¼(‰E‰º)  | 0:ƒVƒXƒeƒ€—\–ñ
+		uint8_t			m_controlPanel;	//1:çœ‰(å·¦ä¸‹) 2:ç›®(å·¦ä¸Š) 3:å£(å³ä¸Š) 4:ãã®ä»–(å³ä¸‹)  | 0:ã‚·ã‚¹ãƒ†ãƒ äºˆç´„
 		PMXMorphType	m_morphType;
 
 		struct PositionMorph
@@ -319,7 +319,7 @@ namespace saba
 			};
 
 			int32_t		m_materialIndex;
-			OpType		m_opType;	//0:æZ 1:‰ÁZ
+			OpType		m_opType;	//0:ä¹—ç®— 1:åŠ ç®—
 			glm::vec4	m_diffuse;
 			glm::vec3	m_specular;
 			float		m_specularPower;
@@ -379,8 +379,8 @@ namespace saba
 
 		enum class FrameType : uint8_t
 		{
-			DefaultFrame,	//!< 0:’Êí˜g
-			SpecialFrame,	//!< 1:“Áê˜g
+			DefaultFrame,	//!< 0:é€šå¸¸æ 
+			SpecialFrame,	//!< 1:ç‰¹æ®Šæ 
 		};
 
 		FrameType			m_flag;
@@ -397,9 +397,9 @@ namespace saba
 		uint16_t	m_collisionGroup;
 
 		/*
-		0:‹…
-		1:” 
-		2:ƒJƒvƒZƒ‹
+		0:çƒ
+		1:ç®±
+		2:ã‚«ãƒ—ã‚»ãƒ«
 		*/
 		enum class Shape : uint8_t
 		{
@@ -411,7 +411,7 @@ namespace saba
 		glm::vec3	m_shapeSize;
 
 		glm::vec3	m_translate;
-		glm::vec3	m_rotate;	//ƒ‰ƒWƒAƒ“
+		glm::vec3	m_rotate;	//ãƒ©ã‚¸ã‚¢ãƒ³
 
 		float	m_mass;
 		float	m_translateDimmer;
@@ -420,9 +420,9 @@ namespace saba
 		float	m_friction;
 
 		/*
-		0:ƒ{[ƒ“’Ç](static)
-		1:•¨—‰‰Z(dynamic)
-		2:•¨—‰‰Z + BoneˆÊ’u‡‚í‚¹
+		0:ãƒœãƒ¼ãƒ³è¿½å¾“(static)
+		1:ç‰©ç†æ¼”ç®—(dynamic)
+		2:ç‰©ç†æ¼”ç®— + Boneä½ç½®åˆã‚ã›
 		*/
 		enum class Operation : uint8_t
 		{
@@ -439,7 +439,7 @@ namespace saba
 		std::string	m_englishName;
 
 		/*
-		0:ƒoƒl•t6DOF
+		0:ãƒãƒä»˜6DOF
 		1:6DOF
 		2:P2P
 		3:ConeTwist
@@ -493,9 +493,9 @@ namespace saba
 		uint16_t	m_collisionGroup;
 
 		/*
-		0x01:B-Link ì¬
-		0x02:ƒNƒ‰ƒXƒ^ì¬
-		0x04: ƒŠƒ“ƒNŒğG
+		0x01:B-Link ä½œæˆ
+		0x02:ã‚¯ãƒ©ã‚¹ã‚¿ä½œæˆ
+		0x04: ãƒªãƒ³ã‚¯äº¤é›‘
 		*/
 		enum class SoftbodyMask : uint8_t
 		{

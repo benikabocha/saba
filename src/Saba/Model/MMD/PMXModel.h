@@ -1,4 +1,4 @@
-#ifndef SABA_MODEL_MMD_PMXMODEL_H_
+﻿#ifndef SABA_MODEL_MMD_PMXMODEL_H_
 #define SABA_MODEL_MMD_PMXMODEL_H_
 
 #include "MMDMaterial.h"
