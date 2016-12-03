@@ -3,6 +3,10 @@
 #include <Saba/GL/GLTextureUtil.h>
 #include <Saba/Base/Log.h>
 
+#include <string>
+#include <map>
+#include <memory>
+
 namespace saba
 {
 	GLMMDModel::GLMMDModel()
@@ -11,6 +15,34 @@ namespace saba
 
 	GLMMDModel::~GLMMDModel()
 	{
+	}
+
+	namespace
+	{
+		using TextureManager = std::map<std::string, GLTextureRef>;
+		GLTextureRef CreateMMDTexture(
+			TextureManager& texMan,
+			const std::string& filename,
+			bool genMipmap = true,
+			bool rgba = false
+		)
+		{
+			std::string key = filename + ":" +
+				std::to_string(genMipmap) + ":" +
+				std::to_string(rgba);
+			auto findIt = texMan.find(key);
+			if (findIt != texMan.end())
+			{
+				return (*findIt).second;
+			}
+			else
+			{
+				auto tex = CreateTextureFromFile(filename.c_str());
+				GLTextureRef texRef = std::move(tex);
+				texMan.emplace(std::make_pair(key, texRef));
+				return texRef;
+			}
+		}
 	}
 
 	bool GLMMDModel::Create(std::shared_ptr<MMDModel> mmdModel)
@@ -58,6 +90,7 @@ namespace saba
 		size_t matCount = mmdModel->GetMaterialCount();
 		auto materials = mmdModel->GetMaterials();
 		m_materials.resize(matCount);
+		TextureManager texMan;
 		for (size_t matIdx = 0; matIdx < matCount; matIdx++)
 		{
 			auto& dest = m_materials[matIdx];
@@ -71,16 +104,16 @@ namespace saba
 			dest.m_edgeFlag = src.m_edgeFlag;
 			if (!src.m_texture.empty())
 			{
-				dest.m_texture = CreateTextureFromFile(src.m_texture, true, true);
+				dest.m_texture = CreateMMDTexture(texMan, src.m_texture, true, true);
 			}
 			if (!src.m_spTexture.empty())
 			{
-				dest.m_spTexture = CreateTextureFromFile(src.m_spTexture);
+				dest.m_spTexture = CreateMMDTexture(texMan, src.m_spTexture);
 			}
 			dest.m_spTextureMode = src.m_spTextureMode;
 			if (!src.m_toonTexture.empty())
 			{
-				dest.m_toonTexture = CreateTextureFromFile(src.m_toonTexture);
+				dest.m_toonTexture = CreateMMDTexture(texMan, src.m_toonTexture);
 			}
 		}
 
