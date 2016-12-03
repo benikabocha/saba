@@ -16,6 +16,8 @@ namespace saba
 		void UpdateLocalMatrix();
 		void UpdateGlobalMatrix();
 
+		uint32_t		m_index;
+
 		std::string		m_name;
 
 		bool			m_enableIK;

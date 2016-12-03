@@ -156,7 +156,9 @@ namespace saba
 
 			NodeType* AddNode()
 			{
-				m_nodes.emplace_back(std::make_unique<NodeType>());
+				auto node = std::make_unique<NodeType>();
+				node->m_index = (uint32_t)m_nodes.size();
+				m_nodes.emplace_back(std::move(node));
 				return m_nodes[m_nodes.size() - 1].get();
 			}
 
