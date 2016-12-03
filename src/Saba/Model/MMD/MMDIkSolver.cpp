@@ -71,7 +71,7 @@ namespace saba
 
 		for (uint32_t i = 0; i < m_iterateCount; i++)
 		{
-			SolveCore();
+			SolveCore(i);
 		}
 	}
 
@@ -224,7 +224,7 @@ namespace saba
 		}
 	}
 
-	void MMDIkSolver::SolveCore()
+	void MMDIkSolver::SolveCore(uint32_t iteration)
 	{
 		auto ikPos =  glm::vec3(m_ikNode->m_global[3]);
 		for (auto& chain : m_chains)
@@ -251,6 +251,7 @@ namespace saba
 			auto cross = glm::cross(chainTargetVec, chainIkVec);
 			auto rot = glm::rotate(glm::quat(), angle, cross);
 
+			bool avoidUpdate = false;
 			auto chainRotM = glm::mat3_cast(chainNode->m_ikRotate)
 				* glm::mat3_cast(chainNode->m_rotate)
 				* glm::mat3_cast(rot);
@@ -267,13 +268,36 @@ namespace saba
 				r = glm::rotate(r, clampXYZ.y, glm::vec3(0, 1, 0));
 				r = glm::rotate(r, clampXYZ.z, glm::vec3(0, 0, 1));
 				chainRotM = glm::mat3_cast(r);
-				chain.m_prevAngle = clampXYZ;
+				if (iteration == 0)
+				{
+					/*
+					最初の IKSolve で Limit に達すると、
+					以降IKが動かなくなることがある。
+					初回の Solve のみ Limit に達した場合は、何も行わないようにする。
+					*/
+					if (clampXYZ.x == chain.m_limitMin.x ||
+						clampXYZ.y == chain.m_limitMin.y ||
+						clampXYZ.z == chain.m_limitMin.z ||
+						clampXYZ.x == chain.m_limitMax.x ||
+						clampXYZ.y == chain.m_limitMax.y ||
+						clampXYZ.z == chain.m_limitMax.z
+						)
+					{
+						avoidUpdate = true;
+					}
+				}
+				if (!avoidUpdate)
+				{
+					chain.m_prevAngle = clampXYZ;
+				}
 			}
 
-			auto ikRotM = chainRotM
-				* glm::inverse(glm::mat3_cast(chainNode->m_rotate));
-
-			chainNode->m_ikRotate = glm::quat_cast(ikRotM);
+			if (!avoidUpdate)
+			{
+				auto ikRotM = chainRotM
+					* glm::inverse(glm::mat3_cast(chainNode->m_rotate));
+				chainNode->m_ikRotate = glm::quat_cast(ikRotM);
+			}
 
 			chainNode->UpdateLocalMatrix();
 			chainNode->UpdateGlobalMatrix();

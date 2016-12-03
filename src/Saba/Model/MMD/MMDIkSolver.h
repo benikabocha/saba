@@ -54,7 +54,7 @@ namespace saba
 		};
 
 	private:
-		void SolveCore();
+		void SolveCore(uint32_t iteration);
 
 	private:
 		std::vector<IKChain>	m_chains;
