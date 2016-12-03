@@ -70,6 +70,7 @@ namespace saba
 
 		bool LoadOBJFile(const std::string& filename);
 		bool LoadPMDFile(const std::string& filename);
+		bool LoadPMXFile(const std::string& filename);
 		bool LoadVMDFile(const std::string& filename);
 
 		static void OnMouseButtonStub(GLFWwindow* window, int button, int action, int mods);

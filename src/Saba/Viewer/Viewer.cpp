@@ -13,6 +13,7 @@
 
 #include <Saba/Model/MMD/PMDModel.h>
 #include <Saba/Model/MMD/VMDFile.h>
+#include <Saba/Model/MMD/PMXModel.h>
 #include <Saba/GL/Model/MMD/GLMMDModel.h>
 #include <Saba/GL/Model/MMD/GLMMDModelDrawer.h>
 
@@ -387,6 +388,13 @@ namespace saba
 				return false;
 			}
 		}
+		else if (ext == "pmx")
+		{
+			if (!LoadPMXFile(filepath))
+			{
+				return false;
+			}
+		}
 		else
 		{
 			SABA_INFO("Unknown File Ext [{}]", ext);
@@ -493,6 +501,74 @@ namespace saba
 
 		auto bboxMin = pmdModel->GetBBoxMin();
 		auto bboxMax = pmdModel->GetBBoxMax();
+		auto center = (bboxMax + bboxMin) * 0.5f;
+		auto radius = glm::length(bboxMax - center);
+		m_context.GetCamera()->Initialize(center, radius);
+
+		// グリッドのスケールを調節する
+		float gridSize = 1.0f;
+		if (radius < 1.0f)
+		{
+			while (!(gridSize <= radius && radius <= gridSize * 10.0f))
+			{
+				gridSize /= 10.0f;
+			}
+		}
+		else
+		{
+			while (!(gridSize <= radius && radius <= gridSize * 10.0f))
+			{
+				gridSize *= 10.0f;
+			}
+		}
+		if (!m_grid.Initialize(m_context, gridSize, 10, 5))
+		{
+			SABA_ERROR("grid Init Fail.");
+			return false;
+		}
+
+		SABA_INFO("radisu [{}] grid [{}]", radius, gridSize);
+
+		m_mmdModel = glMMDModel;
+
+		m_prevTime = GetTime();
+
+		return false;
+	}
+
+	bool Viewer::LoadPMXFile(const std::string & filename)
+	{
+		std::shared_ptr<PMXModel> pmxModel = std::make_shared<PMXModel>();
+		std::string mmdDataDir = PathUtil::Combine(
+			m_context.GetResourceDir(),
+			"mmd"
+		);
+		if (!pmxModel->Load(filename, mmdDataDir))
+		{
+			SABA_WARN("PMD Load Fail.");
+			return false;
+		}
+
+		std::shared_ptr<GLMMDModel> glMMDModel = std::make_shared<GLMMDModel>();
+		if (!glMMDModel->Create(pmxModel))
+		{
+			SABA_WARN("GLMMDModel Create Fail.");
+			return false;
+		}
+
+		auto mmdDrawer = std::make_unique<GLMMDModelDrawer>(
+			m_mmdModelDrawContext.get(),
+			glMMDModel
+			);
+		if (!mmdDrawer->Create())
+		{
+			SABA_WARN("GLMMDModelDrawer Create Fail.");
+			return false;
+		}
+		m_modelDrawer = std::move(mmdDrawer);
+
+		auto bboxMin = pmxModel->GetBBoxMin();
+		auto bboxMax = pmxModel->GetBBoxMax();
 		auto center = (bboxMax + bboxMin) * 0.5f;
 		auto radius = glm::length(bboxMax - center);
 		m_context.GetCamera()->Initialize(center, radius);
