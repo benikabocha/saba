@@ -4,6 +4,7 @@
 #include <Saba/Base/File.h>
 
 #include <codecvt>
+#include <locale>
 #include <vector>
 
 namespace saba
@@ -37,11 +38,20 @@ namespace saba
 				{
 					// UTF16
 					// wchat_t は 16bitとは限らないので注意（MacやLinuxでは32bit）
+#if _WIN32
+					// Visual C++ では、u16string ではリンクできないという問題がある
 					std::vector<uint16_t> buffer(bufSize / 2);
 					file.Read(buffer.data(), buffer.size());
 
 					std::wstring_convert<std::codecvt_utf8<uint16_t>, uint16_t> utf8Conv;
 					*val = utf8Conv.to_bytes(&buffer[0], &buffer[0] + buffer.size());
+#else
+					std::u16string utf16Str(bufSize, u'\0');
+					file.Read(&utf16Str[0], bufSize);
+
+					std::wstring_convert<std::codecvt_utf8<char16_t>, char16_t> utf8Conv;
+					*val = utf8Conv.to_bytes(utf16Str);
+#endif
 				}
 				else if (pmx->m_header.m_encode == 1)
 				{
