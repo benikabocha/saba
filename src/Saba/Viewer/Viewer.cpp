@@ -272,7 +272,7 @@ namespace saba
 			return;
 		}
 		ImGui::SetNextWindowPos(ImVec2(10, 30));
-		if (!ImGui::Begin("Info", &m_enableCommandUI, ImVec2(0, 0), 0.3f, ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoSavedSettings))
+		if (!ImGui::Begin("Info", &m_enableCommandUI, ImVec2(0, 0), 0.3f, ImGuiWindowFlags_NoTitleBar /*| ImGuiWindowFlags_NoResize*/ | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoSavedSettings))
 		{
 			ImGui::End();
 			return;
@@ -280,6 +280,11 @@ namespace saba
 		ImGui::Text("Info");
 		ImGui::Separator();
 		ImGui::Text("Time %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
+
+		if (m_mmdModel != nullptr)
+		{
+			ImGui::Text("MMD Model Update Time %.3f ms", m_mmdModel->GetUpdateTime() * 1000.0);
+		}
 		ImGui::End();
 	}
 

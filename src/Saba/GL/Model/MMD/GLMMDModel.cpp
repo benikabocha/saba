@@ -2,6 +2,7 @@
 #include <Saba/GL/GLVertexUtil.h>
 #include <Saba/GL/GLTextureUtil.h>
 #include <Saba/Base/Log.h>
+#include <Saba/Base/Time.h>
 
 #include <string>
 #include <map>
@@ -12,6 +13,7 @@ namespace saba
 	GLMMDModel::GLMMDModel()
 	{
 		m_animTime = 0;
+		m_updateTime = 0;
 	}
 
 	GLMMDModel::~GLMMDModel()
@@ -178,6 +180,7 @@ namespace saba
 
 	void GLMMDModel::Update(double elapsed)
 	{
+		m_updateTime = 0;
 		if (m_mmdModel == nullptr)
 		{
 			return;
@@ -187,6 +190,7 @@ namespace saba
 			return;
 		}
 
+		double startTime = GetTime();
 		if (m_vmdAnim != 0)
 		{
 			m_animTime += elapsed;
@@ -199,6 +203,8 @@ namespace saba
 		size_t vtxCount = m_mmdModel->GetVertexCount();
 		UpdateVBO(m_posVBO, m_mmdModel->GetUpdatePositions(), vtxCount);
 		UpdateVBO(m_norVBO, m_mmdModel->GetUpdateNormals(), vtxCount);
+		double endTime = GetTime();
+		m_updateTime = endTime - startTime;
 	}
 
 }

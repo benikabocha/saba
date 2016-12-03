@@ -55,9 +55,11 @@ namespace saba
 		GLenum GetIndexType() const { return m_indexType; }
 		const GLBufferObject& GetIBO() const { return m_ibo; }
 
+		MMDModel* GetMMDModel() const { return m_mmdModel.get(); }
 		const std::vector<GLMMDMaterial>& GetMaterials() const { return m_materials; }
 		const std::vector<MMDSubMesh>& GetSubMeshes() const { return m_subMeshes; }
 
+		double GetUpdateTime() const { return m_updateTime; }
 	private:
 		std::shared_ptr<MMDModel>		m_mmdModel;
 
@@ -78,6 +80,8 @@ namespace saba
 
 		std::vector<GLMMDMaterial>	m_materials;
 		std::vector<MMDSubMesh>		m_subMeshes;
+
+		double						m_updateTime;
 	};
 }
 
