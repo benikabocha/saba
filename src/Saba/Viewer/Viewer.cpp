@@ -304,6 +304,7 @@ namespace saba
 		if (m_imguiLogSink->IsAdded())
 		{
 			ImGui::SetScrollHere(1.0f);
+			m_imguiLogSink->ClearAddedFlag();
 		}
 
 		ImGui::EndChild();
