@@ -41,7 +41,7 @@ add_library(
     ${GL3W_SOURCE}
     ${IMGUI_SOURCE}
 )
-target_link_libraries(Saba glfw glslang OSDependent SPIRV OGLCompiler HLSL)
+target_link_libraries(Saba glfw glslang OSDependent SPIRV OGLCompiler HLSL ${BULLET_LIBRARIES})
 
 SOURCE_GROUP(Base FILES ${BASE_SOURCE} ${BASE_HEADER})
 SOURCE_GROUP(GL FILES ${GL_SOURCE} ${GL_HEADER})

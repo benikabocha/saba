@@ -4,6 +4,7 @@ set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 project(saba)
 
 find_package(OpenGL REQUIRED)
+find_package(bullet REQUIRED)
 
 enable_testing()
 option(SABA_ENABLE_GL_TEST "OpenGL test." off)
@@ -19,6 +20,7 @@ include_directories(${PROJECT_SOURCE_DIR}/external/spdlog/include)
 include_directories(${PROJECT_SOURCE_DIR}/external/glslang)
 include_directories(${PROJECT_SOURCE_DIR}/external/tinyobjloader/include)
 include_directories(${PROJECT_SOURCE_DIR}/external/imgui/include)
+include_directories(${BULLET_INCLUDE_DIRS})
 
 if(WIN32)
     ADD_DEFINITIONS(-DUNICODE)
