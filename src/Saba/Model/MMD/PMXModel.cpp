@@ -1,6 +1,7 @@
 ﻿#include "PMXModel.h"
 
 #include "PMXFile.h"
+#include "MMDPhysics.h"
 
 #include <Saba/Base/Path.h>
 #include <Saba/Base/File.h>
@@ -16,8 +17,7 @@
 
 namespace saba
 {
-
-	void PMXModel::Update(float elapsed)
+	void PMXModel::InitializeAnimation()
 	{
 		for (const auto& node : (*m_nodeMan.GetNodes()))
 		{
@@ -36,7 +36,31 @@ namespace saba
 		{
 			solver->Solve();
 		}
+	}
 
+	void PMXModel::UpdateAnimation(float elapsed)
+	{
+		for (const auto& node : (*m_nodeMan.GetNodes()))
+		{
+			node->UpdateLocalMatrix();
+		}
+
+		for (const auto& node : (*m_nodeMan.GetNodes()))
+		{
+			if (node->m_parent == nullptr)
+			{
+				node->UpdateGlobalMatrix();
+			}
+		}
+
+		for (auto& solver : (*m_ikSolverMan.GetIKSolvers()))
+		{
+			solver->Solve();
+		}
+	}
+
+	void PMXModel::Update(float elapsed)
+	{
 		const auto* position = m_positions.data();
 		const auto* normal = m_normals.data();
 		const auto* vtxInfo = m_vertexBoneInfos.data();
@@ -425,6 +449,7 @@ namespace saba
 				glm::mat4(1),
 				bone.m_position * glm::vec3(1, 1, -1)
 			);
+			node->m_global = init;
 			node->m_inverseInit = glm::inverse(init);
 
 			node->m_deformDepth = bone.m_deformDepth;
@@ -476,6 +501,46 @@ namespace saba
 				solver->SetIterateCount(bone.m_ikIterationCount);
 				solver->SetLimitAngle(bone.m_ikLimit);
 			}
+		}
+
+		if (!m_physicsMan.Create())
+		{
+			SABA_ERROR("Create Physics Fail.");
+			return false;
+		}
+
+		for (const auto& pmxRB : pmx.m_rigidbodies)
+		{
+			auto rb = m_physicsMan.AddRigidBody();
+			MMDNode* node = nullptr;
+			if (pmxRB.m_boneIndex != 0xFFFF)
+			{
+				node = m_nodeMan.GetMMDNode(pmxRB.m_boneIndex);
+			}
+			if (!rb->Create(pmxRB, this, node))
+			{
+				SABA_ERROR("Create Rigid Body Fail.\n");
+				return false;
+			}
+			m_physicsMan.GetMMDPhysics()->AddRigidBody(rb);
+		}
+
+		for (const auto& pmxJoint : pmx.m_joints)
+		{
+			auto joint = m_physicsMan.AddJoint();
+			MMDNode* node = nullptr;
+			auto rigidBodys = m_physicsMan.GetRigidBodys();
+			bool ret = joint->CreateJoint(
+				pmxJoint,
+				(*rigidBodys)[pmxJoint.m_rigidbodyAIndex].get(),
+				(*rigidBodys)[pmxJoint.m_rigidbodyBIndex].get()
+			);
+			if (!ret)
+			{
+				SABA_ERROR("Create Joint Fail.\n");
+				return false;
+			}
+			m_physicsMan.GetMMDPhysics()->AddJoint(joint);
 		}
 
 		return true;

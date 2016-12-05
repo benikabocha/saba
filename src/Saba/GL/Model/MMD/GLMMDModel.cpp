@@ -165,6 +165,10 @@ namespace saba
 		}
 
 		m_animTime = 0.0f;
+
+		m_vmdAnim->Evaluate((float)m_animTime);
+		m_mmdModel->InitializeAnimation();
+
 		return true;
 	}
 
@@ -198,6 +202,8 @@ namespace saba
 			m_vmdAnim->Evaluate((float)frame);
 		}
 
+		m_mmdModel->UpdateAnimation((float)elapsed);
+		//m_mmdModel->UpdateAnimation(0);
 		m_mmdModel->Update((float)elapsed);
 
 		size_t vtxCount = m_mmdModel->GetVertexCount();

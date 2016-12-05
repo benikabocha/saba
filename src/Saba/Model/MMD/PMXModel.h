@@ -30,6 +30,7 @@ namespace saba
 		MMDNodeManager* GetNodeManager() override { return &m_nodeMan; }
 		MMDIKManager* GetIKManager() override { return &m_ikSolverMan; }
 		MMDBlendShapeManager* GetBlendShapeManager() override { return &m_blendShapeMan; }
+		MMDPhysicsManager* GetPhysicsManager() override { return &m_physicsMan; }
 
 		size_t GetVertexCount() const override { return m_positions.size(); }
 		const glm::vec3* GetPositions() const override { return &m_positions[0]; }
@@ -49,7 +50,11 @@ namespace saba
 		size_t GetSubMeshCount() const override { return m_subMeshes.size(); }
 		const MMDSubMesh* GetSubMeshes() const override { return &m_subMeshes[0]; }
 
-		virtual void Update(float elapsed) override;
+		MMDPhysics* GetMMDPhysics() override { return m_physicsMan.GetMMDPhysics(); }
+
+		void InitializeAnimation() override;
+		void UpdateAnimation(float elapsed) override;
+		void Update(float elapsed) override;
 
 		bool Load(const std::string& filepath, const std::string& mmdDataDir);
 		void Destroy();
@@ -94,6 +99,7 @@ namespace saba
 		MMDNodeManagerT<PMXNode>	m_nodeMan;
 		MMDIKManagerT<MMDIkSolver>	m_ikSolverMan;
 		MMDBlendShapeManagerT<MMDBlendShape>	m_blendShapeMan;
+		MMDPhysicsManager			m_physicsMan;
 	};
 }
 

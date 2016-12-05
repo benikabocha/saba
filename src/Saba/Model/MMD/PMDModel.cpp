@@ -1,6 +1,6 @@
 ﻿#include "PMDModel.h"
-
 #include "PMDFile.h"
+#include "MMDPhysics.h"
 
 #include <Saba/Base/Path.h>
 #include <Saba/Base/File.h>
@@ -41,7 +41,7 @@ namespace saba
 		}
 	}
 
-	void PMDModel::Update(float elapsed)
+	void PMDModel::InitializeAnimation()
 	{
 		for (const auto& node : (*m_nodeMan.GetNodes()))
 		{
@@ -61,6 +61,89 @@ namespace saba
 			solver->Solve();
 		}
 
+		MMDPhysicsManager* physicsMan = GetPhysicsManager();
+		auto physics = physicsMan->GetMMDPhysics();
+
+		if (physics == nullptr)
+		{
+			return;
+		}
+
+		auto rigidbodys = physicsMan->GetRigidBodys();
+		auto joints = physicsMan->GetJoints();
+		for (auto& rb : (*rigidbodys))
+		{
+			rb->SetActivation(false);
+		}
+
+		for (auto& rb : (*rigidbodys))
+		{
+			rb->BeginUpdate();
+		}
+
+		physics->Update(1.0f / 60.0f);
+
+		for (auto& rb : (*rigidbodys))
+		{
+			rb->EndUpdate();
+		}
+
+		for (auto& rb : (*rigidbodys))
+		{
+			rb->Reset(physics);
+		}
+	}
+
+	void PMDModel::UpdateAnimation(float elapsed)
+	{
+		for (const auto& node : (*m_nodeMan.GetNodes()))
+		{
+			node->UpdateLocalMatrix();
+		}
+
+		for (const auto& node : (*m_nodeMan.GetNodes()))
+		{
+			if (node->m_parent == nullptr)
+			{
+				node->UpdateGlobalMatrix();
+			}
+		}
+
+		for (auto& solver : (*m_ikSolverMan.GetIKSolvers()))
+		{
+			solver->Solve();
+		}
+
+		MMDPhysicsManager* physicsMan = GetPhysicsManager();
+		auto physics = physicsMan->GetMMDPhysics();
+
+		if (physics == nullptr)
+		{
+			return;
+		}
+
+		auto rigidbodys = physicsMan->GetRigidBodys();
+		auto joints = physicsMan->GetJoints();
+		for (auto& rb : (*rigidbodys))
+		{
+			rb->SetActivation(true);
+		}
+
+		for (auto& rb : (*rigidbodys))
+		{
+			rb->BeginUpdate();
+		}
+
+		physics->Update(elapsed);
+
+		for (auto& rb : (*rigidbodys))
+		{
+			rb->EndUpdate();
+		}
+	}
+
+	void PMDModel::Update(float elapsed)
+	{
 		const auto* position = &m_positions[0];
 		const auto* normal = &m_normals[0];
 		const auto* bone = &m_bones[0];
@@ -324,6 +407,7 @@ namespace saba
 				glm::mat4(1),
 				bone.m_position * glm::vec3(1, 1, -1)
 			);
+			node->m_global = init;
 			node->m_inverseInit = glm::inverse(init);
 		}
 
@@ -355,6 +439,46 @@ namespace saba
 			solver->SetLimitAngle(ik.m_rotateLimit * 4.0f);
 		}
 
+		if (!m_physicsMan.Create())
+		{
+			SABA_ERROR("Create Physics Fail.");
+			return false;
+		}
+
+		for (const auto& pmdRB : pmd.m_rigidBodies)
+		{
+			auto rb = m_physicsMan.AddRigidBody();
+			MMDNode* node = nullptr;
+			if (pmdRB.m_boneIndex != 0xFFFF)
+			{
+				node = m_nodeMan.GetMMDNode(pmdRB.m_boneIndex);
+			}
+			if (!rb->Create(pmdRB, this, node))
+			{
+				SABA_ERROR("Create Rigid Body Fail.\n");
+				return false;
+			}
+			m_physicsMan.GetMMDPhysics()->AddRigidBody(rb);
+		}
+
+		for (const auto& pmdJoint : pmd.m_joints)
+		{
+			auto joint = m_physicsMan.AddJoint();
+			MMDNode* node = nullptr;
+			auto rigidBodys = m_physicsMan.GetRigidBodys();
+			bool ret = joint->CreateJoint(
+				pmdJoint,
+				(*rigidBodys)[pmdJoint.m_rigidBodyA].get(),
+				(*rigidBodys)[pmdJoint.m_rigidBodyB].get()
+			);
+			if (!ret)
+			{
+				SABA_ERROR("Create Joint Fail.\n");
+				return false;
+			}
+			m_physicsMan.GetMMDPhysics()->AddJoint(joint);
+		}
+
 		return true;
 	}
 
@@ -373,4 +497,5 @@ namespace saba
 
 		m_nodeMan.GetNodes()->clear();
 	}
+
 }

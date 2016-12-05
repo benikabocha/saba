@@ -15,6 +15,9 @@
 namespace saba
 {
 	struct MMDMaterial;
+	class MMDPhysics;
+	class MMDRigidBody;
+	class MMDJoint;
 
 	struct MMDBlendShapeVertex
 	{
@@ -89,6 +92,33 @@ namespace saba
 		}
 	};
 
+	class MMDPhysicsManager
+	{
+	public:
+		using RigidBodyPtr = std::unique_ptr<MMDRigidBody>;
+		using JointPtr = std::unique_ptr<MMDJoint>;
+
+		MMDPhysicsManager();
+		~MMDPhysicsManager();
+
+		bool Create();
+
+		MMDPhysics* GetMMDPhysics();
+
+		MMDRigidBody* AddRigidBody();
+		std::vector<RigidBodyPtr>* GetRigidBodys() { return &m_rigidBodys; }
+
+		MMDJoint* AddJoint();
+		std::vector<JointPtr>* GetJoints() { return &m_joints; }
+
+
+	private:
+		std::unique_ptr<MMDPhysics>	m_mmdPhysics;
+
+		std::vector<RigidBodyPtr>	m_rigidBodys;
+		std::vector<JointPtr>		m_joints;
+	};
+
 	struct MMDSubMesh
 	{
 		int	m_beginIndex;
@@ -102,6 +132,7 @@ namespace saba
 		virtual MMDNodeManager* GetNodeManager() = 0;
 		virtual MMDIKManager* GetIKManager() = 0;
 		virtual MMDBlendShapeManager* GetBlendShapeManager() = 0;
+		virtual MMDPhysicsManager* GetPhysicsManager() = 0;
 
 		virtual size_t GetVertexCount() const = 0;
 		virtual const glm::vec3* GetPositions() const = 0;
@@ -121,6 +152,10 @@ namespace saba
 		virtual size_t GetSubMeshCount() const = 0;
 		virtual const MMDSubMesh* GetSubMeshes() const = 0;
 
+		virtual MMDPhysics* GetMMDPhysics() = 0;
+
+		virtual void InitializeAnimation() = 0;
+		virtual void UpdateAnimation(float elapsed) = 0;
 		virtual void Update(float elapsed) = 0;
 
 	protected:
