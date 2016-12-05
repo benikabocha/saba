@@ -4,7 +4,7 @@ set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 project(saba)
 
 find_package(OpenGL REQUIRED)
-find_package(bullet REQUIRED)
+find_package(Bullet REQUIRED)
 
 enable_testing()
 option(SABA_ENABLE_GL_TEST "OpenGL test." off)
