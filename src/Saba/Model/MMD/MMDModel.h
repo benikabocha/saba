@@ -154,8 +154,15 @@ namespace saba
 
 		virtual MMDPhysics* GetMMDPhysics() = 0;
 
+		// ノードを初期化する
 		virtual void InitializeAnimation() = 0;
+
+		// アニメーションの前後で呼ぶ (VMDアニメーションの前後)
+		virtual void BeginAnimation() = 0;
+		virtual void EndAnimation() = 0;
+		// ノードを更新する
 		virtual void UpdateAnimation(float elapsed) = 0;
+		// 頂点を更新する
 		virtual void Update(float elapsed) = 0;
 
 	protected:
@@ -172,7 +179,7 @@ namespace saba
 				auto findIt = std::find_if(
 					m_nodes.begin(),
 					m_nodes.end(),
-					[&name](const NodePtr& node) { return node->m_name == name; }
+					[&name](const NodePtr& node) { return node->GetName() == name; }
 				);
 				if (findIt == m_nodes.end())
 				{
@@ -192,7 +199,7 @@ namespace saba
 			NodeType* AddNode()
 			{
 				auto node = std::make_unique<NodeType>();
-				node->m_index = (uint32_t)m_nodes.size();
+				node->SetIndex((uint32_t)m_nodes.size());
 				m_nodes.emplace_back(std::move(node));
 				return m_nodes[m_nodes.size() - 1].get();
 			}

@@ -21,7 +21,7 @@ namespace saba
 		{
 			if (m_ikNode != nullptr)
 			{
-				return m_ikNode->m_name;
+				return m_ikNode->GetName();
 			}
 			else
 			{

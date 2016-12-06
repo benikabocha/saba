@@ -8,23 +8,63 @@
 
 namespace saba
 {
-	struct MMDNode
+	class MMDNode
 	{
+	public:
 		MMDNode();
 
 		void AddChild(MMDNode* child);
-		void UpdateLocalMatrix();
-		void UpdateGlobalMatrix();
+		// アニメーションの前後て呼ぶ
+		void BeginUpateTransform();
+		void EndUpateTransform();
 
+		void UpdateLocalTransform();
+		void UpdateGlobalTransform();
+
+		void SetIndex(uint32_t idx) { m_index = idx; }
+		uint32_t GetIndex() const { return m_index; }
+
+		void SetName(const std::string& name) { m_name = name; }
+		const std::string& GetName() const { return m_name; }
+
+		void EnableIK(bool enable) { m_enableIK = enable; }
+		bool IsIK() const { return m_enableIK; }
+
+		void SetTranslate(const glm::vec3& t) { m_translate = t; }
+		const glm::vec3& GetTranslate() const { return m_translate; }
+
+		void SetRotate(const glm::quat& r) { m_rotate = r; }
+		const glm::quat& GetRotate() const { return m_rotate; }
+
+		void SetScale(const glm::vec3& s) { m_scale = s; }
+		const glm::vec3& GetScale() const { return m_scale; }
+
+		void SetIKRotate(const glm::quat& ikr) { m_ikRotate = ikr; }
+		const glm::quat& GetIKRotate() const { return m_ikRotate; }
+
+		MMDNode* GetParent() const { return m_parent; }
+		MMDNode* GetChild() const { return m_child; }
+		MMDNode* GetNext() const { return m_next; }
+		MMDNode* GetPrev() const { return m_prev; }
+
+		void SetLocalTransform(const glm::mat4& m) { m_local = m; }
+		const glm::mat4& GetLocalTransform() const { return m_local; }
+
+		void SetGlobalTransform(const glm::mat4& m) { m_global = m; }
+		const glm::mat4& GetGlobalTransform() const { return m_global; }
+
+		void CalculateInverseInitTransform();
+		const glm::mat4 GetInverseInitTransform() { return m_inverseInit; }
+
+	protected:
+		virtual void OnBeginUpdateTransform();
+		virtual void OnEndUpdateTransfrom();
+		virtual void OnUpdateLocalTransform();
+
+	protected:
 		uint32_t		m_index;
-
 		std::string		m_name;
-
 		bool			m_enableIK;
-
-		glm::mat4		m_local;
-		glm::mat4		m_global;
-		glm::mat4		m_inverseInit;
 
 		MMDNode*		m_parent;
 		MMDNode*		m_child;
@@ -36,6 +76,10 @@ namespace saba
 		glm::vec3	m_scale;
 
 		glm::quat	m_ikRotate;
+
+		glm::mat4		m_local;
+		glm::mat4		m_global;
+		glm::mat4		m_inverseInit;
 
 		glm::vec3	m_initTranslate;
 		glm::quat	m_initRotate;

@@ -43,16 +43,16 @@ namespace saba
 
 	void PMDModel::InitializeAnimation()
 	{
-		for (const auto& node : (*m_nodeMan.GetNodes()))
+		for (auto& node : (*m_nodeMan.GetNodes()))
 		{
-			node->UpdateLocalMatrix();
+			node->UpdateLocalTransform();
 		}
 
-		for (const auto& node : (*m_nodeMan.GetNodes()))
+		for (auto& node : (*m_nodeMan.GetNodes()))
 		{
-			if (node->m_parent == nullptr)
+			if (node->GetParent() == nullptr)
 			{
-				node->UpdateGlobalMatrix();
+				node->UpdateGlobalTransform();
 			}
 		}
 
@@ -94,18 +94,34 @@ namespace saba
 		}
 	}
 
+	void PMDModel::BeginAnimation()
+	{
+		for (auto& node : (*m_nodeMan.GetNodes()))
+		{
+			node->BeginUpateTransform();
+		}
+	}
+
+	void PMDModel::EndAnimation()
+	{
+		for (auto& node : (*m_nodeMan.GetNodes()))
+		{
+			node->EndUpateTransform();
+		}
+	}
+
 	void PMDModel::UpdateAnimation(float elapsed)
 	{
-		for (const auto& node : (*m_nodeMan.GetNodes()))
+		for (auto& node : (*m_nodeMan.GetNodes()))
 		{
-			node->UpdateLocalMatrix();
+			node->UpdateLocalTransform();
 		}
 
-		for (const auto& node : (*m_nodeMan.GetNodes()))
+		for (auto& node : (*m_nodeMan.GetNodes()))
 		{
-			if (node->m_parent == nullptr)
+			if (node->GetParent() == nullptr)
 			{
-				node->UpdateGlobalMatrix();
+				node->UpdateGlobalTransform();
 			}
 		}
 
@@ -210,8 +226,8 @@ namespace saba
 			auto node1 = m_nodeMan.GetNode(bone->y);
 			auto w0 = boneWeight->x;
 			auto w1 = boneWeight->y;
-			auto m0 = node0->m_global * node0->m_inverseInit;
-			auto m1 = node1->m_global * node1->m_inverseInit;
+			auto m0 = node0->GetGlobalTransform() * node0->GetInverseInitTransform();
+			auto m1 = node1->GetGlobalTransform() * node1->GetInverseInitTransform();
 
 			auto m = m0 * w0 + m1 * w1;
 			*updatePosition = glm::vec3(m * glm::vec4(*updatePosition, 1));
@@ -380,7 +396,7 @@ namespace saba
 		for (const auto& bone : pmd.m_bones)
 		{
 			auto* node = m_nodeMan.AddNode();
-			node->m_name = bone.m_boneName.ToUtf8String();
+			node->SetName(bone.m_boneName.ToUtf8String());
 		}
 		for (size_t i = 0; i < pmd.m_bones.size(); i++)
 		{
@@ -394,21 +410,21 @@ namespace saba
 				glm::vec3 localPos = bone.m_position - parentBone.m_position;
 				localPos.z *= -1;
 
-				node->m_translate = localPos;
+				node->SetTranslate(localPos);
 			}
 			else
 			{
 				glm::vec3 localPos = bone.m_position;
 				localPos.z *= -1;
 
-				node->m_translate = localPos;
+				node->SetTranslate(localPos);
 			}
 			glm::mat4 init = glm::translate(
 				glm::mat4(1),
 				bone.m_position * glm::vec3(1, 1, -1)
 			);
-			node->m_global = init;
-			node->m_inverseInit = glm::inverse(init);
+			node->SetGlobalTransform(init);
+			node->CalculateInverseInitTransform();
 		}
 
 		// IKを作成
@@ -425,14 +441,14 @@ namespace saba
 			for (const auto& chain : ik.m_chanins)
 			{
 				auto* chainNode = m_nodeMan.GetNode(chain);
-				auto findPos = chainNode->m_name.find(u8"ひざ");
+				auto findPos = chainNode->GetName().find(u8"ひざ");
 				bool isKnee = false;
 				if (findPos != std::string::npos)
 				{
 					isKnee = true;
 				}
 				solver->AddIKChain(chainNode, isKnee);
-				chainNode->m_enableIK = true;
+				chainNode->EnableIK(true);
 			}
 
 			solver->SetIterateCount(ik.m_numIteration);

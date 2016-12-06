@@ -50,19 +50,22 @@ namespace saba
 		}
 	}
 
-	void MMDNode::UpdateLocalMatrix()
+	void MMDNode::BeginUpateTransform()
 	{
-		auto s = glm::scale(glm::mat4(1), m_scale);
-		auto r = glm::mat4_cast(m_rotate);
-		auto t = glm::translate(glm::mat4(1), m_translate);
-		if (m_enableIK)
-		{
-			r = glm::mat4_cast(m_ikRotate) * r;
-		}
-		m_local = t * r * s;
+		OnBeginUpdateTransform();
 	}
 
-	void MMDNode::UpdateGlobalMatrix()
+	void MMDNode::EndUpateTransform()
+	{
+		OnEndUpdateTransfrom();
+	}
+
+	void MMDNode::UpdateLocalTransform()
+	{
+		OnUpdateLocalTransform();
+	}
+
+	void MMDNode::UpdateGlobalTransform()
 	{
 		if (m_parent == nullptr)
 		{
@@ -75,9 +78,34 @@ namespace saba
 		MMDNode* child = m_child;
 		while (child != nullptr)
 		{
-			child->UpdateGlobalMatrix();
+			child->UpdateGlobalTransform();
 			child = child->m_next;
 		}
+	}
+
+	void MMDNode::CalculateInverseInitTransform()
+	{
+		m_inverseInit = glm::inverse(m_global);
+	}
+
+	void MMDNode::OnBeginUpdateTransform()
+	{
+	}
+
+	void MMDNode::OnEndUpdateTransfrom()
+	{
+	}
+
+	void MMDNode::OnUpdateLocalTransform()
+	{
+		auto s = glm::scale(glm::mat4(1), m_scale);
+		auto r = glm::mat4_cast(m_rotate);
+		auto t = glm::translate(glm::mat4(1), m_translate);
+		if (m_enableIK)
+		{
+			r = glm::mat4_cast(m_ikRotate) * r;
+		}
+		m_local = t * r * s;
 	}
 
 }

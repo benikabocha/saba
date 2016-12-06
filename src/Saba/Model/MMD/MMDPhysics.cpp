@@ -171,7 +171,7 @@ namespace saba
 			, m_override(override)
 		{
 			m_invOffset = glm::inverse(offset);
-			m_nodeGlobal = m_node->m_global;
+			m_nodeGlobal = m_node->GetGlobalTransform();
 		}
 
 		void getWorldTransform(btTransform& worldTransform) const
@@ -186,11 +186,11 @@ namespace saba
 			worldTransform.getOpenGLMatrix(&world[0][0]);
 			m_nodeGlobal = InvZ(world) * m_invOffset;
 
-			MMDNode* parent = m_node->m_parent;
+			MMDNode* parent = m_node->GetParent();
 			glm::mat4 local;
 			if (parent != nullptr)
 			{
-				local = glm::inverse(parent->m_global) * m_nodeGlobal;
+				local = glm::inverse(parent->GetGlobalTransform()) * m_nodeGlobal;
 			}
 			else
 			{
@@ -199,14 +199,14 @@ namespace saba
 
 			if (m_override)
 			{
-				m_node->m_local = local;
-				m_node->UpdateGlobalMatrix();
+				m_node->SetLocalTransform(local);
+				m_node->UpdateGlobalTransform();
 			}
 		}
 
 		void Reset() override
 		{
-			m_nodeGlobal = m_node->m_global;
+			m_nodeGlobal = m_node->GetGlobalTransform();
 		}
 
 		void BeginUpdate() override
@@ -234,8 +234,8 @@ namespace saba
 			, m_override(override)
 		{
 			m_invOffset = glm::inverse(offset);
-			m_nodeLocal = m_node->m_local;
-			m_nodeGlobal = m_node->m_global;
+			m_nodeLocal = m_node->GetLocalTransform();
+			m_nodeGlobal = m_node->GetGlobalTransform();
 		}
 
 		void getWorldTransform(btTransform& worldTransform) const
@@ -249,14 +249,14 @@ namespace saba
 			glm::mat4 world;
 			worldTransform.getOpenGLMatrix(&world[0][0]);
 			world = InvZ(world);
-			glm::mat4 nodeOffsetGlobal = m_node->m_global * m_offset;
+			glm::mat4 nodeOffsetGlobal = m_node->GetGlobalTransform() * m_offset;
 			world[3] = nodeOffsetGlobal[3];
 			m_nodeGlobal = world * m_invOffset;
 
-			MMDNode* parent = m_node->m_parent;
+			MMDNode* parent = m_node->GetParent();
 			if (parent != nullptr)
 			{
-				glm::mat4 local = glm::inverse(parent->m_global) * m_nodeGlobal;
+				glm::mat4 local = glm::inverse(parent->GetGlobalTransform()) * m_nodeGlobal;
 				m_nodeLocal = local;
 			}
 			else
@@ -266,23 +266,23 @@ namespace saba
 
 			if (m_override)
 			{
-				m_node->m_local = m_nodeLocal;
-				m_node->UpdateGlobalMatrix();
+				m_node->SetLocalTransform(m_nodeLocal);
+				m_node->UpdateGlobalTransform();
 			}
 		}
 
 		void Reset() override
 		{
-			m_nodeLocal = m_node->m_local;
-			m_nodeGlobal = m_node->m_global;
+			m_nodeLocal = m_node->GetLocalTransform();
+			m_nodeGlobal = m_node->GetGlobalTransform();
 		}
 
 		void BeginUpdate() override
 		{
-			MMDNode* parent = m_node->m_parent;
+			MMDNode* parent = m_node->GetParent();
 			if (parent != nullptr)
 			{
-				m_nodeGlobal = parent->m_global * m_nodeLocal;
+				m_nodeGlobal = parent->GetGlobalTransform() * m_nodeLocal;
 			}
 			else
 			{
@@ -318,7 +318,7 @@ namespace saba
 			glm::mat4 m;
 			if (m_node != nullptr)
 			{
-				m = m_node->m_global * m_offset;
+				m = m_node->GetGlobalTransform() * m_offset;
 			}
 			else
 			{
@@ -399,26 +399,26 @@ namespace saba
 		glm::mat4 rbMat = translateMat * rotMat;
 		if (node != nullptr)
 		{
-			glm::mat4 global = node->m_global;
+			glm::mat4 global = node->GetGlobalTransform();
 			rbMat = InvZ(global) * rbMat;
 		}
 		else
 		{
 			MMDNode* root = model->GetNodeManager()->GetMMDNode(0);
-			glm::mat4 global = root->m_global;
+			glm::mat4 global = root->GetGlobalTransform();
 			rbMat = InvZ(global) * rbMat;
 		}
 		rbMat = InvZ(rbMat);
 
 		if (node != nullptr)
 		{
-			m_offsetMat = glm::inverse(node->m_global) * rbMat;
+			m_offsetMat = glm::inverse(node->GetGlobalTransform()) * rbMat;
 			m_invOffsetMat = glm::inverse(m_offsetMat);
 		}
 		else
 		{
 			MMDNode* root = model->GetNodeManager()->GetMMDNode(0);
-			m_offsetMat = glm::inverse(root->m_global) * rbMat;
+			m_offsetMat = glm::inverse(root->GetGlobalTransform()) * rbMat;
 			m_invOffsetMat = glm::inverse(m_offsetMat);
 		}
 
@@ -530,14 +530,14 @@ namespace saba
 		bool overrideNode = true;
 		if (node != nullptr)
 		{
-			m_offsetMat = glm::inverse(node->m_global) * rbMat;
+			m_offsetMat = glm::inverse(node->GetGlobalTransform()) * rbMat;
 			m_invOffsetMat = glm::inverse(m_offsetMat);
 			kinematicNode = node;
 		}
 		else
 		{
 			MMDNode* root = model->GetNodeManager()->GetMMDNode(0);
-			m_offsetMat = glm::inverse(root->m_global) * rbMat;
+			m_offsetMat = glm::inverse(root->GetGlobalTransform()) * rbMat;
 			m_invOffsetMat = glm::inverse(m_offsetMat);
 			kinematicNode = model->GetNodeManager()->GetMMDNode(0);
 			overrideNode = false;
@@ -689,17 +689,17 @@ namespace saba
 			glm::mat4 globalMat = rbMat * m_invOffsetMat;
 
 			glm::mat4 localMat;
-			MMDNode* parent = m_node->m_parent;
+			MMDNode* parent = m_node->GetParent();
 			if (parent != nullptr)
 			{
-				localMat = glm::inverse(parent->m_global) * globalMat;
+				localMat = glm::inverse(parent->GetGlobalTransform()) * globalMat;
 			}
 			else
 			{
 				localMat = globalMat;
 			}
-			m_node->m_local = localMat;
-			m_node->m_global = globalMat;
+			m_node->SetLocalTransform(localMat);
+			m_node->SetGlobalTransform(globalMat);
 		}
 	}
 

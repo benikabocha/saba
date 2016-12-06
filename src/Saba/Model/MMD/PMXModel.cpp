@@ -21,14 +21,14 @@ namespace saba
 	{
 		for (const auto& node : (*m_nodeMan.GetNodes()))
 		{
-			node->UpdateLocalMatrix();
+			node->UpdateLocalTransform();
 		}
 
 		for (const auto& node : (*m_nodeMan.GetNodes()))
 		{
-			if (node->m_parent == nullptr)
+			if (node->GetParent() == nullptr)
 			{
-				node->UpdateGlobalMatrix();
+				node->UpdateGlobalTransform();
 			}
 		}
 
@@ -38,18 +38,34 @@ namespace saba
 		}
 	}
 
+	void PMXModel::BeginAnimation()
+	{
+		for (auto& node : (*m_nodeMan.GetNodes()))
+		{
+			node->BeginUpateTransform();
+		}
+	}
+
+	void PMXModel::EndAnimation()
+	{
+		for (auto& node : (*m_nodeMan.GetNodes()))
+		{
+			node->EndUpateTransform();
+		}
+	}
+
 	void PMXModel::UpdateAnimation(float elapsed)
 	{
 		for (const auto& node : (*m_nodeMan.GetNodes()))
 		{
-			node->UpdateLocalMatrix();
+			node->UpdateLocalTransform();
 		}
 
 		for (const auto& node : (*m_nodeMan.GetNodes()))
 		{
-			if (node->m_parent == nullptr)
+			if (node->GetParent() == nullptr)
 			{
-				node->UpdateGlobalMatrix();
+				node->UpdateGlobalTransform();
 			}
 		}
 
@@ -128,7 +144,7 @@ namespace saba
 			case SkinningType::Weight1:
 			{
 				auto node0 = m_nodeMan.GetNode(vtxInfo->m_boneIndex.x);
-				auto m0 = node0->m_global * node0->m_inverseInit;
+				auto m0 = node0->GetGlobalTransform() * node0->GetInverseInitTransform();
 				m = m0;
 				break;
 			}
@@ -138,8 +154,8 @@ namespace saba
 				auto node1 = m_nodeMan.GetNode(vtxInfo->m_boneIndex.y);
 				auto w0 = vtxInfo->m_boneWeight.x;
 				auto w1 = vtxInfo->m_boneWeight.y;
-				auto m0 = node0->m_global * node0->m_inverseInit;
-				auto m1 = node1->m_global * node1->m_inverseInit;
+				auto m0 = node0->GetGlobalTransform() * node0->GetInverseInitTransform();
+				auto m1 = node1->GetGlobalTransform() * node1->GetInverseInitTransform();
 				m = m0 * w0 + m1 * w1;
 				break;
 			}
@@ -153,10 +169,10 @@ namespace saba
 				auto w1 = vtxInfo->m_boneWeight.y;
 				auto w2 = vtxInfo->m_boneWeight.z;
 				auto w3 = vtxInfo->m_boneWeight.w;
-				auto m0 = node0->m_global * node0->m_inverseInit;
-				auto m1 = node1->m_global * node1->m_inverseInit;
-				auto m2 = node2->m_global * node2->m_inverseInit;
-				auto m3 = node3->m_global * node3->m_inverseInit;
+				auto m0 = node0->GetGlobalTransform() * node0->GetInverseInitTransform();
+				auto m1 = node1->GetGlobalTransform() * node1->GetInverseInitTransform();
+				auto m2 = node2->GetGlobalTransform() * node2->GetInverseInitTransform();
+				auto m3 = node3->GetGlobalTransform() * node3->GetInverseInitTransform();
 				m = m0 * w0 + m1 * w1 + m2 * w2 + m3 * w3;
 				break;
 			}
@@ -424,7 +440,7 @@ namespace saba
 		for (const auto& bone : pmx.m_bones)
 		{
 			auto* node = m_nodeMan.AddNode();
-			node->m_name = bone.m_name;
+			node->SetName(bone.m_name);
 		}
 		for (size_t i = 0; i < pmx.m_bones.size(); i++)
 		{
@@ -437,20 +453,20 @@ namespace saba
 				parent->AddChild(node);
 				auto localPos = bone.m_position - parentBone.m_position;
 				localPos.z *= -1;
-				node->m_translate = localPos;
+				node->SetTranslate(localPos);
 			}
 			else
 			{
 				auto localPos = bone.m_position;
 				localPos.z *= -1;
-				node->m_translate = localPos;
+				node->SetTranslate(localPos);
 			}
 			glm::mat4 init = glm::translate(
 				glm::mat4(1),
 				bone.m_position * glm::vec3(1, 1, -1)
 			);
-			node->m_global = init;
-			node->m_inverseInit = glm::inverse(init);
+			node->SetGlobalTransform(init);
+			node->CalculateInverseInitTransform();
 
 			node->m_deformDepth = bone.m_deformDepth;
 			node->m_giftRotate = ((uint16_t)bone.m_boneFlag & (uint16_t)PMXBoneFlags::GiftRotate) != 0;
@@ -495,7 +511,7 @@ namespace saba
 					{
 						solver->AddIKChain(linkNode);
 					}
-					linkNode->m_enableIK = true;
+					linkNode->EnableIK(true);
 				}
 
 				solver->SetIterateCount(bone.m_ikIterationCount);

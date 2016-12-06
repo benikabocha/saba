@@ -57,16 +57,16 @@ namespace saba
 				r = glm::rotate(r, angle.y, glm::vec3(0, 1, 0));
 				r = glm::rotate(r, angle.z, glm::vec3(0, 0, 1));
 				chain.m_prevAngle = angle;
-				auto rm = glm::mat3_cast(r) * glm::inverse(glm::mat3_cast(chain.m_node->m_rotate));
-				chain.m_node->m_ikRotate = glm::quat_cast(rm);
+				auto rm = glm::mat3_cast(r) * glm::inverse(glm::mat3_cast(chain.m_node->GetRotate()));
+				chain.m_node->SetIKRotate(glm::quat_cast(rm));
 			}
 			else
 			{
-				chain.m_node->m_ikRotate = glm::quat();
+				chain.m_node->SetIKRotate(glm::quat());
 			}
 
-			chain.m_node->UpdateLocalMatrix();
-			chain.m_node->UpdateGlobalMatrix();
+			chain.m_node->UpdateLocalTransform();
+			chain.m_node->UpdateGlobalTransform();
 		}
 
 		for (uint32_t i = 0; i < m_iterateCount; i++)
@@ -226,13 +226,13 @@ namespace saba
 
 	void MMDIkSolver::SolveCore(uint32_t iteration)
 	{
-		auto ikPos =  glm::vec3(m_ikNode->m_global[3]);
+		auto ikPos =  glm::vec3(m_ikNode->GetGlobalTransform()[3]);
 		for (auto& chain : m_chains)
 		{
 			MMDNode* chainNode = chain.m_node;
-			auto targetPos = glm::vec3(m_ikTarget->m_global[3]);
+			auto targetPos = glm::vec3(m_ikTarget->GetGlobalTransform()[3]);
 
-			auto invChain = glm::inverse(chain.m_node->m_global);
+			auto invChain = glm::inverse(chain.m_node->GetGlobalTransform());
 
 			auto chainIkPos = glm::vec3(invChain * glm::vec4(ikPos, 1));
 			auto chainTargetPos = glm::vec3(invChain * glm::vec4(targetPos, 1));
@@ -252,8 +252,8 @@ namespace saba
 			auto rot = glm::rotate(glm::quat(), angle, cross);
 
 			bool avoidUpdate = false;
-			auto chainRotM = glm::mat3_cast(chainNode->m_ikRotate)
-				* glm::mat3_cast(chainNode->m_rotate)
+			auto chainRotM = glm::mat3_cast(chainNode->GetIKRotate())
+				* glm::mat3_cast(chainNode->GetRotate())
 				* glm::mat3_cast(rot);
 			if (chain.m_enableAxisLimit)
 			{
@@ -295,12 +295,12 @@ namespace saba
 			if (!avoidUpdate)
 			{
 				auto ikRotM = chainRotM
-					* glm::inverse(glm::mat3_cast(chainNode->m_rotate));
-				chainNode->m_ikRotate = glm::quat_cast(ikRotM);
+					* glm::inverse(glm::mat3_cast(chainNode->GetRotate()));
+				chainNode->SetIKRotate(glm::quat_cast(ikRotM));
 			}
 
-			chainNode->UpdateLocalMatrix();
-			chainNode->UpdateGlobalMatrix();
+			chainNode->UpdateLocalTransform();
+			chainNode->UpdateGlobalTransform();
 		}
 	}
 }

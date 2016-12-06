@@ -85,9 +85,9 @@ namespace saba
 	{
 		m_node = node;
 
-		m_initTranslate = node->m_translate;
-		m_initRotate = node->m_rotate;
-		m_initScale = node->m_scale;
+		m_initTranslate = node->GetTranslate();
+		m_initRotate = node->GetRotate();
+		m_initScale = node->GetScale();
 	}
 
 	void VMDNodeController::Evaluate(float t)
@@ -99,9 +99,9 @@ namespace saba
 		}
 		if (m_keys.empty())
 		{
-			m_node->m_translate = m_initTranslate;
-			m_node->m_rotate = m_initRotate;
-			m_node->m_scale = m_initScale;
+			m_node->SetTranslate(m_initTranslate);
+			m_node->SetRotate(m_initRotate);
+			m_node->SetScale(m_initScale);
 			return;
 		}
 
@@ -144,8 +144,8 @@ namespace saba
 			}
 		}
 
-		m_node->m_translate = m_initTranslate + vt;
-		m_node->m_rotate = q;
+		m_node->SetTranslate(m_initTranslate + vt);
+		m_node->SetRotate(q);
 	}
 
 	void VMDNodeController::SortKeys()

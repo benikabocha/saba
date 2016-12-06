@@ -18,7 +18,7 @@ namespace saba
 {
 	class MMDPhysics;
 	class MMDModel;
-	struct MMDNode;
+	class MMDNode;
 
 	class MMDMotionState : public btMotionState
 	{

@@ -194,6 +194,8 @@ namespace saba
 			return;
 		}
 
+		m_mmdModel->BeginAnimation();
+
 		double startTime = GetTime();
 		if (m_vmdAnim != 0)
 		{
@@ -203,7 +205,9 @@ namespace saba
 		}
 
 		m_mmdModel->UpdateAnimation((float)elapsed);
-		//m_mmdModel->UpdateAnimation(0);
+
+		m_mmdModel->EndAnimation();
+
 		m_mmdModel->Update((float)elapsed);
 
 		size_t vtxCount = m_mmdModel->GetVertexCount();

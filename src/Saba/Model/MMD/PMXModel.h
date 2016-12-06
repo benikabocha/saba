@@ -53,7 +53,12 @@ namespace saba
 		MMDPhysics* GetMMDPhysics() override { return m_physicsMan.GetMMDPhysics(); }
 
 		void InitializeAnimation() override;
+		// アニメーションの前後で呼ぶ (VMDアニメーションの前後)
+		void BeginAnimation() override;
+		void EndAnimation() override;
+		// ノードを更新する
 		void UpdateAnimation(float elapsed) override;
+		// 頂点データーを更新する
 		void Update(float elapsed) override;
 
 		bool Load(const std::string& filepath, const std::string& mmdDataDir);
