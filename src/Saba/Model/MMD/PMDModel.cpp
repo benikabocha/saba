@@ -425,6 +425,7 @@ namespace saba
 			);
 			node->SetGlobalTransform(init);
 			node->CalculateInverseInitTransform();
+			node->SaveInitialTRS();
 		}
 
 		// IKを作成

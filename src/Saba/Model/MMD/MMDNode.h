@@ -56,6 +56,17 @@ namespace saba
 		void CalculateInverseInitTransform();
 		const glm::mat4 GetInverseInitTransform() { return m_inverseInit; }
 
+		// ノードの初期化時に呼び出す
+		void SaveInitialTRS()
+		{
+			m_initTranslate = m_translate;
+			m_initRotate = m_rotate;
+			m_scale = m_scale;
+		}
+		const glm::vec3& GetInitialTranslate() const { return m_initTranslate; }
+		const glm::quat& GetInitialRotate() const { return m_initRotate; }
+		const glm::vec3& GetInitialScale() const { return m_initScale; }
+
 	protected:
 		virtual void OnBeginUpdateTransform();
 		virtual void OnEndUpdateTransfrom();

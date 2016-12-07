@@ -9,6 +9,7 @@
 
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtx/matrix_decompose.hpp>
 #include <map>
 #include <limits>
 #include <algorithm>
@@ -56,7 +57,7 @@ namespace saba
 
 	void PMXModel::UpdateAnimation(float elapsed)
 	{
-		for (const auto& node : (*m_nodeMan.GetNodes()))
+		for (auto& node : (*m_nodeMan.GetNodes()))
 		{
 			node->UpdateLocalTransform();
 		}
@@ -69,9 +70,27 @@ namespace saba
 			}
 		}
 
-		for (auto& solver : (*m_ikSolverMan.GetIKSolvers()))
+		for (auto pmxNode : m_sortedNodes)
 		{
-			solver->Solve();
+			if (pmxNode->GetGiftNode() != nullptr)
+			{
+				pmxNode->UpdateGiftTransform();
+				pmxNode->UpdateGlobalTransform();
+			}
+			if (pmxNode->GetIKSolver() != nullptr)
+			{
+				auto ikSolver = pmxNode->GetIKSolver();
+				ikSolver->Solve();
+				pmxNode->UpdateGlobalTransform();
+			}
+		}
+
+		for (const auto& node : (*m_nodeMan.GetNodes()))
+		{
+			if (node->GetParent() == nullptr)
+			{
+				node->UpdateGlobalTransform();
+			}
 		}
 	}
 
@@ -468,16 +487,34 @@ namespace saba
 			node->SetGlobalTransform(init);
 			node->CalculateInverseInitTransform();
 
-			node->m_deformDepth = bone.m_deformDepth;
-			node->m_giftRotate = ((uint16_t)bone.m_boneFlag & (uint16_t)PMXBoneFlags::GiftRotate) != 0;
-			node->m_giftTranslate = ((uint16_t)bone.m_boneFlag & (uint16_t)PMXBoneFlags::GiftTranslate) != 0;
-			if (node->m_giftRotate || node->m_giftTranslate)
+			node->SetDeformDepth(bone.m_deformDepth);
+			bool giftRotate = ((uint16_t)bone.m_boneFlag & (uint16_t)PMXBoneFlags::GiftRotate) != 0;
+			bool giftTranslate = ((uint16_t)bone.m_boneFlag & (uint16_t)PMXBoneFlags::GiftTranslate) != 0;
+			node->EnableGiftRotate(giftRotate);
+			node->EnableGiftTranslate(giftTranslate);
+			if (giftRotate || giftTranslate)
 			{
-				node->m_giftLocal = ((uint16_t)bone.m_boneFlag & (uint16_t)PMXBoneFlags::GiftLocal) != 0;
-				node->m_giftNode = m_nodeMan.GetNode(bone.m_giftBoneIndex);
-				node->m_giftWeight = bone.m_giftWeight;
+				bool giftLocal = ((uint16_t)bone.m_boneFlag & (uint16_t)PMXBoneFlags::GiftLocal) != 0;
+				auto giftNode = m_nodeMan.GetNode(bone.m_giftBoneIndex);
+				float giftWeight = bone.m_giftWeight;
+				node->EnableGiftLocal(giftLocal);
+				node->SetGiftNode(giftNode);
+				node->SetGiftWeight(giftWeight);
 			}
+			node->SaveInitialTRS();
 		}
+		m_sortedNodes.clear();
+		m_sortedNodes.reserve(m_nodeMan.GetNodeCount());
+		auto* pmxNodes = m_nodeMan.GetNodes();
+		for (auto& pmxNode : (*pmxNodes))
+		{
+			m_sortedNodes.push_back(pmxNode.get());
+		}
+		std::stable_sort(
+			m_sortedNodes.begin(),
+			m_sortedNodes.end(),
+			[](const PMXNode* x, const PMXNode* y) {return x->GetDeformdepth() < y->GetDeformdepth(); }
+		);
 
 		// IK
 		for (size_t i = 0; i < pmx.m_bones.size(); i++)
@@ -488,6 +525,7 @@ namespace saba
 				auto solver = m_ikSolverMan.AddIKSolver();
 				auto* ikNode = m_nodeMan.GetNode(i);
 				solver->SetIKNode(ikNode);
+				ikNode->SetIKSolver(solver);
 
 				auto* targetNode = m_nodeMan.GetNode(bone.m_ikTargetBoneIndex);
 				solver->SetTargetNode(targetNode);
@@ -575,5 +613,115 @@ namespace saba
 		m_indices.clear();
 
 		m_nodeMan.GetNodes()->clear();
+	}
+
+	PMXNode::PMXNode()
+		: m_deformDepth(-1)
+		, m_giftNode(nullptr)
+		, m_isGiftRotate(false)
+		, m_isGiftTranslate(false)
+		, m_isGiftLocal(false)
+		, m_giftWeight(0)
+		, m_ikSolver(nullptr)
+	{
+	}
+
+	void PMXNode::UpdateGiftTransform()
+	{
+		if (m_giftNode == nullptr)
+		{
+			return;
+		}
+
+		if (m_isGiftRotate)
+		{
+			glm::quat giftRotate;
+			if (m_isGiftLocal)
+			{
+				giftRotate = m_giftNode->GetRotate();
+			}
+			else
+			{
+				if (m_giftNode->GetGiftNode() != nullptr)
+				{
+					giftRotate = m_giftNode->GetGiftRotate();
+				}
+				else
+				{
+					giftRotate = m_giftNode->GetRotate();
+				}
+			}
+
+			if (m_giftNode->m_enableIK)
+			{
+				giftRotate = m_giftNode->GetIKRotate() * giftRotate;
+			}
+
+			glm::quat giftQ = glm::slerp(
+				glm::quat(),
+				giftRotate,
+				GetGiftWeight()
+			);
+			m_giftRotate = giftQ;
+		}
+
+		if (m_isGiftTranslate)
+		{
+			glm::vec3 giftTranslate(0.0f);
+			if (m_isGiftLocal)
+			{
+				giftTranslate = m_giftNode->GetTranslate() - m_giftNode->GetInitialTranslate();
+			}
+			else
+			{
+				if (m_giftNode->GetGiftNode() != nullptr)
+				{
+					giftTranslate = m_giftNode->GetGiftTranslate();
+				}
+				else
+				{
+					giftTranslate = m_giftNode->GetTranslate() - m_giftNode->GetInitialTranslate();
+				}
+			}
+
+			m_giftTranslate = giftTranslate * GetGiftWeight();
+		}
+
+		UpdateLocalTransform();
+	}
+
+	void PMXNode::OnBeginUpdateTransform()
+	{
+		m_giftTranslate = glm::vec3(0);
+		m_giftRotate = glm::quat();
+	}
+
+	void PMXNode::OnEndUpdateTransfrom()
+	{
+	}
+
+	void PMXNode::OnUpdateLocalTransform()
+	{
+		glm::vec3 t = GetTranslate();
+		if (m_isGiftTranslate)
+		{
+			t += m_giftTranslate;
+		}
+
+		glm::quat r = GetRotate();
+		if (m_enableIK)
+		{
+			r = GetIKRotate() * r;
+		}
+		if (m_isGiftRotate)
+		{
+			r = r * m_giftRotate;
+		}
+
+		glm::vec3 s = GetScale();
+
+		m_local = glm::translate(glm::mat4(), t)
+			* glm::mat4_cast(r)
+			* glm::scale(glm::mat4(), s);
 	}
 }

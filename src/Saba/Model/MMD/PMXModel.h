@@ -3,25 +3,62 @@
 
 #include "MMDMaterial.h"
 #include "MMDModel.h"
+#include "MMDIkSolver.h"
 
 #include <glm/vec2.hpp>
 #include <glm/vec3.hpp>
+#include <glm/gtc/quaternion.hpp>
 #include <vector>
 #include <string>
 #include <algorithm>
 
 namespace saba
 {
-	struct PMXNode : public MMDNode
+	class PMXNode : public MMDNode
 	{
 	public:
+		PMXNode();
+
+		void SetDeformDepth(int32_t depth) { m_deformDepth = depth; }
+		int32_t GetDeformdepth() const { return m_deformDepth; }
+
+		void SetGiftNode(PMXNode* node) { m_giftNode = node; }
+		PMXNode* GetGiftNode() const { return m_giftNode; }
+
+		void EnableGiftRotate(bool enable) { m_isGiftRotate = enable; }
+		void EnableGiftTranslate(bool enable) { m_isGiftTranslate = enable; }
+		void EnableGiftLocal(bool enable) { m_isGiftLocal = enable; }
+		void SetGiftWeight(float weight) { m_giftWeight = weight; }
+		float GetGiftWeight() const { return m_giftWeight; }
+
+		const glm::vec3& GetGiftTranslate() const { return m_giftTranslate; }
+		const glm::quat& GetGiftRotate() const { return m_giftRotate; }
+
+		void SetIKSolver(MMDIkSolver* ik) { m_ikSolver = ik; }
+		MMDIkSolver* GetIKSolver() const { return m_ikSolver; }
+
+		void UpdateGiftTransform();
+
+
+	protected:
+		void OnBeginUpdateTransform() override;
+		void OnEndUpdateTransfrom() override;
+		void OnUpdateLocalTransform() override;
+
+	private:
 		int32_t		m_deformDepth;
 
 		PMXNode*	m_giftNode;
-		bool		m_giftRotate;
-		bool		m_giftTranslate;
-		bool		m_giftLocal;
+		bool		m_isGiftRotate;
+		bool		m_isGiftTranslate;
+		bool		m_isGiftLocal;
 		float		m_giftWeight;
+
+		glm::vec3	m_giftTranslate;
+		glm::quat	m_giftRotate;
+
+		MMDIkSolver*	m_ikSolver;
+
 	};
 
 	class PMXModel : public MMDModel
@@ -100,6 +137,7 @@ namespace saba
 
 		std::vector<MMDMaterial>	m_materials;
 		std::vector<MMDSubMesh>		m_subMeshes;
+		std::vector<PMXNode*>		m_sortedNodes;
 
 		MMDNodeManagerT<PMXNode>	m_nodeMan;
 		MMDIKManagerT<MMDIkSolver>	m_ikSolverMan;
