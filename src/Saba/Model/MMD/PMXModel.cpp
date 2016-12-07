@@ -20,7 +20,7 @@ namespace saba
 {
 	void PMXModel::InitializeAnimation()
 	{
-		for (const auto& node : (*m_nodeMan.GetNodes()))
+		for (auto& node : (*m_nodeMan.GetNodes()))
 		{
 			node->UpdateLocalTransform();
 		}
@@ -33,9 +33,59 @@ namespace saba
 			}
 		}
 
-		for (auto& solver : (*m_ikSolverMan.GetIKSolvers()))
+		for (auto pmxNode : m_sortedNodes)
 		{
-			solver->Solve();
+			if (pmxNode->GetGiftNode() != nullptr)
+			{
+				pmxNode->UpdateGiftTransform();
+				pmxNode->UpdateGlobalTransform();
+			}
+			if (pmxNode->GetIKSolver() != nullptr)
+			{
+				auto ikSolver = pmxNode->GetIKSolver();
+				ikSolver->Solve();
+				pmxNode->UpdateGlobalTransform();
+			}
+		}
+
+		for (const auto& node : (*m_nodeMan.GetNodes()))
+		{
+			if (node->GetParent() == nullptr)
+			{
+				node->UpdateGlobalTransform();
+			}
+		}
+
+		MMDPhysicsManager* physicsMan = GetPhysicsManager();
+		auto physics = physicsMan->GetMMDPhysics();
+
+		if (physics == nullptr)
+		{
+			return;
+		}
+
+		auto rigidbodys = physicsMan->GetRigidBodys();
+		auto joints = physicsMan->GetJoints();
+		for (auto& rb : (*rigidbodys))
+		{
+			rb->SetActivation(false);
+		}
+
+		for (auto& rb : (*rigidbodys))
+		{
+			rb->BeginUpdate();
+		}
+
+		physics->Update(1.0f / 60.0f);
+
+		for (auto& rb : (*rigidbodys))
+		{
+			rb->EndUpdate();
+		}
+
+		for (auto& rb : (*rigidbodys))
+		{
+			rb->Reset(physics);
 		}
 	}
 
@@ -91,6 +141,33 @@ namespace saba
 			{
 				node->UpdateGlobalTransform();
 			}
+		}
+
+		MMDPhysicsManager* physicsMan = GetPhysicsManager();
+		auto physics = physicsMan->GetMMDPhysics();
+
+		if (physics == nullptr)
+		{
+			return;
+		}
+
+		auto rigidbodys = physicsMan->GetRigidBodys();
+		auto joints = physicsMan->GetJoints();
+		for (auto& rb : (*rigidbodys))
+		{
+			rb->SetActivation(true);
+		}
+
+		for (auto& rb : (*rigidbodys))
+		{
+			rb->BeginUpdate();
+		}
+
+		physics->Update(elapsed);
+
+		for (auto& rb : (*rigidbodys))
+		{
+			rb->EndUpdate();
 		}
 	}
 
