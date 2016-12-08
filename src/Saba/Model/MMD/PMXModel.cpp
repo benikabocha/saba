@@ -644,7 +644,7 @@ namespace saba
 		{
 			auto rb = m_physicsMan.AddRigidBody();
 			MMDNode* node = nullptr;
-			if (pmxRB.m_boneIndex != 0xFFFF)
+			if (pmxRB.m_boneIndex != -1)
 			{
 				node = m_nodeMan.GetMMDNode(pmxRB.m_boneIndex);
 			}
