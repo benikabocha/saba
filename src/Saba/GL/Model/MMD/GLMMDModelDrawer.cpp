@@ -148,7 +148,7 @@ namespace saba
 			SetUniform(shader->m_uWV, wv);
 			SetUniform(shader->m_uWVP, wvp);
 
-			bool alphaBlend = false;
+			bool alphaBlend = true;
 
 			SetUniform(shader->m_uAmbinet, pmdMat.m_ambient);
 			SetUniform(shader->m_uDiffuse, pmdMat.m_diffuse);
@@ -156,21 +156,18 @@ namespace saba
 			SetUniform(shader->m_uSpecularPower, pmdMat.m_specularPower);
 			SetUniform(shader->m_uAlpha, pmdMat.m_alpha);
 
-			if (pmdMat.m_alpha != 1.0)
-			{
-				alphaBlend = true;
-			}
-
 			glActiveTexture(GL_TEXTURE0 + 0);
 			SetUniform(shader->m_uTex, (GLint)0);
 			if (pmdMat.m_texture != 0)
 			{
-				if (!IsAlphaTexture(shader->m_uTex))
+				if (!IsAlphaTexture(pmdMat.m_texture))
 				{
+					// Use Material Alpha
 					SetUniform(shader->m_uTexMode, (GLint)1);
 				}
 				else
 				{
+					// Use Material Alpha * Texture Alpha
 					SetUniform(shader->m_uTexMode, (GLint)2);
 				}
 				glBindTexture(GL_TEXTURE_2D, pmdMat.m_texture);
