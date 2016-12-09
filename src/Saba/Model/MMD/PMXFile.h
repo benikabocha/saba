@@ -199,9 +199,9 @@ namespace saba
 		Visible = 0x0008,
 		AllowControl = 0x0010,
 		IK = 0x0020,
-		GiftLocal = 0x0080,
-		GiftRotate = 0x0100,
-		GiftTranslate = 0x0200,
+		AppendLocal = 0x0080,
+		AppendRotate = 0x0100,
+		AppendTranslate = 0x0200,
 		FixedAxis = 0x0400,
 		LocalAxis = 0x800,
 		DeformAfterPhysics = 0x1000,
@@ -233,8 +233,8 @@ namespace saba
 		int32_t		m_linkBoneIndex;	//接続先:1の場合
 
 										//「回転付与」または「移動付与」が有効のみ
-		int32_t	m_giftBoneIndex;
-		float	m_giftWeight;
+		int32_t	m_appendBoneIndex;
+		float	m_appendWeight;
 
 		//「軸固定」が有効のみ
 		glm::vec3	m_fixedAxis;

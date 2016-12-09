@@ -35,9 +35,9 @@ namespace saba
 
 		for (auto pmxNode : m_sortedNodes)
 		{
-			if (pmxNode->GetGiftNode() != nullptr)
+			if (pmxNode->GetAppendNode() != nullptr)
 			{
-				pmxNode->UpdateGiftTransform();
+				pmxNode->UpdateAppendTransform();
 				pmxNode->UpdateGlobalTransform();
 			}
 			if (pmxNode->GetIKSolver() != nullptr)
@@ -122,9 +122,9 @@ namespace saba
 
 		for (auto pmxNode : m_sortedNodes)
 		{
-			if (pmxNode->GetGiftNode() != nullptr)
+			if (pmxNode->GetAppendNode() != nullptr)
 			{
-				pmxNode->UpdateGiftTransform();
+				pmxNode->UpdateAppendTransform();
 				pmxNode->UpdateGlobalTransform();
 			}
 			if (pmxNode->GetIKSolver() != nullptr)
@@ -565,18 +565,18 @@ namespace saba
 			node->CalculateInverseInitTransform();
 
 			node->SetDeformDepth(bone.m_deformDepth);
-			bool giftRotate = ((uint16_t)bone.m_boneFlag & (uint16_t)PMXBoneFlags::GiftRotate) != 0;
-			bool giftTranslate = ((uint16_t)bone.m_boneFlag & (uint16_t)PMXBoneFlags::GiftTranslate) != 0;
-			node->EnableGiftRotate(giftRotate);
-			node->EnableGiftTranslate(giftTranslate);
-			if (giftRotate || giftTranslate)
+			bool appendRotate = ((uint16_t)bone.m_boneFlag & (uint16_t)PMXBoneFlags::AppendRotate) != 0;
+			bool appendTranslate = ((uint16_t)bone.m_boneFlag & (uint16_t)PMXBoneFlags::AppendTranslate) != 0;
+			node->EnableAppendRotate(appendRotate);
+			node->EnableAppendTranslate(appendTranslate);
+			if (appendRotate || appendTranslate)
 			{
-				bool giftLocal = ((uint16_t)bone.m_boneFlag & (uint16_t)PMXBoneFlags::GiftLocal) != 0;
-				auto giftNode = m_nodeMan.GetNode(bone.m_giftBoneIndex);
-				float giftWeight = bone.m_giftWeight;
-				node->EnableGiftLocal(giftLocal);
-				node->SetGiftNode(giftNode);
-				node->SetGiftWeight(giftWeight);
+				bool appendLocal = ((uint16_t)bone.m_boneFlag & (uint16_t)PMXBoneFlags::AppendLocal) != 0;
+				auto appendNode = m_nodeMan.GetNode(bone.m_appendBoneIndex);
+				float appendWeight = bone.m_appendWeight;
+				node->EnableAppendLocal(appendLocal);
+				node->SetAppendNode(appendNode);
+				node->SetAppendWeight(appendWeight);
 			}
 			node->SaveInitialTRS();
 		}
@@ -694,74 +694,74 @@ namespace saba
 
 	PMXNode::PMXNode()
 		: m_deformDepth(-1)
-		, m_giftNode(nullptr)
-		, m_isGiftRotate(false)
-		, m_isGiftTranslate(false)
-		, m_isGiftLocal(false)
-		, m_giftWeight(0)
+		, m_appendNode(nullptr)
+		, m_isAppendRotate(false)
+		, m_isAppendTranslate(false)
+		, m_isAppendLocal(false)
+		, m_appendWeight(0)
 		, m_ikSolver(nullptr)
 	{
 	}
 
-	void PMXNode::UpdateGiftTransform()
+	void PMXNode::UpdateAppendTransform()
 	{
-		if (m_giftNode == nullptr)
+		if (m_appendNode == nullptr)
 		{
 			return;
 		}
 
-		if (m_isGiftRotate)
+		if (m_isAppendRotate)
 		{
-			glm::quat giftRotate;
-			if (m_isGiftLocal)
+			glm::quat appendRotate;
+			if (m_isAppendLocal)
 			{
-				giftRotate = m_giftNode->GetRotate();
+				appendRotate = m_appendNode->GetRotate();
 			}
 			else
 			{
-				if (m_giftNode->GetGiftNode() != nullptr)
+				if (m_appendNode->GetAppendNode() != nullptr)
 				{
-					giftRotate = m_giftNode->GetGiftRotate();
+					appendRotate = m_appendNode->GetAppendRotate();
 				}
 				else
 				{
-					giftRotate = m_giftNode->GetRotate();
+					appendRotate = m_appendNode->GetRotate();
 				}
 			}
 
-			if (m_giftNode->m_enableIK)
+			if (m_appendNode->m_enableIK)
 			{
-				giftRotate = m_giftNode->GetIKRotate() * giftRotate;
+				appendRotate = m_appendNode->GetIKRotate() * appendRotate;
 			}
 
-			glm::quat giftQ = glm::slerp(
+			glm::quat appendQ = glm::slerp(
 				glm::quat(),
-				giftRotate,
-				GetGiftWeight()
+				appendRotate,
+				GetAppendWeight()
 			);
-			m_giftRotate = giftQ;
+			m_appendRotate = appendQ;
 		}
 
-		if (m_isGiftTranslate)
+		if (m_isAppendTranslate)
 		{
-			glm::vec3 giftTranslate(0.0f);
-			if (m_isGiftLocal)
+			glm::vec3 appendTranslate(0.0f);
+			if (m_isAppendLocal)
 			{
-				giftTranslate = m_giftNode->GetTranslate() - m_giftNode->GetInitialTranslate();
+				appendTranslate = m_appendNode->GetTranslate() - m_appendNode->GetInitialTranslate();
 			}
 			else
 			{
-				if (m_giftNode->GetGiftNode() != nullptr)
+				if (m_appendNode->GetAppendNode() != nullptr)
 				{
-					giftTranslate = m_giftNode->GetGiftTranslate();
+					appendTranslate = m_appendNode->GetAppendTranslate();
 				}
 				else
 				{
-					giftTranslate = m_giftNode->GetTranslate() - m_giftNode->GetInitialTranslate();
+					appendTranslate = m_appendNode->GetTranslate() - m_appendNode->GetInitialTranslate();
 				}
 			}
 
-			m_giftTranslate = giftTranslate * GetGiftWeight();
+			m_appendTranslate = appendTranslate * GetAppendWeight();
 		}
 
 		UpdateLocalTransform();
@@ -769,8 +769,8 @@ namespace saba
 
 	void PMXNode::OnBeginUpdateTransform()
 	{
-		m_giftTranslate = glm::vec3(0);
-		m_giftRotate = glm::quat();
+		m_appendTranslate = glm::vec3(0);
+		m_appendRotate = glm::quat();
 	}
 
 	void PMXNode::OnEndUpdateTransfrom()
@@ -780,9 +780,9 @@ namespace saba
 	void PMXNode::OnUpdateLocalTransform()
 	{
 		glm::vec3 t = GetTranslate();
-		if (m_isGiftTranslate)
+		if (m_isAppendTranslate)
 		{
-			t += m_giftTranslate;
+			t += m_appendTranslate;
 		}
 
 		glm::quat r = GetRotate();
@@ -790,9 +790,9 @@ namespace saba
 		{
 			r = GetIKRotate() * r;
 		}
-		if (m_isGiftRotate)
+		if (m_isAppendRotate)
 		{
-			r = r * m_giftRotate;
+			r = r * m_appendRotate;
 		}
 
 		glm::vec3 s = GetScale();

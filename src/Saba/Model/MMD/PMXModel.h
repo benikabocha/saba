@@ -22,22 +22,22 @@ namespace saba
 		void SetDeformDepth(int32_t depth) { m_deformDepth = depth; }
 		int32_t GetDeformdepth() const { return m_deformDepth; }
 
-		void SetGiftNode(PMXNode* node) { m_giftNode = node; }
-		PMXNode* GetGiftNode() const { return m_giftNode; }
+		void SetAppendNode(PMXNode* node) { m_appendNode = node; }
+		PMXNode* GetAppendNode() const { return m_appendNode; }
 
-		void EnableGiftRotate(bool enable) { m_isGiftRotate = enable; }
-		void EnableGiftTranslate(bool enable) { m_isGiftTranslate = enable; }
-		void EnableGiftLocal(bool enable) { m_isGiftLocal = enable; }
-		void SetGiftWeight(float weight) { m_giftWeight = weight; }
-		float GetGiftWeight() const { return m_giftWeight; }
+		void EnableAppendRotate(bool enable) { m_isAppendRotate = enable; }
+		void EnableAppendTranslate(bool enable) { m_isAppendTranslate = enable; }
+		void EnableAppendLocal(bool enable) { m_isAppendLocal = enable; }
+		void SetAppendWeight(float weight) { m_appendWeight = weight; }
+		float GetAppendWeight() const { return m_appendWeight; }
 
-		const glm::vec3& GetGiftTranslate() const { return m_giftTranslate; }
-		const glm::quat& GetGiftRotate() const { return m_giftRotate; }
+		const glm::vec3& GetAppendTranslate() const { return m_appendTranslate; }
+		const glm::quat& GetAppendRotate() const { return m_appendRotate; }
 
 		void SetIKSolver(MMDIkSolver* ik) { m_ikSolver = ik; }
 		MMDIkSolver* GetIKSolver() const { return m_ikSolver; }
 
-		void UpdateGiftTransform();
+		void UpdateAppendTransform();
 
 
 	protected:
@@ -48,14 +48,14 @@ namespace saba
 	private:
 		int32_t		m_deformDepth;
 
-		PMXNode*	m_giftNode;
-		bool		m_isGiftRotate;
-		bool		m_isGiftTranslate;
-		bool		m_isGiftLocal;
-		float		m_giftWeight;
+		PMXNode*	m_appendNode;
+		bool		m_isAppendRotate;
+		bool		m_isAppendTranslate;
+		bool		m_isAppendLocal;
+		float		m_appendWeight;
 
-		glm::vec3	m_giftTranslate;
-		glm::quat	m_giftRotate;
+		glm::vec3	m_appendTranslate;
+		glm::quat	m_appendRotate;
 
 		MMDIkSolver*	m_ikSolver;
 

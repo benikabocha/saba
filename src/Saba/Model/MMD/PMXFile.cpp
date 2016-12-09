@@ -377,11 +377,11 @@ namespace saba
 					ReadIndex(&bone.m_linkBoneIndex, pmx->m_header.m_boneIndexSize, file);
 				}
 
-				if (((uint16_t)bone.m_boneFlag & (uint16_t)PMXBoneFlags::GiftRotate) ||
-					((uint16_t)bone.m_boneFlag & (uint16_t)PMXBoneFlags::GiftTranslate))
+				if (((uint16_t)bone.m_boneFlag & (uint16_t)PMXBoneFlags::AppendRotate) ||
+					((uint16_t)bone.m_boneFlag & (uint16_t)PMXBoneFlags::AppendTranslate))
 				{
-					ReadIndex(&bone.m_giftBoneIndex, pmx->m_header.m_boneIndexSize, file);
-					Read(&bone.m_giftWeight, file);
+					ReadIndex(&bone.m_appendBoneIndex, pmx->m_header.m_boneIndexSize, file);
+					Read(&bone.m_appendWeight, file);
 				}
 
 				if ((uint16_t)bone.m_boneFlag & (uint16_t)PMXBoneFlags::FixedAxis)
