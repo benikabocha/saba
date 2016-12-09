@@ -133,12 +133,12 @@ namespace saba
 			m_initialTransform = m_transform;
 		}
 
-		void getWorldTransform(btTransform& worldTransform) const
+		void getWorldTransform(btTransform& worldTransform) const override
 		{
 			worldTransform = m_transform;
 		}
 
-		void setWorldTransform(const btTransform& worldTransform)
+		void setWorldTransform(const btTransform& worldTransform) override
 		{
 			m_transform = worldTransform;
 		}
@@ -174,13 +174,13 @@ namespace saba
 			m_nodeGlobal = m_node->GetGlobalTransform();
 		}
 
-		void getWorldTransform(btTransform& worldTransform) const
+		void getWorldTransform(btTransform& worldTransform) const override
 		{
 			glm::mat4 ret = InvZ(m_nodeGlobal * m_offset);
 			worldTransform.setFromOpenGLMatrix(&ret[0][0]);
 		}
 
-		void setWorldTransform(const btTransform& worldTransform)
+		void setWorldTransform(const btTransform& worldTransform) override
 		{
 			glm::mat4 world;
 			worldTransform.getOpenGLMatrix(&world[0][0]);
@@ -238,13 +238,13 @@ namespace saba
 			m_nodeGlobal = m_node->GetGlobalTransform();
 		}
 
-		void getWorldTransform(btTransform& worldTransform) const
+		void getWorldTransform(btTransform& worldTransform) const override
 		{
 			glm::mat4 ret = InvZ(m_nodeGlobal * m_offset);
 			worldTransform.setFromOpenGLMatrix(&ret[0][0]);
 		}
 
-		void setWorldTransform(const btTransform& worldTransform)
+		void setWorldTransform(const btTransform& worldTransform) override
 		{
 			glm::mat4 world;
 			worldTransform.getOpenGLMatrix(&world[0][0]);
@@ -313,7 +313,7 @@ namespace saba
 		{
 		}
 
-		void getWorldTransform(btTransform& worldTransform) const
+		void getWorldTransform(btTransform& worldTransform) const override
 		{
 			glm::mat4 m;
 			if (m_node != nullptr)
@@ -328,7 +328,7 @@ namespace saba
 			worldTransform.setFromOpenGLMatrix(&m[0][0]);
 		}
 
-		void setWorldTransform(const btTransform& worldTransform)
+		void setWorldTransform(const btTransform& worldTransform) override
 		{
 		}
 
