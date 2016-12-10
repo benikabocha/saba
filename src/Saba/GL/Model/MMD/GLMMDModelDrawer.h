@@ -24,7 +24,9 @@ namespace saba
 		bool Create();
 		void Destroy();
 
-		virtual void Draw(ViewerContext* ctxt) override;
+		void Update(ViewerContext* ctxt) override;
+		void DrawUI(ViewerContext* ctxt) override;
+		void Draw(ViewerContext* ctxt) override;
 
 	private:
 		struct MaterialShader
@@ -32,6 +34,16 @@ namespace saba
 			int					m_objMaterialIndex;
 			int					m_objShaderIndex;
 			GLVertexArrayObject	m_vao;
+		};
+
+		enum class PlayMode
+		{
+			None,
+			Play,
+			Stop,
+			StepFrame,
+			StepFF,
+			StepFR,
 		};
 
 	private:
@@ -42,9 +54,10 @@ namespace saba
 
 		glm::mat4	m_world;
 
+
 		// IMGui
-		bool	m_clipElapsed;
-		bool	m_stepAnimMode;
+		PlayMode	m_playMode;
+		bool		m_clipElapsed;
 	};
 }
 

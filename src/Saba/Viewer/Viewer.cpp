@@ -274,6 +274,19 @@ namespace saba
 		m_grid.SetWVPMatrix(wvp);
 		m_grid.Draw();
 
+		// DrawUI
+		if (m_modelDrawer != nullptr)
+		{
+			m_modelDrawer->DrawUI(&m_context);
+		}
+
+		// Update
+		if (m_modelDrawer != nullptr)
+		{
+			m_modelDrawer->Update(&m_context);
+		}
+
+		// Draw
 		if (m_modelDrawer != nullptr)
 		{
 			m_modelDrawer->Draw(&m_context);
@@ -287,7 +300,7 @@ namespace saba
 			return;
 		}
 		ImGui::SetNextWindowPos(ImVec2(10, 30));
-		if (!ImGui::Begin("Info", &m_enableCommandUI, ImVec2(0, 0), 0.3f, ImGuiWindowFlags_NoTitleBar /*| ImGuiWindowFlags_NoResize*/ | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoSavedSettings))
+		if (!ImGui::Begin("Info", &m_enableCommandUI, ImVec2(0, 0), 0.3f, ImGuiWindowFlags_NoTitleBar /*| ImGuiWindowFlags_NoResize*/ | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_AlwaysAutoResize))
 		{
 			ImGui::End();
 			return;

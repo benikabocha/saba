@@ -25,7 +25,9 @@ namespace saba
 		bool Create();
 		void Destroy();
 
-		virtual void Draw(ViewerContext* ctxt) override;
+		void Update(ViewerContext* ctxt) override;
+		void DrawUI(ViewerContext* ctxt) override;
+		void Draw(ViewerContext* ctxt) override;
 
 	private:
 		struct MaterialShader

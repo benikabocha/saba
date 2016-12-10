@@ -13,12 +13,11 @@ namespace saba
 	GLMMDModelDrawer::GLMMDModelDrawer(GLMMDModelDrawContext * ctxt, std::shared_ptr<GLMMDModel> mmdModel)
 		: m_drawContext(ctxt)
 		, m_mmdModel(mmdModel)
+		, m_playMode(PlayMode::None)
+		, m_clipElapsed(true)
 	{
 		SABA_ASSERT(ctxt != nullptr);
 		SABA_ASSERT(mmdModel != nullptr);
-
-		m_clipElapsed = true;
-		m_stepAnimMode = false;
 	}
 
 	GLMMDModelDrawer::~GLMMDModelDrawer()
@@ -71,6 +70,7 @@ namespace saba
 
 			matIdx++;
 		}
+		m_playMode = PlayMode::Stop;
 		return true;
 	}
 
@@ -79,36 +79,46 @@ namespace saba
 		m_materialShaders.clear();
 	}
 
-	void GLMMDModelDrawer::Draw(ViewerContext * ctxt)
+	void GLMMDModelDrawer::DrawUI(ViewerContext * ctxt)
 	{
-		double elapsed = ctxt->GetElapsed();
-
 		ImGui::Begin("MMDDrawCtrl");
 		ImGui::Checkbox("Clip Elapsed", &m_clipElapsed);
 		float animFrame = (float)(m_mmdModel->GetAnimationTime() * 30.0);
 		if (ImGui::InputFloat("Frame", &animFrame))
 		{
 			m_mmdModel->SetAnimationTime(animFrame / 30.0);
-			m_mmdModel->Update(0.0);
-			elapsed = 0;
-			m_stepAnimMode = true;
+			m_playMode = PlayMode::StepFrame;
 		}
-		ImGui::Checkbox("StepFrameMode", &m_stepAnimMode);
+
+		if (m_playMode == PlayMode::Play)
+		{
+			if (ImGui::Button("Stop"))
+			{
+				m_playMode = PlayMode::Stop;
+			}
+		}
+		else
+		{
+			if (ImGui::Button("Play"))
+			{
+				m_playMode = PlayMode::Play;
+			}
+		}
 		if (ImGui::Button("Step FF"))
 		{
-			m_stepAnimMode = true;
-			elapsed = 0;
-			m_mmdModel->Update(1.0f / 30.0f);
+			m_playMode = PlayMode::StepFF;
 		}
 		if (ImGui::Button("Step FR"))
 		{
-			m_stepAnimMode = true;
-			elapsed = 0;
-			m_mmdModel->Update(-1.0f / 30.0f);
+			m_playMode = PlayMode::StepFR;
 		}
 		ImGui::End();
+	}
 
-
+	void GLMMDModelDrawer::Update(ViewerContext * ctxt)
+	{
+		double elapsed = ctxt->GetElapsed();
+		float animFrame = (float)(m_mmdModel->GetAnimationTime() * 30.0);
 		if (m_clipElapsed)
 		{
 			if (elapsed > 1.0f / 30.0f)
@@ -117,11 +127,34 @@ namespace saba
 			}
 		}
 
-		if (!m_stepAnimMode)
+		switch (m_playMode)
 		{
+		case saba::GLMMDModelDrawer::PlayMode::None:
+			break;
+		case saba::GLMMDModelDrawer::PlayMode::Play:
 			m_mmdModel->Update(elapsed);
+			break;
+		case saba::GLMMDModelDrawer::PlayMode::Stop:
+			break;
+		case saba::GLMMDModelDrawer::PlayMode::StepFrame:
+			m_mmdModel->Update(0.0f);
+			break;
+		case saba::GLMMDModelDrawer::PlayMode::StepFF:
+			m_mmdModel->Update(1.0f / 30.0f);
+			m_playMode = PlayMode::Stop;
+			break;
+		case saba::GLMMDModelDrawer::PlayMode::StepFR:
+			m_mmdModel->Update(-1.0f / 30.0f);
+			m_playMode = PlayMode::Stop;
+			break;
+		default:
+			break;
 		}
+	}
 
+
+	void GLMMDModelDrawer::Draw(ViewerContext * ctxt)
+	{
 		const auto& view = ctxt->GetCamera()->GetViewMatrix();
 		const auto& proj = ctxt->GetCamera()->GetProjectionMatrix();
 

@@ -14,7 +14,8 @@ namespace saba
 		ModelDrawer(const ModelDrawer&) = delete;
 		ModelDrawer& operator =(const ModelDrawer&) = delete;
 
-
+		virtual void DrawUI(ViewerContext* ctxt) = 0;
+		virtual void Update(ViewerContext* ctxt) = 0;
 		virtual void Draw(ViewerContext* ctxt) = 0;
 	};
 }

@@ -103,6 +103,14 @@ namespace saba
 		m_materialShaders.clear();
 	}
 
+	void GLOBJModelDrawer::Update(ViewerContext * ctxt)
+	{
+	}
+
+	void GLOBJModelDrawer::DrawUI(ViewerContext * ctxt)
+	{
+	}
+
 	void GLOBJModelDrawer::Draw(ViewerContext * ctxt)
 	{
 		const auto& view = ctxt->GetCamera()->GetViewMatrix();
