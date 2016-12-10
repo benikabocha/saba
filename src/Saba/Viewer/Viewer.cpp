@@ -115,6 +115,21 @@ namespace saba
 
 		// imguiの初期化
 		ImGui_ImplGlfwGL3_Init(m_window, false);
+		ImGuiIO& io = ImGui::GetIO();
+		std::string fontDir = PathUtil::Combine(
+			m_context.GetResourceDir(),
+			"font"
+		);
+		std::string fontPath = PathUtil::Combine(
+			fontDir,
+			"mgenplus-1mn-bold.ttf"
+		);
+		io.Fonts->AddFontFromFileTTF(
+			fontPath.c_str(),
+			14.0f,
+			nullptr,
+			io.Fonts->GetGlyphRangesJapanese()
+		);
 
 		// gl3wの初期化
 		if (gl3wInit() != 0)
