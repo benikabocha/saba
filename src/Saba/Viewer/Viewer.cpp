@@ -16,6 +16,7 @@
 #include <Saba/Model/MMD/PMXModel.h>
 #include <Saba/GL/Model/MMD/GLMMDModel.h>
 #include <Saba/GL/Model/MMD/GLMMDModelDrawer.h>
+#include <Saba/Model/MMD/SjisToUnicode.h>
 
 #include <imgui.h>
 #include <imgui_impl_glfw_gl3.h>
@@ -112,7 +113,6 @@ namespace saba
 		glfwSetDropCallback(m_window, OnDropStub);
 
 		glfwMakeContextCurrent(m_window);
-
 		// imguiの初期化
 		ImGui_ImplGlfwGL3_Init(m_window, false);
 		ImGuiIO& io = ImGui::GetIO();
@@ -124,11 +124,12 @@ namespace saba
 			fontDir,
 			"mgenplus-1mn-bold.ttf"
 		);
+		SetupSjisGryphRanges();
 		io.Fonts->AddFontFromFileTTF(
 			fontPath.c_str(),
 			14.0f,
 			nullptr,
-			io.Fonts->GetGlyphRangesJapanese()
+			m_gryphRanges.data()//io.Fonts->GetGlyphRangesJapanese()
 		);
 
 		// gl3wの初期化
@@ -246,6 +247,76 @@ namespace saba
 		}
 
 		return 0;
+	}
+
+	void Viewer::SetupSjisGryphRanges()
+	{
+		const int ASCIIBegin = 0x20;
+		const int ASCIIEnd = 0x7E;
+
+		const int HankakuBegin = 0xA1;
+		const int HankakuEnd = 0xDF;
+
+		const int SjisFirstBegin1 = 0x81;
+		const int SjisFirstEnd1 = 0x9F;
+
+		const int SjisFirstBegin2 = 0xE0;
+		const int SjisFirstEnd2 = 0xEF;
+
+		const int SjisSecondBegin = 0x40;
+		const int SjisSecondEnd = 0xFC;
+		std::vector<ImWchar> wcharTable;
+		for (int ch = ASCIIBegin; ch <= ASCIIEnd; ch++)
+		{
+			wcharTable.push_back((ImWchar)ch);
+		}
+		for (int ch = HankakuBegin; ch <= HankakuEnd; ch++)
+		{
+			wcharTable.push_back((ImWchar)ConvertSjisToUnicode(ch));
+		}
+		for (int sjisFirst = SjisFirstBegin1; sjisFirst <= SjisFirstEnd1; sjisFirst++)
+		{
+			for (int sjisSecond = SjisSecondBegin; sjisSecond <= SjisSecondEnd; sjisSecond++)
+			{
+				int ch = (sjisFirst << 8) | sjisSecond;
+				wcharTable.push_back((ImWchar)ConvertSjisToUnicode(ch));\
+			}
+		}
+		for (int sjisFirst = SjisFirstBegin2; sjisFirst <= SjisFirstEnd2; sjisFirst++)
+		{
+			for (int sjisSecond = SjisSecondBegin; sjisSecond <= SjisSecondEnd; sjisSecond++)
+			{
+				int ch = (sjisFirst << 8) | sjisSecond;
+				wcharTable.push_back((ImWchar)ConvertSjisToUnicode(ch));
+			}
+		}
+		std::sort(wcharTable.begin(), wcharTable.end());
+		auto removeIt = std::unique(wcharTable.begin(), wcharTable.end());
+		wcharTable.erase(removeIt, wcharTable.end());
+
+		m_gryphRanges.clear();
+		if (!wcharTable.empty())
+		{
+			auto begin = wcharTable.begin();
+			auto end = wcharTable.end();
+			auto prevCh = (*begin);
+			auto it = begin + 1;
+			while (it != end)
+			{
+				if ((prevCh + 1) != (*it))
+				{
+					m_gryphRanges.push_back((*begin));
+					m_gryphRanges.push_back(prevCh);
+
+					begin = it;
+				}
+				prevCh = (*it);
+				++it;
+			}
+			m_gryphRanges.push_back((*begin));
+			m_gryphRanges.push_back(prevCh);
+		}
+		m_gryphRanges.push_back(0);
 	}
 
 	void Viewer::Draw()

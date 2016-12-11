@@ -14,6 +14,8 @@
 #include <Saba/GL/Model/OBJ/GLOBJModelDrawContext.h>
 #include <Saba/GL/Model/MMD/GLMMDModelDrawContext.h>
 
+#include <imgui.h>
+
 #include <memory>
 
 namespace saba
@@ -59,6 +61,7 @@ namespace saba
 		};
 
 	private:
+		void SetupSjisGryphRanges();
 		void Draw();
 		void DrawInfoUI();
 		void DrawLogUI();
@@ -110,6 +113,9 @@ namespace saba
 		Grid		m_grid;
 
 		double		m_prevTime;
+
+		//
+		std::vector<ImWchar>	m_gryphRanges;
 
 		// InfoUI
 		bool	m_enableInfoUI;
