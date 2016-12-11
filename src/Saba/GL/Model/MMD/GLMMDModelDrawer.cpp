@@ -82,35 +82,52 @@ namespace saba
 	void GLMMDModelDrawer::DrawUI(ViewerContext * ctxt)
 	{
 		ImGui::Begin("MMDDrawCtrl");
-		ImGui::Checkbox("Clip Elapsed", &m_clipElapsed);
-		float animFrame = (float)(m_mmdModel->GetAnimationTime() * 30.0);
-		if (ImGui::InputFloat("Frame", &animFrame))
+		if (ImGui::CollapsingHeader("Animation"))
 		{
-			m_mmdModel->SetAnimationTime(animFrame / 30.0);
-			m_playMode = PlayMode::StepFrame;
-		}
+			ImGui::Checkbox("Clip Elapsed", &m_clipElapsed);
+			float animFrame = (float)(m_mmdModel->GetAnimationTime() * 30.0);
+			if (ImGui::InputFloat("Frame", &animFrame))
+			{
+				m_mmdModel->SetAnimationTime(animFrame / 30.0);
+				m_playMode = PlayMode::Update;
+			}
 
-		if (m_playMode == PlayMode::Play)
-		{
-			if (ImGui::Button("Stop"))
+			if (m_playMode == PlayMode::Play)
 			{
-				m_playMode = PlayMode::Stop;
+				if (ImGui::Button("Stop"))
+				{
+					m_playMode = PlayMode::Stop;
+				}
+			}
+			else
+			{
+				if (ImGui::Button("Play"))
+				{
+					m_playMode = PlayMode::Play;
+				}
+			}
+			if (ImGui::Button("Step FF"))
+			{
+				m_playMode = PlayMode::StepFF;
+			}
+			if (ImGui::Button("Step FR"))
+			{
+				m_playMode = PlayMode::StepFR;
 			}
 		}
-		else
+		if (ImGui::CollapsingHeader("Morph"))
 		{
-			if (ImGui::Button("Play"))
+			auto model = m_mmdModel->GetMMDModel();
+			auto bm = model->GetBlendShapeManager();
+			size_t keyCount = bm->GetBlendKeyShapeCount();
+			for (size_t keyIdx = 0; keyIdx < keyCount; keyIdx++)
 			{
-				m_playMode = PlayMode::Play;
+				auto key = bm->GetMMDBlendKeyShape(keyIdx);
+				if (ImGui::SliderFloat(key->m_name.c_str(), &key->m_weight, 0.0f, 1.0f))
+				{
+					m_playMode = PlayMode::Update;
+				}
 			}
-		}
-		if (ImGui::Button("Step FF"))
-		{
-			m_playMode = PlayMode::StepFF;
-		}
-		if (ImGui::Button("Step FR"))
-		{
-			m_playMode = PlayMode::StepFR;
 		}
 		ImGui::End();
 	}
@@ -129,21 +146,22 @@ namespace saba
 
 		switch (m_playMode)
 		{
-		case saba::GLMMDModelDrawer::PlayMode::None:
+		case PlayMode::None:
 			break;
-		case saba::GLMMDModelDrawer::PlayMode::Play:
+		case PlayMode::Play:
 			m_mmdModel->Update(elapsed);
 			break;
-		case saba::GLMMDModelDrawer::PlayMode::Stop:
+		case PlayMode::Stop:
 			break;
-		case saba::GLMMDModelDrawer::PlayMode::StepFrame:
+		case PlayMode::Update:
 			m_mmdModel->Update(0.0f);
+			m_playMode = PlayMode::Stop;
 			break;
-		case saba::GLMMDModelDrawer::PlayMode::StepFF:
+		case PlayMode::StepFF:
 			m_mmdModel->Update(1.0f / 30.0f);
 			m_playMode = PlayMode::Stop;
 			break;
-		case saba::GLMMDModelDrawer::PlayMode::StepFR:
+		case PlayMode::StepFR:
 			m_mmdModel->Update(-1.0f / 30.0f);
 			m_playMode = PlayMode::Stop;
 			break;

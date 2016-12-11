@@ -189,10 +189,10 @@ namespace saba
 		{
 			return;
 		}
-		if (m_vmdAnim == nullptr)
-		{
-			return;
-		}
+		//if (m_vmdAnim == nullptr)
+		//{
+		//	return;
+		//}
 
 		m_mmdModel->BeginAnimation();
 

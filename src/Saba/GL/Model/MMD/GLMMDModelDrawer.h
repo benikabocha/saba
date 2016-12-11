@@ -41,7 +41,7 @@ namespace saba
 			None,
 			Play,
 			Stop,
-			StepFrame,
+			Update,
 			StepFF,
 			StepFR,
 		};
