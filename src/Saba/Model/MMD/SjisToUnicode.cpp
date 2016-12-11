@@ -9234,7 +9234,7 @@ int ConvertSjisToUnicode(int ch)
 		int code1 = ch >> 8;
 		int code2 = ch & 0xFF;
 		if ((SjisFirstBegin1 <= code1 && code1 <= SjisFirstEnd1) &&
-			(SjisSecondBegin <= code1 && code1 <= SjisSecondEnd)
+			(SjisSecondBegin <= code2 && code2 <= SjisSecondEnd)
 			)
 		{
 			code1 -= SjisFirstBegin1;
@@ -9242,7 +9242,7 @@ int ConvertSjisToUnicode(int ch)
 			unicode = SjisTable1[code1][code2];
 		}
 		else if ((SjisFirstBegin2 <= code1 && code1 <= SjisFirstEnd2) &&
-			(SjisSecondBegin <= code1 && code1 <= SjisSecondEnd)
+			(SjisSecondBegin <= code2 && code2 <= SjisSecondEnd)
 			)
 		{
 			code1 -= SjisFirstBegin2;
