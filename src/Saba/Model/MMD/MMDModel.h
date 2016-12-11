@@ -3,6 +3,7 @@
 
 #include "MMDNode.h"
 #include "MMDIkSolver.h"
+#include "MMDMorph.h"
 
 #include <vector>
 #include <string>
@@ -18,19 +19,6 @@ namespace saba
 	class MMDPhysics;
 	class MMDRigidBody;
 	class MMDJoint;
-
-	struct MMDBlendShapeVertex
-	{
-		uint32_t	m_index;
-		glm::vec3	m_position;
-	};
-
-	struct MMDBlendShape
-	{
-		std::string							m_name;
-		float								m_weight;
-		std::vector<MMDBlendShapeVertex>	m_vertices;
-	};
 
 	class MMDNodeManager
 	{
@@ -72,23 +60,23 @@ namespace saba
 		}
 	};
 
-	class MMDBlendShapeManager
+	class MMDMorphManager
 	{
 	public:
 		static const size_t NPos = -1;
 
-		virtual size_t GetBlendKeyShapeCount() = 0;
-		virtual size_t FindBlendKeyShapeIndex(const std::string& name) = 0;
-		virtual MMDBlendShape* GetMMDBlendKeyShape(size_t idx) = 0;
+		virtual size_t GetMorphCount() = 0;
+		virtual size_t FindMorphIndex(const std::string& name) = 0;
+		virtual MMDMorph* GetMorph(size_t idx) = 0;
 
-		MMDBlendShape* GetMMDBlendKeyShape(const std::string& name)
+		MMDMorph* GetMorph(const std::string& name)
 		{
-			auto findIdx = FindBlendKeyShapeIndex(name);
+			auto findIdx = FindMorphIndex(name);
 			if (findIdx == NPos)
 			{
 				return nullptr;
 			}
-			return GetMMDBlendKeyShape(findIdx);
+			return GetMorph(findIdx);
 		}
 	};
 
@@ -131,7 +119,8 @@ namespace saba
 	public:
 		virtual MMDNodeManager* GetNodeManager() = 0;
 		virtual MMDIKManager* GetIKManager() = 0;
-		virtual MMDBlendShapeManager* GetBlendShapeManager() = 0;
+		//virtual MMDBlendShapeManager* GetBlendShapeManager() = 0;
+		virtual MMDMorphManager* GetMorphManager() = 0;
 		virtual MMDPhysicsManager* GetPhysicsManager() = 0;
 
 		virtual size_t GetVertexCount() const = 0;
@@ -268,54 +257,49 @@ namespace saba
 			std::vector<IKSolverPtr>	m_ikSolvers;
 		};
 
-		template <typename BlendShapeType>
-		class MMDBlendShapeManagerT : public MMDBlendShapeManager
+		template <typename MorphType>
+		class MMDMorphManagerT : public MMDMorphManager
 		{
 		public:
-			using BlendShapePtr = std::unique_ptr<BlendShapeType>;
+			using MorphPtr = std::unique_ptr<MorphType>;
 
-			size_t GetBlendKeyShapeCount() override { return m_keyShapes.size(); }
+			size_t GetMorphCount() override { return m_morphs.size(); }
 
-			size_t FindBlendKeyShapeIndex(const std::string& name) override
+			size_t FindMorphIndex(const std::string& name) override
 			{
 				auto findIt = std::find_if(
-					m_keyShapes.begin(),
-					m_keyShapes.end(),
-					[&name](const BlendShapePtr& blendShape) { return blendShape->m_name == name; }
+					m_morphs.begin(),
+					m_morphs.end(),
+					[&name](const MorphPtr& morph) { return morph->GetName() == name; }
 				);
-				if (findIt == m_keyShapes.end())
+				if (findIt == m_morphs.end())
 				{
 					return NPos;
 				}
 				else
 				{
-					return findIt - m_keyShapes.begin();
+					return findIt - m_morphs.begin();
 				}
 			}
 
-			MMDBlendShape* GetMMDBlendKeyShape(size_t idx) override
+			MMDMorph* GetMorph(size_t idx) override
 			{
-				return m_keyShapes[idx].get();
+				return m_morphs[idx].get();
 			}
 
-			BlendShapeType* AddBlendKeyShape()
+			MorphType* AddMorph()
 			{
-				m_keyShapes.emplace_back(std::make_unique<BlendShapeType>());
-				return m_keyShapes[m_keyShapes.size() - 1].get();
+				m_morphs.emplace_back(std::make_unique<MorphType>());
+				return m_morphs[m_morphs.size() - 1].get();
 			}
 
-			BlendShapeType* GetBlendKeyShape(size_t i)
+			std::vector<MorphPtr>* GetMorphs()
 			{
-				return m_keyShapes[i].get();
-			}
-
-			std::vector<BlendShapePtr>* GetBlendKeyShapes()
-			{
-				return &m_keyShapes;
+				return &m_morphs;
 			}
 
 		private:
-			std::vector<BlendShapePtr>	m_keyShapes;
+			std::vector<MorphPtr>	m_morphs;
 		};
 	};
 }

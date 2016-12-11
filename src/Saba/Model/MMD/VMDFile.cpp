@@ -58,12 +58,12 @@ namespace saba
 				return false;
 			}
 
-			vmd->m_blendShapes.resize(blendShapeCount);
-			for (auto& blendShape : vmd->m_blendShapes)
+			vmd->m_morphs.resize(blendShapeCount);
+			for (auto& morph : vmd->m_morphs)
 			{
-				Read(&blendShape.m_blendShapeName, file);
-				Read(&blendShape.m_frame, file);
-				Read(&blendShape.m_weight, file);
+				Read(&morph.m_blendShapeName, file);
+				Read(&morph.m_frame, file);
+				Read(&morph.m_weight, file);
 			}
 
 			return !file.IsBad();

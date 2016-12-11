@@ -183,39 +183,39 @@ namespace saba
 			destNor++;
 		}
 
-		// BlendShapeの処理
-		if (m_baseShape.m_vertices.empty())
+		// Morph の処理
+		if (m_baseMorph.m_vertices.empty())
 		{
-			for (const auto& keyShape : (*m_blendShapeMan.GetBlendKeyShapes()))
+			for (const auto& morph : (*m_morphMan.GetMorphs()))
 			{
-				float weight = keyShape->m_weight;
+				float weight = morph->GetWeight();
 				if (weight == 0.0f)
 				{
 					continue;
 				}
-				for (const auto& bsVtx : keyShape->m_vertices)
+				for (const auto& morphVtx : morph->m_vertices)
 				{
-					updatePosition[bsVtx.m_index] += bsVtx.m_position * weight;
+					updatePosition[morphVtx.m_index] += morphVtx.m_position * weight;
 				}
 			}
 		}
 		else
 		{
-			for (const auto& bsVtx : m_baseShape.m_vertices)
+			for (const auto& morphVtx : m_baseMorph.m_vertices)
 			{
-				updatePosition[bsVtx.m_index] = bsVtx.m_position;
+				updatePosition[morphVtx.m_index] = morphVtx.m_position;
 			}
-			for (const auto& keyShape : (*m_blendShapeMan.GetBlendKeyShapes()))
+			for (const auto& morph : (*m_morphMan.GetMorphs()))
 			{
-				float weight = keyShape->m_weight;
+				float weight = morph->GetWeight();
 				if (weight == 0.0f)
 				{
 					continue;
 				}
-				for (const auto& bsVtx : keyShape->m_vertices)
+				for (const auto& morphVtx : morph->m_vertices)
 				{
-					const auto& baseBsVtx = m_baseShape.m_vertices[bsVtx.m_index];
-					updatePosition[baseBsVtx.m_index] += bsVtx.m_position * weight;
+					const auto& baseMorphVtx = m_baseMorph.m_vertices[morphVtx.m_index];
+					updatePosition[baseMorphVtx.m_index] += morphVtx.m_position * weight;
 				}
 			}
 		}
@@ -367,27 +367,27 @@ namespace saba
 			beginIndex = beginIndex + pmdMat.m_faceVertexCount;
 		}
 
-		for (const auto& blendShape : pmd.m_blendShapes)
+		for (const auto& pmdMorph : pmd.m_morphs)
 		{
-			MMDBlendShape* shape = nullptr;
-			if (blendShape.m_blendShapeType == PMDBlendShape::Base)
+			PMDMorph* morph = nullptr;
+			if (pmdMorph.m_morphType == saba::PMDMorph::Base)
 			{
-				shape = &m_baseShape;
+				morph = &m_baseMorph;
 			}
 			else
 			{
-				shape = m_blendShapeMan.AddBlendKeyShape();
-				shape->m_name = blendShape.m_shapeName.ToUtf8String();
+				morph = m_morphMan.AddMorph();
+				morph->SetName(pmdMorph.m_morphName.ToUtf8String());
 			}
-			size_t numVtx = blendShape.m_vertices.size();
-			shape->m_weight = 0;
-			shape->m_vertices.reserve(blendShape.m_vertices.size());
-			for (const auto vtx : blendShape.m_vertices)
+			size_t numVtx = pmdMorph.m_vertices.size();
+			morph->SetWeight(0.0f);
+			morph->m_vertices.reserve(pmdMorph.m_vertices.size());
+			for (const auto vtx : pmdMorph.m_vertices)
 			{
-				MMDBlendShapeVertex bsVtx;
-				bsVtx.m_index = vtx.m_vertexIndex;
-				bsVtx.m_position = vtx.m_position * glm::vec3(1, 1, -1);
-				shape->m_vertices.push_back(bsVtx);
+				MorphVertex morphVtx;
+				morphVtx.m_index = vtx.m_vertexIndex;
+				morphVtx.m_position = vtx.m_position * glm::vec3(1, 1, -1);
+				morph->m_vertices.push_back(morphVtx);
 			}
 		}
 

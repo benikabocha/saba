@@ -39,7 +39,7 @@ namespace saba
 		VMDBezier	m_rotBezier;
 	};
 
-	struct VMDBlendShapeAnimationKey
+	struct VMDMorphAnimationKey
 	{
 		float	m_time;
 		float	m_weight;
@@ -75,14 +75,14 @@ namespace saba
 		std::vector<KeyType>	m_keys;
 	};
 
-	class VMDBlendShapeController
+	class VMDMorphController
 	{
 	public:
-		using KeyType = VMDBlendShapeAnimationKey;
+		using KeyType = VMDMorphAnimationKey;
 
-		VMDBlendShapeController();
+		VMDMorphController();
 
-		void SetBlendKeyShape(MMDBlendShape* shape);
+		void SetBlendKeyShape(MMDMorph* morph);
 		void Evaluate(float t);
 
 		void AddKey(const KeyType& key)
@@ -92,7 +92,7 @@ namespace saba
 		void SortKeys();
 
 	private:
-		MMDBlendShape*			m_keyShape;
+		MMDMorph*				m_morph;
 		std::vector<KeyType>	m_keys;
 	};
 
@@ -128,12 +128,12 @@ namespace saba
 	private:
 		using NodeControllerPtr = std::unique_ptr<VMDNodeController>;
 		using IKControllerPtr = std::unique_ptr<VMDIKController>;
-		using BlendShapeControllerPtr = std::unique_ptr<VMDBlendShapeController>;
+		using MorphControllerPtr = std::unique_ptr<VMDMorphController>;
 
 		std::shared_ptr<MMDModel>		m_model;
 		std::vector<NodeControllerPtr>	m_nodeControllers;
 		std::vector<IKControllerPtr>	m_ikControllers;
-		std::vector<BlendShapeControllerPtr>	m_blendShapeControllers;
+		std::vector<MorphControllerPtr>	m_blendShapeControllers;
 	};
 
 }

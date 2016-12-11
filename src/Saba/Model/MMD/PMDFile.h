@@ -78,7 +78,7 @@ namespace saba
 		ChainList	m_chanins;
 	};
 
-	struct PMDBlendShape
+	struct PMDMorph
 	{
 		struct Vertex
 		{
@@ -87,7 +87,7 @@ namespace saba
 		};
 		using VertexList = std::vector<Vertex>;
 
-		enum BlendShapeType : uint8_t
+		enum MorphType : uint8_t
 		{
 			Base,
 			Eyebrow,
@@ -96,14 +96,14 @@ namespace saba
 			Other
 		};
 
-		PMDString<20>		m_shapeName;
-		BlendShapeType		m_blendShapeType;
-		VertexList			m_vertices;
-		PMDString<20>		m_englishShapeNameExt;
+		PMDString<20>	m_morphName;
+		MorphType		m_morphType;
+		VertexList		m_vertices;
+		PMDString<20>	m_englishShapeNameExt;
 
 	};
 
-	struct PMDBlendShapeDisplayList
+	struct PMDMorphDisplayList
 	{
 		typedef std::vector<uint16_t> DisplayList;
 
@@ -178,8 +178,8 @@ namespace saba
 		std::vector<PMDMaterial>		m_materials;
 		std::vector<PMDBone>			m_bones;
 		std::vector<PMDIk>				m_iks;
-		std::vector<PMDBlendShape>		m_blendShapes;
-		PMDBlendShapeDisplayList		m_blendShapeDisplayList;
+		std::vector<PMDMorph>			m_morphs;
+		PMDMorphDisplayList				m_morphDisplayList;
 		std::vector<PMDBoneDisplayList>	m_boneDisplayLists;
 		std::array<PMDString<100>, 10>	m_toonTextureNames;
 		std::vector<PMDRigidBodyExt>	m_rigidBodies;

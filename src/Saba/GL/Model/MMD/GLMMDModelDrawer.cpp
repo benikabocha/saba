@@ -118,13 +118,15 @@ namespace saba
 		if (ImGui::CollapsingHeader("Morph"))
 		{
 			auto model = m_mmdModel->GetMMDModel();
-			auto bm = model->GetBlendShapeManager();
-			size_t keyCount = bm->GetBlendKeyShapeCount();
-			for (size_t keyIdx = 0; keyIdx < keyCount; keyIdx++)
+			auto morphMan = model->GetMorphManager();
+			size_t morphCount = morphMan->GetMorphCount();
+			for (size_t morphIdx = 0; morphIdx < morphCount; morphIdx++)
 			{
-				auto key = bm->GetMMDBlendKeyShape(keyIdx);
-				if (ImGui::SliderFloat(key->m_name.c_str(), &key->m_weight, 0.0f, 1.0f))
+				auto morph = morphMan->GetMorph(morphIdx);
+				float weight = morph->GetWeight();
+				if (ImGui::SliderFloat(morph->GetName().c_str(), &weight, 0.0f, 1.0f))
 				{
+					morph->SetWeight(weight);
 					m_playMode = PlayMode::Update;
 				}
 			}

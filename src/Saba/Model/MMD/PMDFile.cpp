@@ -205,18 +205,18 @@ namespace saba
 				return false;
 			}
 
-			auto& blendShapes = pmdFile->m_blendShapes;
-			blendShapes.resize(blendShapeCount);
-			for (auto& blendShape : blendShapes)
+			auto& morphs = pmdFile->m_morphs;
+			morphs.resize(blendShapeCount);
+			for (auto& morph : morphs)
 			{
-				Read(&blendShape.m_shapeName, file);
+				Read(&morph.m_morphName, file);
 
 				uint32_t vertexCount = 0;
 				Read(&vertexCount, file);
-				blendShape.m_vertices.resize(vertexCount);
+				morph.m_vertices.resize(vertexCount);
 
-				Read(&blendShape.m_blendShapeType, file);
-				for (auto& vtx : blendShape.m_vertices)
+				Read(&morph.m_morphType, file);
+				for (auto& vtx : morph.m_vertices)
 				{
 					Read(&vtx.m_vertexIndex, file);
 					Read(&vtx.m_position, file);
@@ -239,8 +239,8 @@ namespace saba
 				return false;
 			}
 
-			pmdFile->m_blendShapeDisplayList.m_displayList.resize(displayListCount);
-			for (auto& displayList : pmdFile->m_blendShapeDisplayList.m_displayList)
+			pmdFile->m_morphDisplayList.m_displayList.resize(displayListCount);
+			for (auto& displayList : pmdFile->m_morphDisplayList.m_displayList)
 			{
 				Read(&displayList, file);
 			}
@@ -321,11 +321,11 @@ namespace saba
 				/*
 				BlendShapeの最初はbaseなので、EnglishNameを読まないようにする
 				*/
-				size_t numBlensShape = pmdFile->m_blendShapes.size();
+				size_t numBlensShape = pmdFile->m_morphs.size();
 				for (size_t bsIdx = 1; bsIdx < numBlensShape; bsIdx++)
 				{
-					auto& blendShape = pmdFile->m_blendShapes[bsIdx];
-					Read(&blendShape.m_englishShapeNameExt, file);
+					auto& morpsh = pmdFile->m_morphs[bsIdx];
+					Read(&morpsh.m_englishShapeNameExt, file);
 				}
 
 				// BoneDisplayNameLists

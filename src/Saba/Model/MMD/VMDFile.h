@@ -32,7 +32,7 @@ namespace saba
 		std::array<uint8_t, 64>	m_interpolation;
 	};
 
-	struct VMDBlendShape {
+	struct VMDMorph {
 		VMDString<15>	m_blendShapeName;
 		uint32_t		m_frame;
 		float			m_weight;
@@ -80,7 +80,7 @@ namespace saba
 	{
 		VMDHeader					m_header;
 		std::vector<VMDMotion>		m_motions;
-		std::vector<VMDBlendShape>	m_blendShapes;
+		std::vector<VMDMorph>		m_morphs;
 		std::vector<VMDCamera>		m_cameras;
 		std::vector<VMDLight>		m_lights;
 		std::vector<VMDShadow>		m_shadows;

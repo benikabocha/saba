@@ -246,24 +246,24 @@ namespace saba
 		}
 		ikCtrlMap.clear();
 
-		std::map<std::string, BlendShapeControllerPtr> bsCtrlMap;
-		for (const auto& bs : vmd.m_blendShapes)
+		std::map<std::string, MorphControllerPtr> morphCtrlMap;
+		for (const auto& morph : vmd.m_morphs)
 		{
-			std::string bsName = bs.m_blendShapeName.ToUtf8String();
-			auto findIt = bsCtrlMap.find(bsName);
-			VMDBlendShapeController* bsCtrl = nullptr;
-			if (findIt == std::end(bsCtrlMap))
+			std::string bsName = morph.m_blendShapeName.ToUtf8String();
+			auto findIt = morphCtrlMap.find(bsName);
+			VMDMorphController* bsCtrl = nullptr;
+			if (findIt == std::end(morphCtrlMap))
 			{
-				auto* mmdBS = model->GetBlendShapeManager()->GetMMDBlendKeyShape(bsName);
+				auto* mmdBS = model->GetMorphManager()->GetMorph(bsName);
 				if (mmdBS != nullptr)
 				{
 					auto val = std::make_pair(
 						bsName,
-						std::make_unique<VMDBlendShapeController>()
+						std::make_unique<VMDMorphController>()
 					);
 					bsCtrl = val.second.get();
 					bsCtrl->SetBlendKeyShape(mmdBS);
-					bsCtrlMap.emplace(std::move(val));
+					morphCtrlMap.emplace(std::move(val));
 				}
 			}
 			else
@@ -273,19 +273,19 @@ namespace saba
 
 			if (bsCtrl != nullptr)
 			{
-				VMDBlendShapeAnimationKey key;
-				key.m_time = (float)bs.m_frame;
-				key.m_weight = bs.m_weight;
+				VMDMorphAnimationKey key;
+				key.m_time = (float)morph.m_frame;
+				key.m_weight = morph.m_weight;
 				bsCtrl->AddKey(key);
 			}
 		}
-		m_blendShapeControllers.reserve(bsCtrlMap.size());
-		for (auto& pair : bsCtrlMap)
+		m_blendShapeControllers.reserve(morphCtrlMap.size());
+		for (auto& pair : morphCtrlMap)
 		{
 			pair.second->SortKeys();
 			m_blendShapeControllers.emplace_back(std::move(pair.second));
 		}
-		bsCtrlMap.clear();
+		morphCtrlMap.clear();
 
 		return true;
 	}
@@ -390,19 +390,19 @@ namespace saba
 		);
 	}
 
-	VMDBlendShapeController::VMDBlendShapeController()
-		: m_keyShape(nullptr)
+	VMDMorphController::VMDMorphController()
+		: m_morph(nullptr)
 	{
 	}
 
-	void VMDBlendShapeController::SetBlendKeyShape(MMDBlendShape * shape)
+	void VMDMorphController::SetBlendKeyShape(MMDMorph * morph)
 	{
-		m_keyShape = shape;
+		m_morph = morph;
 	}
 
-	void VMDBlendShapeController::Evaluate(float t)
+	void VMDMorphController::Evaluate(float t)
 	{
-		if (m_keyShape == nullptr)
+		if (m_morph == nullptr)
 		{
 			return;
 		}
@@ -419,7 +419,7 @@ namespace saba
 			[](float lhs, const KeyType& rhs) { return lhs < rhs.m_time; }
 		);
 
-		VMDBlendShapeAnimationKey key;
+		VMDMorphAnimationKey key;
 		if (findIt == std::end(m_keys))
 		{
 			key = *(findIt - 1);
@@ -433,18 +433,18 @@ namespace saba
 
 		if (findIt != std::begin(m_keys) && findIt != std::end(m_keys))
 		{
-			VMDBlendShapeAnimationKey key0 = *(findIt - 1);
-			VMDBlendShapeAnimationKey key1 = *findIt;
+			VMDMorphAnimationKey key0 = *(findIt - 1);
+			VMDMorphAnimationKey key1 = *findIt;
 
 			float timeRange = key1.m_time - key0.m_time;
 			float time = (t - key0.m_time) / timeRange;
 			weight = (key1.m_weight - key0.m_weight) * time + key0.m_weight;
 		}
 
-		m_keyShape->m_weight = weight;
+		m_morph->SetWeight(weight);
 	}
 
-	void VMDBlendShapeController::SortKeys()
+	void VMDMorphController::SortKeys()
 	{
 		std::sort(
 			std::begin(m_keys),

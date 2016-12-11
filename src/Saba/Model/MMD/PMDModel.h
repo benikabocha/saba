@@ -17,7 +17,7 @@ namespace saba
 	public:
 		MMDNodeManager* GetNodeManager() override { return &m_nodeMan; }
 		MMDIKManager* GetIKManager() override { return &m_ikSolverMan; }
-		MMDBlendShapeManager* GetBlendShapeManager() override { return &m_blendShapeMan; }
+		MMDMorphManager* GetMorphManager() override { return &m_morphMan; };
 		MMDPhysicsManager* GetPhysicsManager() override { return &m_physicsMan; }
 
 		size_t GetVertexCount() const override { return m_positions.size(); }
@@ -58,6 +58,17 @@ namespace saba
 	protected:
 
 	private:
+		struct MorphVertex
+		{
+			uint32_t	m_index;
+			glm::vec3	m_position;
+		};
+
+		class PMDMorph : public MMDMorph
+		{
+		public:
+			std::vector<MorphVertex>	m_vertices;
+		};
 
 	private:
 		std::vector<glm::vec3>	m_positions;
@@ -70,7 +81,7 @@ namespace saba
 
 		std::vector<uint16_t> m_indices;
 
-		MMDBlendShape				m_baseShape;
+		PMDMorph					m_baseMorph;
 
 		glm::vec3		m_bboxMin;
 		glm::vec3		m_bboxMax;
@@ -80,7 +91,7 @@ namespace saba
 
 		MMDNodeManagerT<MMDNode>	m_nodeMan;
 		MMDIKManagerT<MMDIkSolver>	m_ikSolverMan;
-		MMDBlendShapeManagerT<MMDBlendShape>	m_blendShapeMan;
+		MMDMorphManagerT<PMDMorph>	m_morphMan;
 		MMDPhysicsManager			m_physicsMan;
 	};
 }

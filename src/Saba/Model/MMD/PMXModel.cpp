@@ -195,40 +195,19 @@ namespace saba
 			destNor++;
 		}
 
-		// BlendShapeの処理
-		if (m_baseShape.m_vertices.empty())
+		// Morph の処理
+		for (const auto& morph : (*m_morphMan.GetMorphs()))
 		{
-			for (const auto& keyShape : (*m_blendShapeMan.GetBlendKeyShapes()))
+			switch (morph->m_morphType)
 			{
-				float weight = keyShape->m_weight;
-				if (weight == 0.0f)
-				{
-					continue;
-				}
-				for (const auto& bsVtx : keyShape->m_vertices)
-				{
-					updatePosition[bsVtx.m_index] += bsVtx.m_position * weight;
-				}
-			}
-		}
-		else
-		{
-			for (const auto& bsVtx : m_baseShape.m_vertices)
-			{
-				updatePosition[bsVtx.m_index] = bsVtx.m_position;
-			}
-			for (const auto& keyShape : (*m_blendShapeMan.GetBlendKeyShapes()))
-			{
-				float weight = keyShape->m_weight;
-				if (weight == 0.0f)
-				{
-					continue;
-				}
-				for (const auto& bsVtx : keyShape->m_vertices)
-				{
-					const auto& baseBsVtx = m_baseShape.m_vertices[bsVtx.m_index];
-					updatePosition[baseBsVtx.m_index] += bsVtx.m_position * weight;
-				}
+			case MorphType::Position:
+				MorphPosition(
+					m_positionMorphDatas[morph->m_dataIndex],
+					morph->GetWeight()
+				);
+				break;
+			default:
+				break;
 			}
 		}
 
@@ -504,29 +483,30 @@ namespace saba
 		}
 
 		// Morph
-		for (const auto& morph : pmx.m_morphs)
+		for (const auto& pmxMorph : pmx.m_morphs)
 		{
-			if (morph.m_morphType == PMXMorphType::Position)
+			if (pmxMorph.m_morphType == PMXMorphType::Position)
 			{
-				MMDBlendShape* shape = nullptr;
-				shape = m_blendShapeMan.AddBlendKeyShape();
-				shape->m_name = morph.m_name;
-				size_t numVtx = morph.m_positionMorph.size();
-				shape->m_weight = 0;
-				shape->m_vertices.reserve(numVtx);
-				for (const auto vtx : morph.m_positionMorph)
+				auto morph = m_morphMan.AddMorph();
+				morph->SetName(pmxMorph.m_name);
+				morph->SetWeight(0.0f);
+				morph->m_morphType = MorphType::Position;
+				morph->m_dataIndex = m_positionMorphDatas.size();
+				PositionMorphData morphData;
+				for (const auto vtx : pmxMorph.m_positionMorph)
 				{
-					MMDBlendShapeVertex bsVtx;
-					bsVtx.m_index = vtx.m_vertexIndex;
-					bsVtx.m_position = vtx.m_position * glm::vec3(1, 1, -1);
-					shape->m_vertices.push_back(bsVtx);
+					MorphVertex morphVtx;
+					morphVtx.m_index = vtx.m_vertexIndex;
+					morphVtx.m_position = vtx.m_position * glm::vec3(1, 1, -1);
+					morphData.m_morphVertices.push_back(morphVtx);
 				}
+				m_positionMorphDatas.emplace_back(std::move(morphData));
 			}
 			else
 			{
 				SABA_WARN("Not Supported Morp Type({}): [{}]",
-					(uint8_t)morph.m_morphType,
-					morph.m_name
+					(uint8_t)pmxMorph.m_morphType,
+					pmxMorph.m_name
 				);
 			}
 		}
@@ -690,6 +670,20 @@ namespace saba
 		m_indices.clear();
 
 		m_nodeMan.GetNodes()->clear();
+	}
+
+	void PMXModel::MorphPosition(const PositionMorphData & morphData, float weight)
+	{
+		if (weight == 0)
+		{
+			return;
+		}
+
+		auto* updatePosition = m_updatePositions.data();
+		for (const auto& morphVtx : morphData.m_morphVertices)
+		{
+			updatePosition[morphVtx.m_index] += morphVtx.m_position * weight;
+		}
 	}
 
 	PMXNode::PMXNode()
