@@ -4,6 +4,7 @@
 #include "MMDMaterial.h"
 #include "MMDModel.h"
 #include "MMDIkSolver.h"
+#include "PMXFile.h"
 
 #include <glm/vec2.hpp>
 #include <glm/vec3.hpp>
@@ -129,9 +130,36 @@ namespace saba
 			std::vector<MorphVertex>	m_morphVertices;
 		};
 
+		struct MaterialFactor
+		{
+			MaterialFactor() = default;
+			MaterialFactor(const saba::PMXMorph::MaterialMorph& pmxMat);
+
+			void Mul(const MaterialFactor& val, float weight);
+			void Add(const MaterialFactor& val, float weight);
+
+			glm::vec3	m_diffuse;
+			float		m_alpha;
+			glm::vec3	m_specular;
+			float		m_specularPower;
+			glm::vec3	m_ambient;
+			glm::vec4	m_edgeColor;
+			float		m_edgeSize;
+			glm::vec4	m_textureFactor;
+			glm::vec4	m_sphereTextureFactor;
+			glm::vec4	m_toonTextureFactor;
+		};
+
+		struct MaterialMorphData
+		{
+			std::vector<saba::PMXMorph::MaterialMorph>	m_materialMorphs;
+		};
+
 		enum class MorphType
 		{
+			None,
 			Position,
+			Material,
 		};
 
 		class PMXMorph : public MMDMorph
@@ -142,7 +170,12 @@ namespace saba
 		};
 
 	private:
+
 		void MorphPosition(const PositionMorphData& morphData, float weight);
+
+		void BeginMorphMaterial();
+		void EndMorphMaterial();
+		void MorphMaterial(const MaterialMorphData& morphData, float weight);
 
 	private:
 		std::vector<glm::vec3>	m_positions;
@@ -157,6 +190,12 @@ namespace saba
 		size_t				m_indexElementSize;
 
 		std::vector<PositionMorphData>	m_positionMorphDatas;
+		std::vector<MaterialMorphData>	m_materialMorphDatas;
+
+		// マテリアルMorph用
+		std::vector<MMDMaterial>	m_initMaterials;
+		std::vector<MaterialFactor>	m_mulMaterialFactors;
+		std::vector<MaterialFactor>	m_addMaterialFactors;
 
 		glm::vec3		m_bboxMin;
 		glm::vec3		m_bboxMax;

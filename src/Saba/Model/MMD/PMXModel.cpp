@@ -196,6 +196,7 @@ namespace saba
 		}
 
 		// Morph の処理
+		BeginMorphMaterial();
 		for (const auto& morph : (*m_morphMan.GetMorphs()))
 		{
 			switch (morph->m_morphType)
@@ -206,10 +207,17 @@ namespace saba
 					morph->GetWeight()
 				);
 				break;
+			case MorphType::Material:
+				MorphMaterial(
+					m_materialMorphDatas[morph->m_dataIndex],
+					morph->GetWeight()
+				);
+				break;
 			default:
 				break;
 			}
 		}
+		EndMorphMaterial();
 
 		for (size_t i = 0; i < numVertices; i++)
 		{
@@ -481,15 +489,19 @@ namespace saba
 
 			beginIndex = beginIndex + pmxMat.m_numFaceVertices;
 		}
+		m_initMaterials = m_materials;
+		m_mulMaterialFactors.resize(m_materials.size());
+		m_addMaterialFactors.resize(m_materials.size());
 
 		// Morph
 		for (const auto& pmxMorph : pmx.m_morphs)
 		{
+			auto morph = m_morphMan.AddMorph();
+			morph->SetName(pmxMorph.m_name);
+			morph->SetWeight(0.0f);
+			morph->m_morphType = MorphType::None;
 			if (pmxMorph.m_morphType == PMXMorphType::Position)
 			{
-				auto morph = m_morphMan.AddMorph();
-				morph->SetName(pmxMorph.m_name);
-				morph->SetWeight(0.0f);
 				morph->m_morphType = MorphType::Position;
 				morph->m_dataIndex = m_positionMorphDatas.size();
 				PositionMorphData morphData;
@@ -501,6 +513,15 @@ namespace saba
 					morphData.m_morphVertices.push_back(morphVtx);
 				}
 				m_positionMorphDatas.emplace_back(std::move(morphData));
+			}
+			else if (pmxMorph.m_morphType == PMXMorphType::Material)
+			{
+				morph->m_morphType = MorphType::Material;
+				morph->m_dataIndex = m_materialMorphDatas.size();
+
+				MaterialMorphData materialMorphData;
+				materialMorphData.m_materialMorphs = pmxMorph.m_materialMorph;
+				m_materialMorphDatas.emplace_back(materialMorphData);
 			}
 			else
 			{
@@ -686,6 +707,94 @@ namespace saba
 		}
 	}
 
+	void PMXModel::BeginMorphMaterial()
+	{
+		MaterialFactor initMul;
+		initMul.m_diffuse = glm::vec3(1);
+		initMul.m_alpha = 1;
+		initMul.m_specular = glm::vec3(1);
+		initMul.m_specularPower = 1;
+		initMul.m_ambient = glm::vec3(1);
+		initMul.m_edgeColor = glm::vec4(1);
+		initMul.m_edgeSize = 1;
+		initMul.m_textureFactor = glm::vec4(1);
+		initMul.m_sphereTextureFactor = glm::vec4(1);
+		initMul.m_toonTextureFactor = glm::vec4(1);
+
+		MaterialFactor initAdd;
+		initAdd.m_diffuse = glm::vec3(0);
+		initAdd.m_alpha = 0;
+		initAdd.m_specular = glm::vec3(0);
+		initAdd.m_specularPower = 0;
+		initAdd.m_ambient = glm::vec3(0);
+		initAdd.m_edgeColor = glm::vec4(0);
+		initAdd.m_edgeSize = 0;
+		initAdd.m_textureFactor = glm::vec4(0);
+		initAdd.m_sphereTextureFactor = glm::vec4(0);
+		initAdd.m_toonTextureFactor = glm::vec4(0);
+
+		size_t matCount = m_materials.size();
+		for (size_t matIdx = 0; matIdx < matCount; matIdx++)
+		{
+			m_mulMaterialFactors[matIdx] = initMul;
+			m_mulMaterialFactors[matIdx].m_diffuse = m_initMaterials[matIdx].m_diffuse;
+			m_mulMaterialFactors[matIdx].m_alpha = m_initMaterials[matIdx].m_alpha;
+			m_mulMaterialFactors[matIdx].m_specular = m_initMaterials[matIdx].m_specular;
+			m_mulMaterialFactors[matIdx].m_specularPower = m_initMaterials[matIdx].m_specularPower;
+			m_mulMaterialFactors[matIdx].m_ambient = m_initMaterials[matIdx].m_ambient;
+
+			m_addMaterialFactors[matIdx] = initAdd;
+		}
+	}
+
+	void PMXModel::EndMorphMaterial()
+	{
+		size_t matCount = m_materials.size();
+		for (size_t matIdx = 0; matIdx < matCount; matIdx++)
+		{
+			MaterialFactor matFactor = m_mulMaterialFactors[matIdx];
+			matFactor.Add(m_addMaterialFactors[matIdx], 1.0f);
+
+			m_materials[matIdx].m_diffuse = matFactor.m_diffuse;
+			m_materials[matIdx].m_alpha = matFactor.m_alpha;
+			m_materials[matIdx].m_specular = matFactor.m_specular;
+			m_materials[matIdx].m_specularPower = matFactor.m_specularPower;
+			m_materials[matIdx].m_ambient = matFactor.m_ambient;
+		}
+	}
+
+	void PMXModel::MorphMaterial(const MaterialMorphData & morphData, float weight)
+	{
+		if (weight == 0)
+		{
+			return;
+		}
+
+		for (const auto& matMorph : morphData.m_materialMorphs)
+		{
+			const auto& initMat = m_initMaterials[matMorph.m_materialIndex];
+			auto mi = matMorph.m_materialIndex;
+			auto& mat = m_materials[mi];
+			switch (matMorph.m_opType)
+			{
+			case saba::PMXMorph::MaterialMorph::OpType::Mul:
+				m_mulMaterialFactors[mi].Mul(
+					MaterialFactor(matMorph),
+					weight
+				);
+				break;
+			case saba::PMXMorph::MaterialMorph::OpType::Add:
+				m_mulMaterialFactors[mi].Add(
+					MaterialFactor(matMorph),
+					weight
+				);
+				break;
+			default:
+				break;
+			}
+		}
+	}
+
 	PMXNode::PMXNode()
 		: m_deformDepth(-1)
 		, m_appendNode(nullptr)
@@ -794,5 +903,49 @@ namespace saba
 		m_local = glm::translate(glm::mat4(), t)
 			* glm::mat4_cast(r)
 			* glm::scale(glm::mat4(), s);
+	}
+
+	PMXModel::MaterialFactor::MaterialFactor(const saba::PMXMorph::MaterialMorph & pmxMat)
+	{
+		m_diffuse.r = pmxMat.m_diffuse.r;
+		m_diffuse.g = pmxMat.m_diffuse.g;
+		m_diffuse.b = pmxMat.m_diffuse.b;
+		m_alpha = pmxMat.m_diffuse.a;
+		m_specular = pmxMat.m_specular;
+		m_specularPower = pmxMat.m_specularPower;
+		m_ambient = pmxMat.m_ambient;
+		m_edgeColor = pmxMat.m_edgeColor;
+		m_edgeSize = pmxMat.m_edgeSize;
+		m_textureFactor = pmxMat.m_textureFactor;
+		m_sphereTextureFactor = pmxMat.m_sphereTextureFactor;
+		m_toonTextureFactor = pmxMat.m_toonTextureFactor;
+	}
+
+	void PMXModel::MaterialFactor::Mul(const MaterialFactor & val, float weight)
+	{
+		m_diffuse = glm::mix(m_diffuse, m_diffuse * val.m_diffuse, weight);
+		m_alpha = glm::mix(m_alpha, m_alpha * val.m_alpha, weight);
+		m_specular = glm::mix(m_specular, m_specular * val.m_specular, weight);
+		m_specularPower = glm::mix(m_specularPower, m_specularPower * val.m_specularPower, weight);
+		m_ambient = glm::mix(m_ambient, m_ambient * val.m_ambient, weight);
+		m_edgeColor = glm::mix(m_edgeColor, m_edgeColor * val.m_edgeColor, weight);
+		m_edgeSize = glm::mix(m_edgeSize, m_edgeSize * val.m_edgeSize, weight);
+		m_textureFactor = glm::mix(m_textureFactor, m_textureFactor * val.m_textureFactor, weight);
+		m_sphereTextureFactor = glm::mix(m_sphereTextureFactor, m_sphereTextureFactor * val.m_sphereTextureFactor, weight);
+		m_toonTextureFactor = glm::mix(m_toonTextureFactor, m_toonTextureFactor * val.m_toonTextureFactor, weight);
+	}
+
+	void PMXModel::MaterialFactor::Add(const MaterialFactor & val, float weight)
+	{
+		m_diffuse += val.m_diffuse * weight;
+		m_alpha += val.m_alpha * weight;
+		m_specular += val.m_specular * weight;
+		m_specularPower += val.m_specularPower * weight;
+		m_ambient += val.m_ambient * weight;
+		m_edgeColor += val.m_edgeColor * weight;
+		m_edgeSize += val.m_edgeSize * weight;
+		m_textureFactor += val.m_textureFactor * weight;
+		m_sphereTextureFactor += val.m_sphereTextureFactor * weight;
+		m_toonTextureFactor += val.m_toonTextureFactor * weight;
 	}
 }

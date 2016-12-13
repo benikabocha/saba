@@ -210,6 +210,17 @@ namespace saba
 
 		m_mmdModel->Update((float)elapsed);
 
+		size_t matCount = m_mmdModel->GetMaterialCount();
+		for (size_t mi = 0; mi < matCount; mi++)
+		{
+			const auto& mmdMat = m_mmdModel->GetMaterials()[mi];
+			m_materials[mi].m_diffuse = mmdMat.m_diffuse;
+			m_materials[mi].m_alpha = mmdMat.m_alpha;
+			m_materials[mi].m_specular = mmdMat.m_specular;
+			m_materials[mi].m_specularPower = mmdMat.m_specularPower;
+			m_materials[mi].m_ambient = mmdMat.m_ambient;
+		}
+
 		size_t vtxCount = m_mmdModel->GetVertexCount();
 		UpdateVBO(m_posVBO, m_mmdModel->GetUpdatePositions(), vtxCount);
 		UpdateVBO(m_norVBO, m_mmdModel->GetUpdateNormals(), vtxCount);

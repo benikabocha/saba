@@ -18,8 +18,8 @@ namespace saba
 
 		glm::vec3		m_diffuse;
 		float			m_alpha;
-		float			m_specularPower;
 		glm::vec3		m_specular;
+		float			m_specularPower;
 		glm::vec3		m_ambient;
 		uint8_t			m_edgeFlag;
 		std::string		m_texture;

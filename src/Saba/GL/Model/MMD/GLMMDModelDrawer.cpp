@@ -187,10 +187,10 @@ namespace saba
 		{
 			int matID = subMesh.m_materialID;
 			const auto& matShader = m_materialShaders[matID];
-			const auto& pmdMat = m_mmdModel->GetMaterials()[matID];
+			const auto& mmdMat = m_mmdModel->GetMaterials()[matID];
 			auto shader = m_drawContext->GetShader(matShader.m_objShaderIndex);
 
-			if (pmdMat.m_alpha == 0.0f)
+			if (mmdMat.m_alpha == 0.0f)
 			{
 				continue;
 			}
@@ -203,17 +203,17 @@ namespace saba
 
 			bool alphaBlend = true;
 
-			SetUniform(shader->m_uAmbinet, pmdMat.m_ambient);
-			SetUniform(shader->m_uDiffuse, pmdMat.m_diffuse);
-			SetUniform(shader->m_uSpecular, pmdMat.m_specular);
-			SetUniform(shader->m_uSpecularPower, pmdMat.m_specularPower);
-			SetUniform(shader->m_uAlpha, pmdMat.m_alpha);
+			SetUniform(shader->m_uAmbinet, mmdMat.m_ambient);
+			SetUniform(shader->m_uDiffuse, mmdMat.m_diffuse);
+			SetUniform(shader->m_uSpecular, mmdMat.m_specular);
+			SetUniform(shader->m_uSpecularPower, mmdMat.m_specularPower);
+			SetUniform(shader->m_uAlpha, mmdMat.m_alpha);
 
 			glActiveTexture(GL_TEXTURE0 + 0);
 			SetUniform(shader->m_uTex, (GLint)0);
-			if (pmdMat.m_texture != 0)
+			if (mmdMat.m_texture != 0)
 			{
-				if (!IsAlphaTexture(pmdMat.m_texture))
+				if (!IsAlphaTexture(mmdMat.m_texture))
 				{
 					// Use Material Alpha
 					SetUniform(shader->m_uTexMode, (GLint)1);
@@ -223,7 +223,7 @@ namespace saba
 					// Use Material Alpha * Texture Alpha
 					SetUniform(shader->m_uTexMode, (GLint)2);
 				}
-				glBindTexture(GL_TEXTURE_2D, pmdMat.m_texture);
+				glBindTexture(GL_TEXTURE_2D, mmdMat.m_texture);
 			}
 			else
 			{
@@ -233,17 +233,17 @@ namespace saba
 
 			glActiveTexture(GL_TEXTURE0 + 1);
 			SetUniform(shader->m_uSphereTex, (GLint)1);
-			if (pmdMat.m_spTexture != 0)
+			if (mmdMat.m_spTexture != 0)
 			{
-				if (pmdMat.m_spTextureMode == MMDMaterial::SphereTextureMode::Mul)
+				if (mmdMat.m_spTextureMode == MMDMaterial::SphereTextureMode::Mul)
 				{
 					SetUniform(shader->m_uSphereTexMode, (GLint)1);
 				}
-				else if (pmdMat.m_spTextureMode == MMDMaterial::SphereTextureMode::Add)
+				else if (mmdMat.m_spTextureMode == MMDMaterial::SphereTextureMode::Add)
 				{
 					SetUniform(shader->m_uSphereTexMode, (GLint)2);
 				}
-				glBindTexture(GL_TEXTURE_2D, pmdMat.m_spTexture);
+				glBindTexture(GL_TEXTURE_2D, mmdMat.m_spTexture);
 			}
 			else
 			{
@@ -253,10 +253,10 @@ namespace saba
 
 			glActiveTexture(GL_TEXTURE0 + 2);
 			SetUniform(shader->m_uToonTex, 2);
-			if (pmdMat.m_toonTexture != 0)
+			if (mmdMat.m_toonTexture != 0)
 			{
 				SetUniform(shader->m_uToonTexMode, (GLint)1);
-				glBindTexture(GL_TEXTURE_2D, pmdMat.m_toonTexture);
+				glBindTexture(GL_TEXTURE_2D, mmdMat.m_toonTexture);
 				glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
 				glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 			}
@@ -269,7 +269,7 @@ namespace saba
 			SetUniform(shader->m_uLightDir, glm::vec3(0, 0, 1));
 			SetUniform(shader->m_uLightColor, glm::vec3(1, 1, 1));
 
-			if (pmdMat.m_bothFace)
+			if (mmdMat.m_bothFace)
 			{
 				glDisable(GL_CULL_FACE);
 			}
