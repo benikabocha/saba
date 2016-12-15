@@ -146,7 +146,7 @@ namespace saba
 			glm::vec4	m_edgeColor;
 			float		m_edgeSize;
 			glm::vec4	m_textureFactor;
-			glm::vec4	m_sphereTextureFactor;
+			glm::vec4	m_spTextureFactor;
 			glm::vec4	m_toonTextureFactor;
 		};
 

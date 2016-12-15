@@ -4,11 +4,13 @@
 #include <string>
 #include <cstdint>
 #include <glm/vec3.hpp>
+#include <glm/vec4.hpp>
 
 namespace saba
 {
 	struct MMDMaterial
 	{
+		MMDMaterial();
 		enum class SphereTextureMode
 		{
 			None,
@@ -26,6 +28,12 @@ namespace saba
 		std::string		m_spTexture;
 		SphereTextureMode	m_spTextureMode;
 		std::string		m_toonTexture;
+		glm::vec4		m_textureMulFactor;
+		glm::vec4		m_spTextureMulFactor;
+		glm::vec4		m_toonTextureMulFactor;
+		glm::vec4		m_textureAddFactor;
+		glm::vec4		m_spTextureAddFactor;
+		glm::vec4		m_toonTextureAddFactor;
 		bool			m_bothFace;
 	};
 }

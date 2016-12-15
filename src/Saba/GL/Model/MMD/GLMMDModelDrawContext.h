@@ -33,12 +33,18 @@ namespace saba
 
 		GLint	m_uTexMode;
 		GLint	m_uTex;
+		GLint	m_uTexMulFactor;
+		GLint	m_uTexAddFactor;
 
 		GLint	m_uSphereTexMode;
 		GLint	m_uSphereTex;
+		GLint	m_uSphereTexMulFactor;
+		GLint	m_uSphereTexAddFactor;
 
 		GLint	m_uToonTexMode;
 		GLint	m_uToonTex;
+		GLint	m_uToonTexMulFactor;
+		GLint	m_uToonTexAddFactor;
 
 		GLint	m_uLightColor;
 		GLint	m_uLightDir;

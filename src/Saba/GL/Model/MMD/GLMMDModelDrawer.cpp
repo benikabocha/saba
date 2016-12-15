@@ -223,6 +223,8 @@ namespace saba
 					// Use Material Alpha * Texture Alpha
 					SetUniform(shader->m_uTexMode, (GLint)2);
 				}
+				SetUniform(shader->m_uTexMulFactor, mmdMat.m_textureMulFactor);
+				SetUniform(shader->m_uTexAddFactor, mmdMat.m_textureAddFactor);
 				glBindTexture(GL_TEXTURE_2D, mmdMat.m_texture);
 			}
 			else

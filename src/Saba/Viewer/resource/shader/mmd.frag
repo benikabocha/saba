@@ -16,12 +16,31 @@ uniform vec3 u_LightDir;
 
 uniform int u_TexMode;
 uniform sampler2D u_Tex;
+uniform vec4 u_TexMulFactor;
+uniform vec4 u_TexAddFactor;
 
 uniform int u_ToonTexMode;
 uniform sampler2D u_ToonTex;
+uniform vec4 u_ToonTexMulFactor;
+uniform vec4 u_ToonTexAddFactor;
 
 uniform int u_SphereTexMode;
 uniform sampler2D u_SphereTex;
+uniform vec4 u_SphereTexMulFactor;
+uniform vec4 u_SphereTexAddFactor;
+
+vec3 ComputeTexMulFactor(vec3 texColor, vec4 factor)
+{
+	vec3 ret = texColor * factor.rgb;
+	return mix(vec3(1.0, 1.0, 1.0), ret, factor.a);
+}
+
+vec3 ComputeTexAddFactor(vec3 texColor, vec4 factor)
+{
+	vec3 ret = texColor + (texColor - vec3(1.0)) * factor.a ;
+	ret = clamp(ret, vec3(0.0), vec3(1.0))+ factor.rgb;
+	return ret;
+}
 
 void main()
 {
@@ -39,6 +58,8 @@ void main()
     if (u_TexMode != 0)
     {
 		vec4 texColor = texture(u_Tex, vs_UV);
+		texColor.rgb = ComputeTexMulFactor(texColor.rgb, u_TexMulFactor);
+		texColor.rgb = ComputeTexAddFactor(texColor.rgb, u_TexAddFactor);
         color *= texColor.rgb;
 		if (u_TexMode == 2)
 		{

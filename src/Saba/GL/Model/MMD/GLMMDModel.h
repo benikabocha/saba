@@ -25,6 +25,12 @@ namespace saba
 		GLTextureRef	m_spTexture;
 		SphereTextureMode	m_spTextureMode;
 		GLTextureRef	m_toonTexture;
+		glm::vec4		m_textureMulFactor;
+		glm::vec4		m_spTextureMulFactor;
+		glm::vec4		m_toonTextureMulFactor;
+		glm::vec4		m_textureAddFactor;
+		glm::vec4		m_spTextureAddFactor;
+		glm::vec4		m_toonTextureAddFactor;
 		bool			m_bothFace;
 	};
 

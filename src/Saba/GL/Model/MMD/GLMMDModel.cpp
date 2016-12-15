@@ -109,15 +109,23 @@ namespace saba
 			{
 				dest.m_texture = CreateMMDTexture(texMan, src.m_texture, true, true);
 			}
+			dest.m_textureMulFactor = src.m_textureMulFactor;
+			dest.m_textureAddFactor = src.m_textureAddFactor;
+
 			if (!src.m_spTexture.empty())
 			{
 				dest.m_spTexture = CreateMMDTexture(texMan, src.m_spTexture);
 			}
 			dest.m_spTextureMode = src.m_spTextureMode;
+			dest.m_spTextureMulFactor = src.m_spTextureMulFactor;
+			dest.m_spTextureAddFactor = src.m_spTextureAddFactor;
+
 			if (!src.m_toonTexture.empty())
 			{
 				dest.m_toonTexture = CreateMMDTexture(texMan, src.m_toonTexture);
 			}
+			dest.m_toonTextureMulFactor = src.m_toonTextureMulFactor;
+			dest.m_toonTextureAddFactor = src.m_toonTextureAddFactor;
 		}
 
 		// SubMesh
@@ -219,6 +227,12 @@ namespace saba
 			m_materials[mi].m_specular = mmdMat.m_specular;
 			m_materials[mi].m_specularPower = mmdMat.m_specularPower;
 			m_materials[mi].m_ambient = mmdMat.m_ambient;
+			m_materials[mi].m_textureMulFactor = mmdMat.m_textureMulFactor;
+			m_materials[mi].m_textureAddFactor = mmdMat.m_textureAddFactor;
+			m_materials[mi].m_spTextureMulFactor = mmdMat.m_spTextureMulFactor;
+			m_materials[mi].m_spTextureAddFactor = mmdMat.m_spTextureAddFactor;
+			m_materials[mi].m_toonTextureMulFactor = mmdMat.m_toonTextureMulFactor;
+			m_materials[mi].m_toonTextureAddFactor = mmdMat.m_toonTextureAddFactor;
 		}
 
 		size_t vtxCount = m_mmdModel->GetVertexCount();

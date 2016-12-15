@@ -26,12 +26,18 @@ namespace saba
 
 		m_uTexMode = glGetUniformLocation(m_prog, "u_TexMode");
 		m_uTex = glGetUniformLocation(m_prog, "u_Tex");
+		m_uTexMulFactor = glGetUniformLocation(m_prog, "u_TexMulFactor");
+		m_uTexAddFactor = glGetUniformLocation(m_prog, "u_TexAddFactor");
 
 		m_uSphereTexMode = glGetUniformLocation(m_prog, "u_SphereTexMode");
 		m_uSphereTex = glGetUniformLocation(m_prog, "u_SphereTex");
+		m_uSphereTexMulFactor = glGetUniformLocation(m_prog, "u_SphereTexMulFactor");
+		m_uSphereTexAddFactor = glGetUniformLocation(m_prog, "u_SphereTexAddFactor");
 
 		m_uToonTexMode = glGetUniformLocation(m_prog, "u_ToonTexMode");
 		m_uToonTex = glGetUniformLocation(m_prog, "u_ToonTex");
+		m_uToonTexMulFactor = glGetUniformLocation(m_prog, "u_ToonTexMulFactor");
+		m_uToonTexAddFactor = glGetUniformLocation(m_prog, "u_ToonTexAddFactor");
 
 		m_uLightColor = glGetUniformLocation(m_prog, "u_LightColor");
 		m_uLightDir = glGetUniformLocation(m_prog, "u_LightDir");

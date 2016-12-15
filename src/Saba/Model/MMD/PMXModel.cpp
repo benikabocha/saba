@@ -718,7 +718,7 @@ namespace saba
 		initMul.m_edgeColor = glm::vec4(1);
 		initMul.m_edgeSize = 1;
 		initMul.m_textureFactor = glm::vec4(1);
-		initMul.m_sphereTextureFactor = glm::vec4(1);
+		initMul.m_spTextureFactor = glm::vec4(1);
 		initMul.m_toonTextureFactor = glm::vec4(1);
 
 		MaterialFactor initAdd;
@@ -730,7 +730,7 @@ namespace saba
 		initAdd.m_edgeColor = glm::vec4(0);
 		initAdd.m_edgeSize = 0;
 		initAdd.m_textureFactor = glm::vec4(0);
-		initAdd.m_sphereTextureFactor = glm::vec4(0);
+		initAdd.m_spTextureFactor = glm::vec4(0);
 		initAdd.m_toonTextureFactor = glm::vec4(0);
 
 		size_t matCount = m_materials.size();
@@ -760,6 +760,12 @@ namespace saba
 			m_materials[matIdx].m_specular = matFactor.m_specular;
 			m_materials[matIdx].m_specularPower = matFactor.m_specularPower;
 			m_materials[matIdx].m_ambient = matFactor.m_ambient;
+			m_materials[matIdx].m_textureMulFactor = m_mulMaterialFactors[matIdx].m_textureFactor;
+			m_materials[matIdx].m_textureAddFactor = m_addMaterialFactors[matIdx].m_textureFactor;
+			m_materials[matIdx].m_spTextureMulFactor = m_mulMaterialFactors[matIdx].m_spTextureFactor;
+			m_materials[matIdx].m_spTextureAddFactor = m_addMaterialFactors[matIdx].m_spTextureFactor;
+			m_materials[matIdx].m_toonTextureMulFactor = m_mulMaterialFactors[matIdx].m_toonTextureFactor;
+			m_materials[matIdx].m_toonTextureAddFactor = m_addMaterialFactors[matIdx].m_toonTextureFactor;
 		}
 	}
 
@@ -784,7 +790,7 @@ namespace saba
 				);
 				break;
 			case saba::PMXMorph::MaterialMorph::OpType::Add:
-				m_mulMaterialFactors[mi].Add(
+				m_addMaterialFactors[mi].Add(
 					MaterialFactor(matMorph),
 					weight
 				);
@@ -917,7 +923,7 @@ namespace saba
 		m_edgeColor = pmxMat.m_edgeColor;
 		m_edgeSize = pmxMat.m_edgeSize;
 		m_textureFactor = pmxMat.m_textureFactor;
-		m_sphereTextureFactor = pmxMat.m_sphereTextureFactor;
+		m_spTextureFactor = pmxMat.m_sphereTextureFactor;
 		m_toonTextureFactor = pmxMat.m_toonTextureFactor;
 	}
 
@@ -931,7 +937,7 @@ namespace saba
 		m_edgeColor = glm::mix(m_edgeColor, m_edgeColor * val.m_edgeColor, weight);
 		m_edgeSize = glm::mix(m_edgeSize, m_edgeSize * val.m_edgeSize, weight);
 		m_textureFactor = glm::mix(m_textureFactor, m_textureFactor * val.m_textureFactor, weight);
-		m_sphereTextureFactor = glm::mix(m_sphereTextureFactor, m_sphereTextureFactor * val.m_sphereTextureFactor, weight);
+		m_spTextureFactor = glm::mix(m_spTextureFactor, m_spTextureFactor * val.m_spTextureFactor, weight);
 		m_toonTextureFactor = glm::mix(m_toonTextureFactor, m_toonTextureFactor * val.m_toonTextureFactor, weight);
 	}
 
@@ -945,7 +951,7 @@ namespace saba
 		m_edgeColor += val.m_edgeColor * weight;
 		m_edgeSize += val.m_edgeSize * weight;
 		m_textureFactor += val.m_textureFactor * weight;
-		m_sphereTextureFactor += val.m_sphereTextureFactor * weight;
+		m_spTextureFactor += val.m_spTextureFactor * weight;
 		m_toonTextureFactor += val.m_toonTextureFactor * weight;
 	}
 }
