@@ -199,23 +199,7 @@ namespace saba
 		BeginMorphMaterial();
 		for (const auto& morph : (*m_morphMan.GetMorphs()))
 		{
-			switch (morph->m_morphType)
-			{
-			case MorphType::Position:
-				MorphPosition(
-					m_positionMorphDatas[morph->m_dataIndex],
-					morph->GetWeight()
-				);
-				break;
-			case MorphType::Material:
-				MorphMaterial(
-					m_materialMorphDatas[morph->m_dataIndex],
-					morph->GetWeight()
-				);
-				break;
-			default:
-				break;
-			}
+			Morph(morph.get(), morph->GetWeight());
 		}
 		EndMorphMaterial();
 
@@ -523,6 +507,15 @@ namespace saba
 				materialMorphData.m_materialMorphs = pmxMorph.m_materialMorph;
 				m_materialMorphDatas.emplace_back(materialMorphData);
 			}
+			else if (pmxMorph.m_morphType == PMXMorphType::Group)
+			{
+				morph->m_morphType = MorphType::Group;
+				morph->m_dataIndex = m_groupMorphDatas.size();
+
+				GroupMorphData groupMorphData;
+				groupMorphData.m_groupMorphs = pmxMorph.m_groupMorph;
+				m_groupMorphDatas.emplace_back(groupMorphData);
+			}
 			else
 			{
 				SABA_WARN("Not Supported Morp Type({}): [{}]",
@@ -691,6 +684,37 @@ namespace saba
 		m_indices.clear();
 
 		m_nodeMan.GetNodes()->clear();
+	}
+
+	void PMXModel::Morph(PMXMorph* morph, float weight)
+	{
+		switch (morph->m_morphType)
+		{
+		case MorphType::Position:
+			MorphPosition(
+				m_positionMorphDatas[morph->m_dataIndex],
+				weight
+			);
+			break;
+		case MorphType::Material:
+			MorphMaterial(
+				m_materialMorphDatas[morph->m_dataIndex],
+				weight
+			);
+			break;
+		case MorphType::Group:
+		{
+			auto& groupMorphData = m_groupMorphDatas[morph->m_dataIndex];
+			for (const auto& groupMorph : groupMorphData.m_groupMorphs)
+			{
+				auto& elemMorph = (*m_morphMan.GetMorphs())[groupMorph.m_morphIndex];
+				Morph(elemMorph.get(), groupMorph.m_weight * weight);
+				break;
+			}
+		}
+		default:
+			break;
+		}
 	}
 
 	void PMXModel::MorphPosition(const PositionMorphData & morphData, float weight)

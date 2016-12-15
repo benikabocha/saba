@@ -155,11 +155,17 @@ namespace saba
 			std::vector<saba::PMXMorph::MaterialMorph>	m_materialMorphs;
 		};
 
+		struct GroupMorphData
+		{
+			std::vector<saba::PMXMorph::GroupMorph>		m_groupMorphs;
+		};
+
 		enum class MorphType
 		{
 			None,
 			Position,
 			Material,
+			Group,
 		};
 
 		class PMXMorph : public MMDMorph
@@ -170,6 +176,7 @@ namespace saba
 		};
 
 	private:
+		void Morph(PMXMorph* morph, float weight);
 
 		void MorphPosition(const PositionMorphData& morphData, float weight);
 
@@ -191,6 +198,7 @@ namespace saba
 
 		std::vector<PositionMorphData>	m_positionMorphDatas;
 		std::vector<MaterialMorphData>	m_materialMorphDatas;
+		std::vector<GroupMorphData>		m_groupMorphDatas;
 
 		// マテリアルMorph用
 		std::vector<MMDMaterial>	m_initMaterials;
