@@ -245,6 +245,8 @@ namespace saba
 				{
 					SetUniform(shader->m_uSphereTexMode, (GLint)2);
 				}
+				SetUniform(shader->m_uSphereTexMulFactor, mmdMat.m_spTextureMulFactor);
+				SetUniform(shader->m_uSphereTexAddFactor, mmdMat.m_spTextureAddFactor);
 				glBindTexture(GL_TEXTURE_2D, mmdMat.m_spTexture);
 			}
 			else
@@ -257,6 +259,8 @@ namespace saba
 			SetUniform(shader->m_uToonTex, 2);
 			if (mmdMat.m_toonTexture != 0)
 			{
+				SetUniform(shader->m_uToonTexMulFactor, mmdMat.m_toonTextureMulFactor);
+				SetUniform(shader->m_uToonTexAddFactor, mmdMat.m_toonTextureAddFactor);
 				SetUniform(shader->m_uToonTexMode, (GLint)1);
 				glBindTexture(GL_TEXTURE_2D, mmdMat.m_toonTexture);
 				glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);

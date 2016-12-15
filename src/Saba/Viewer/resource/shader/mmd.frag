@@ -73,6 +73,8 @@ void main()
 		spUV.x = nor.x * 0.5 + 0.5;
 		spUV.y = nor.y * 0.5 + 0.5;
 		vec3 spColor = texture(u_SphereTex, spUV).rgb;
+		spColor = ComputeTexMulFactor(spColor, u_SphereTexMulFactor);
+		spColor = ComputeTexAddFactor(spColor, u_SphereTexAddFactor);
 		if (u_SphereTexMode == 1)
 		{
 			color *= spColor;
@@ -86,6 +88,8 @@ void main()
 	if (u_ToonTexMode != 0)
 	{
 		vec3 toonColor = texture(u_ToonTex, vec2(0.0, ln)).rgb;
+		toonColor = ComputeTexMulFactor(toonColor, u_ToonTexMulFactor);
+		toonColor = ComputeTexAddFactor(toonColor, u_ToonTexAddFactor);
 		color *= toonColor;
 	}
 
