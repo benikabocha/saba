@@ -113,7 +113,7 @@ namespace saba
 	{
 		// Morph の処理
 		BeginMorphMaterial();
-		//for (const auto& morph : (*m_morphMan.GetMorphs()))
+
 		const auto& morphs = (*m_morphMan.GetMorphs());
 		for (size_t i = 0; i < morphs.size(); i++)
 		{
@@ -194,29 +194,15 @@ namespace saba
 		const auto* vtxInfo = m_vertexBoneInfos.data();
 		auto* updatePosition = m_updatePositions.data();
 		auto* updateNormal = m_updateNormals.data();
-
-		// 頂点をコピー
-		auto srcPos = position;
-		auto srcNor = normal;
-		auto destPos = updatePosition;
-		auto destNor = updateNormal;
 		size_t numVertices = m_positions.size();
-		for (size_t i = 0; i < numVertices; i++)
-		{
-			*destPos = *srcPos + *morphPos;
-			*destNor = *srcNor;
-			srcPos++;
-			srcNor++;
-			destPos++;
-			destNor++;
-			morphPos++;
-		}
-
 		auto& nodes = (*m_nodeMan.GetNodes());
+
+		// スキンメッシュに使用する変形マトリクスを事前計算
 		for (size_t i = 0; i < nodes.size(); i++)
 		{
 			m_transforms[i] = nodes[i]->GetGlobalTransform() * nodes[i]->GetInverseInitTransform();
 		}
+
 		for (size_t i = 0; i < numVertices; i++)
 		{
 			glm::mat4 m;
@@ -254,12 +240,15 @@ namespace saba
 				break;
 			}
 
-			*updatePosition = glm::vec3(m * glm::vec4(*updatePosition, 1));
-			*updateNormal = glm::normalize(glm::mat3(m) * *updateNormal);
+			*updatePosition = glm::vec3(m * glm::vec4(*position + *morphPos, 1));
+			*updateNormal = glm::normalize(glm::mat3(m) * *normal);
 
 			vtxInfo++;
+			position++;
+			normal++;
 			updatePosition++;
 			updateNormal++;
+			morphPos++;
 		}
 	}
 
