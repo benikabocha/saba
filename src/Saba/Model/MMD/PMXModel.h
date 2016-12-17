@@ -206,6 +206,7 @@ namespace saba
 		std::vector<VertexBoneInfo>	m_vertexBoneInfos;
 		std::vector<glm::vec3>	m_updatePositions;
 		std::vector<glm::vec3>	m_updateNormals;
+		std::vector<glm::mat4>	m_transforms;
 
 		std::vector<char>	m_indices;
 		size_t				m_indexCount;

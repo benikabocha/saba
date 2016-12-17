@@ -212,6 +212,11 @@ namespace saba
 			morphPos++;
 		}
 
+		auto& nodes = (*m_nodeMan.GetNodes());
+		for (size_t i = 0; i < nodes.size(); i++)
+		{
+			m_transforms[i] = nodes[i]->GetGlobalTransform() * nodes[i]->GetInverseInitTransform();
+		}
 		for (size_t i = 0; i < numVertices; i++)
 		{
 			glm::mat4 m;
@@ -219,36 +224,29 @@ namespace saba
 			{
 			case SkinningType::Weight1:
 			{
-				auto node0 = m_nodeMan.GetNode(vtxInfo->m_boneIndex.x);
-				auto m0 = node0->GetGlobalTransform() * node0->GetInverseInitTransform();
+				const auto& m0 = m_transforms[vtxInfo->m_boneIndex.x];
 				m = m0;
 				break;
 			}
 			case SkinningType::Weight2:
 			{
-				auto node0 = m_nodeMan.GetNode(vtxInfo->m_boneIndex.x);
-				auto node1 = m_nodeMan.GetNode(vtxInfo->m_boneIndex.y);
 				auto w0 = vtxInfo->m_boneWeight.x;
 				auto w1 = vtxInfo->m_boneWeight.y;
-				auto m0 = node0->GetGlobalTransform() * node0->GetInverseInitTransform();
-				auto m1 = node1->GetGlobalTransform() * node1->GetInverseInitTransform();
+				const auto& m0 = m_transforms[vtxInfo->m_boneIndex.x];
+				const auto& m1 = m_transforms[vtxInfo->m_boneIndex.y];
 				m = m0 * w0 + m1 * w1;
 				break;
 			}
 			case SkinningType::Weight4:
 			{
-				auto node0 = m_nodeMan.GetNode(vtxInfo->m_boneIndex.x);
-				auto node1 = m_nodeMan.GetNode(vtxInfo->m_boneIndex.y);
-				auto node2 = m_nodeMan.GetNode(vtxInfo->m_boneIndex.z);
-				auto node3 = m_nodeMan.GetNode(vtxInfo->m_boneIndex.w);
 				auto w0 = vtxInfo->m_boneWeight.x;
 				auto w1 = vtxInfo->m_boneWeight.y;
 				auto w2 = vtxInfo->m_boneWeight.z;
 				auto w3 = vtxInfo->m_boneWeight.w;
-				auto m0 = node0->GetGlobalTransform() * node0->GetInverseInitTransform();
-				auto m1 = node1->GetGlobalTransform() * node1->GetInverseInitTransform();
-				auto m2 = node2->GetGlobalTransform() * node2->GetInverseInitTransform();
-				auto m3 = node3->GetGlobalTransform() * node3->GetInverseInitTransform();
+				const auto& m0 = m_transforms[vtxInfo->m_boneIndex.x];
+				const auto& m1 = m_transforms[vtxInfo->m_boneIndex.y];
+				const auto& m2 = m_transforms[vtxInfo->m_boneIndex.z];
+				const auto& m3 = m_transforms[vtxInfo->m_boneIndex.w];
 				m = m0 * w0 + m1 * w1 + m2 * w2 + m3 * w3;
 				break;
 			}
@@ -536,6 +534,8 @@ namespace saba
 			}
 			node->SaveInitialTRS();
 		}
+		m_transforms.resize(m_nodeMan.GetNodeCount());
+
 		m_sortedNodes.clear();
 		m_sortedNodes.reserve(m_nodeMan.GetNodeCount());
 		auto* pmxNodes = m_nodeMan.GetNodes();
