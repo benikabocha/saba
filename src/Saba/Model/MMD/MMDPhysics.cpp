@@ -225,10 +225,10 @@ namespace saba
 		bool		m_override;
 	};
 
-	class AlignedMotionState : public MMDMotionState
+	class DynamicAndBoneMergeMotionState : public MMDMotionState
 	{
 	public:
-		AlignedMotionState(MMDNode* node, const glm::mat4& offset, bool override = true)
+		DynamicAndBoneMergeMotionState(MMDNode* node, const glm::mat4& offset, bool override = true)
 			: m_node(node)
 			, m_offset(offset)
 			, m_override(override)
@@ -447,7 +447,7 @@ namespace saba
 		}
 		else if (pmdRigidBody.m_rigidBodyType == PMDRigidBodyOperation::DynamicAdjustBone)
 		{
-			m_activeMotionState = std::make_unique<AlignedMotionState>(kinematicNode, m_offsetMat, overrideNode);
+			m_activeMotionState = std::make_unique<DynamicAndBoneMergeMotionState>(kinematicNode, m_offsetMat, overrideNode);
 			m_kinematicMotionState = std::make_unique<KinematicMotionState>(kinematicNode, m_offsetMat);
 			motionState = m_activeMotionState.get();
 		}
@@ -561,7 +561,7 @@ namespace saba
 				}
 				else if (pmxRigidBody.m_op == PMXRigidbody::Operation::DynamicAndBoneMerge)
 				{
-					m_activeMotionState = std::make_unique<AlignedMotionState>(kinematicNode, m_offsetMat);
+					m_activeMotionState = std::make_unique<DynamicAndBoneMergeMotionState>(kinematicNode, m_offsetMat);
 					m_kinematicMotionState = std::make_unique<KinematicMotionState>(kinematicNode, m_offsetMat);
 					MMDMotionState = m_activeMotionState.get();
 				}
