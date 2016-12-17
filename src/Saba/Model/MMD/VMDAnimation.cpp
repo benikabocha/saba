@@ -84,10 +84,6 @@ namespace saba
 	void VMDNodeController::SetNode(MMDNode * node)
 	{
 		m_node = node;
-
-		m_initTranslate = node->GetTranslate();
-		m_initRotate = node->GetRotate();
-		m_initScale = node->GetScale();
 	}
 
 	void VMDNodeController::Evaluate(float t)
@@ -99,9 +95,8 @@ namespace saba
 		}
 		if (m_keys.empty())
 		{
-			m_node->SetTranslate(m_initTranslate);
-			m_node->SetRotate(m_initRotate);
-			m_node->SetScale(m_initScale);
+			m_node->SetAnimationTranslate(glm::vec3(0));
+			m_node->SetAnimationRotate(glm::quat(1, 0, 0, 0));
 			return;
 		}
 
@@ -144,8 +139,8 @@ namespace saba
 			}
 		}
 
-		m_node->SetTranslate(m_initTranslate + vt);
-		m_node->SetRotate(q);
+		m_node->SetAnimationRotate(q);
+		m_node->SetAnimationTranslate(vt);
 	}
 
 	void VMDNodeController::SortKeys()

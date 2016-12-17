@@ -868,7 +868,7 @@ namespace saba
 			}
 
 			glm::quat appendQ = glm::slerp(
-				glm::quat(),
+				glm::quat(1, 0, 0, 0),
 				appendRotate,
 				GetAppendWeight()
 			);
@@ -903,7 +903,7 @@ namespace saba
 	void PMXNode::OnBeginUpdateTransform()
 	{
 		m_appendTranslate = glm::vec3(0);
-		m_appendRotate = glm::quat();
+		m_appendRotate = glm::quat(1, 0, 0, 0);
 	}
 
 	void PMXNode::OnEndUpdateTransfrom()

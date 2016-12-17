@@ -69,9 +69,6 @@ namespace saba
 
 	private:
 		MMDNode*	m_node;
-		glm::vec3	m_initTranslate;
-		glm::quat	m_initRotate;
-		glm::vec3	m_initScale;
 		std::vector<KeyType>	m_keys;
 	};
 

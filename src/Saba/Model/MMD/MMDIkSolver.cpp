@@ -62,7 +62,7 @@ namespace saba
 			}
 			else
 			{
-				chain.m_node->SetIKRotate(glm::quat());
+				chain.m_node->SetIKRotate(glm::quat(1, 0, 0, 0));
 			}
 
 			chain.m_node->UpdateLocalTransform();
@@ -249,7 +249,7 @@ namespace saba
 			float angle = std::acos(dot);
 			angle = glm::clamp(angle, -m_limitAngle, m_limitAngle);
 			auto cross = glm::cross(chainTargetVec, chainIkVec);
-			auto rot = glm::rotate(glm::quat(), angle, cross);
+			auto rot = glm::rotate(glm::quat(1, 0, 0, 0), angle, cross);
 
 			bool avoidUpdate = false;
 			auto chainRotM = glm::mat3_cast(chainNode->GetIKRotate())
@@ -264,7 +264,7 @@ namespace saba
 				clampXYZ.z = ClampAngle(rotXYZ.z, chain.m_limitMin.z, chain.m_limitMax.z);
 
 				clampXYZ = glm::clamp(clampXYZ - chain.m_prevAngle, -m_limitAngle, m_limitAngle) + chain.m_prevAngle;
-				auto r = glm::rotate(glm::quat(), clampXYZ.x, glm::vec3(1, 0, 0));
+				auto r = glm::rotate(glm::quat(1, 0, 0, 0), clampXYZ.x, glm::vec3(1, 0, 0));
 				r = glm::rotate(r, clampXYZ.y, glm::vec3(0, 1, 0));
 				r = glm::rotate(r, clampXYZ.z, glm::vec3(0, 0, 1));
 				chainRotM = glm::mat3_cast(r);

@@ -15,7 +15,10 @@ namespace saba
 		, m_next(nullptr)
 		, m_prev(nullptr)
 		, m_translate(0)
+		, m_rotate(1, 0, 0, 0)
 		, m_scale(1)
+		, m_animTranslate(0)
+		, m_animRotate(1, 0, 0, 0)
 		, m_initTranslate(0)
 		, m_initScale(1)
 	{
@@ -98,9 +101,9 @@ namespace saba
 
 	void MMDNode::OnUpdateLocalTransform()
 	{
-		auto s = glm::scale(glm::mat4(1), m_scale);
-		auto r = glm::mat4_cast(m_rotate);
-		auto t = glm::translate(glm::mat4(1), m_translate);
+		auto s = glm::scale(glm::mat4(1), GetScale());
+		auto r = glm::mat4_cast(GetRotate());
+		auto t = glm::translate(glm::mat4(1), GetTranslate());
 		if (m_enableIK)
 		{
 			r = glm::mat4_cast(m_ikRotate) * r;

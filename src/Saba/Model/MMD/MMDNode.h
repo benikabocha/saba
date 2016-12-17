@@ -31,16 +31,20 @@ namespace saba
 		bool IsIK() const { return m_enableIK; }
 
 		void SetTranslate(const glm::vec3& t) { m_translate = t; }
-		const glm::vec3& GetTranslate() const { return m_translate; }
+		const glm::vec3 GetTranslate() const { return m_animTranslate + m_translate; }
 
 		void SetRotate(const glm::quat& r) { m_rotate = r; }
-		const glm::quat& GetRotate() const { return m_rotate; }
+		const glm::quat GetRotate() const { return m_animRotate * m_rotate; }
 
 		void SetScale(const glm::vec3& s) { m_scale = s; }
-		const glm::vec3& GetScale() const { return m_scale; }
+		const glm::vec3 GetScale() const { return m_scale; }
+
+		void SetAnimationTranslate(const glm::vec3& t) { m_animTranslate = t; }
+
+		void SetAnimationRotate(const glm::quat& q) { m_animRotate = q; }
 
 		void SetIKRotate(const glm::quat& ikr) { m_ikRotate = ikr; }
-		const glm::quat& GetIKRotate() const { return m_ikRotate; }
+		const glm::quat GetIKRotate() const { return m_ikRotate; }
 
 		MMDNode* GetParent() const { return m_parent; }
 		MMDNode* GetChild() const { return m_child; }
@@ -85,6 +89,9 @@ namespace saba
 		glm::vec3	m_translate;
 		glm::quat	m_rotate;
 		glm::vec3	m_scale;
+
+		glm::vec3	m_animTranslate;
+		glm::quat	m_animRotate;
 
 		glm::quat	m_ikRotate;
 
