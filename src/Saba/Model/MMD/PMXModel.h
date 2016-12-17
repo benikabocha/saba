@@ -155,6 +155,18 @@ namespace saba
 			std::vector<saba::PMXMorph::MaterialMorph>	m_materialMorphs;
 		};
 
+		struct BoneMorphElement
+		{
+			MMDNode*	m_node;
+			glm::vec3	m_position;
+			glm::quat	m_rotate;
+		};
+
+		struct BoneMorphData
+		{
+			std::vector<BoneMorphElement>	m_boneMorphs;
+		};
+
 		struct GroupMorphData
 		{
 			std::vector<saba::PMXMorph::GroupMorph>		m_groupMorphs;
@@ -165,6 +177,7 @@ namespace saba
 			None,
 			Position,
 			Material,
+			Bone,
 			Group,
 		};
 
@@ -184,6 +197,8 @@ namespace saba
 		void EndMorphMaterial();
 		void MorphMaterial(const MaterialMorphData& morphData, float weight);
 
+		void MorphBone(const BoneMorphData& morphData, float weight);
+
 	private:
 		std::vector<glm::vec3>	m_positions;
 		std::vector<glm::vec3>	m_normals;
@@ -198,7 +213,11 @@ namespace saba
 
 		std::vector<PositionMorphData>	m_positionMorphDatas;
 		std::vector<MaterialMorphData>	m_materialMorphDatas;
+		std::vector<BoneMorphData>		m_boneMorphDatas;
 		std::vector<GroupMorphData>		m_groupMorphDatas;
+
+		// PositionMorph用
+		std::vector<glm::vec3>	m_morphPositions;
 
 		// マテリアルMorph用
 		std::vector<MMDMaterial>	m_initMaterials;

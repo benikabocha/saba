@@ -55,6 +55,7 @@ namespace saba
 
 	void MMDNode::BeginUpateTransform()
 	{
+		LoadInitialTRS();
 		OnBeginUpdateTransform();
 	}
 
@@ -102,8 +103,8 @@ namespace saba
 	void MMDNode::OnUpdateLocalTransform()
 	{
 		auto s = glm::scale(glm::mat4(1), GetScale());
-		auto r = glm::mat4_cast(GetRotate());
-		auto t = glm::translate(glm::mat4(1), GetTranslate());
+		auto r = glm::mat4_cast(AnimateRotate());
+		auto t = glm::translate(glm::mat4(1), AnimateTranslate());
 		if (m_enableIK)
 		{
 			r = glm::mat4_cast(m_ikRotate) * r;

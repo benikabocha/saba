@@ -57,7 +57,7 @@ namespace saba
 				r = glm::rotate(r, angle.y, glm::vec3(0, 1, 0));
 				r = glm::rotate(r, angle.z, glm::vec3(0, 0, 1));
 				chain.m_prevAngle = angle;
-				auto rm = glm::mat3_cast(r) * glm::inverse(glm::mat3_cast(chain.m_node->GetRotate()));
+				auto rm = glm::mat3_cast(r) * glm::inverse(glm::mat3_cast(chain.m_node->AnimateRotate()));
 				chain.m_node->SetIKRotate(glm::quat_cast(rm));
 			}
 			else
@@ -253,7 +253,7 @@ namespace saba
 
 			bool avoidUpdate = false;
 			auto chainRotM = glm::mat3_cast(chainNode->GetIKRotate())
-				* glm::mat3_cast(chainNode->GetRotate())
+				* glm::mat3_cast(chainNode->AnimateRotate())
 				* glm::mat3_cast(rot);
 			if (chain.m_enableAxisLimit)
 			{
@@ -295,7 +295,7 @@ namespace saba
 			if (!avoidUpdate)
 			{
 				auto ikRotM = chainRotM
-					* glm::inverse(glm::mat3_cast(chainNode->GetRotate()));
+					* glm::inverse(glm::mat3_cast(chainNode->AnimateRotate()));
 				chainNode->SetIKRotate(glm::quat_cast(ikRotM));
 			}
 

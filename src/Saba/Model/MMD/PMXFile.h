@@ -10,6 +10,7 @@
 #include <glm/vec2.hpp>
 #include <glm/vec3.hpp>
 #include <glm/vec4.hpp>
+#include <glm/gtc/quaternion.hpp>
 
 namespace saba
 {
@@ -307,7 +308,7 @@ namespace saba
 		{
 			int32_t		m_boneIndex;
 			glm::vec3	m_position;
-			glm::vec4	m_quaternion;
+			glm::quat	m_quaternion;
 		};
 
 		struct MaterialMorph
