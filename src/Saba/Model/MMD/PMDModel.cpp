@@ -342,13 +342,13 @@ namespace saba
 			if (!texName.empty())
 			{
 				std::string texPath = PathUtil::Combine(dirPath, texName);
-				mat.m_texture = texPath;
+				mat.m_texture = PathUtil::Normalize(texPath);
 			}
 
 			if (!spTexName.empty())
 			{
 				std::string spTexPath = PathUtil::Combine(dirPath, spTexName);
-				mat.m_spTexture = spTexPath;
+				mat.m_spTexture = PathUtil::Normalize(spTexPath);
 			}
 
 			if (pmdMat.m_toonIndex != 255)

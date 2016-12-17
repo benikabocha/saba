@@ -42,4 +42,11 @@ TEST(BaseTest, PathTest)
 	EXPECT_EQ(std::string(""), saba::PathUtil::GetExt("test"));
 	EXPECT_EQ(std::string(""), saba::PathUtil::GetExt("."));
 	EXPECT_EQ(std::string(""), saba::PathUtil::GetExt(""));
+
+	// Normalize
+#if _WIN32
+	EXPECT_EQ(std::string("a\\b\\c\\"), saba::PathUtil::Normalize("a/b\\c/"));
+#else // _WIN32
+	EXPECT_EQ(std::string("a/b/c/"), saba::PathUtil::Normalize("a\\b/c\\"));
+#endif
 }

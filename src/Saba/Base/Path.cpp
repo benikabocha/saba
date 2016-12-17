@@ -1,5 +1,7 @@
 ﻿#include "Path.h"
 
+#include <algorithm>
+
 namespace saba
 {
 	namespace
@@ -96,6 +98,17 @@ namespace saba
 #else // _WIN32
 		return "/";
 #endif
+	}
+
+	std::string PathUtil::Normalize(const std::string & path)
+	{
+		std::string result = path;
+#if _WIN32
+		std::replace(result.begin(), result.end(), '/', '\\');
+#else // _WIN32
+		std::replace(result.begin(), result.end(), '\\', '/');
+#endif
+		return result;
 	}
 
 }

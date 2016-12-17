@@ -433,7 +433,7 @@ namespace saba
 			// Texture
 			if (pmxMat.m_textureIndex != -1)
 			{
-				mat.m_texture = texturePaths[pmxMat.m_textureIndex];
+				mat.m_texture = PathUtil::Normalize(texturePaths[pmxMat.m_textureIndex]);
 			}
 
 			// ToonTexture
@@ -450,14 +450,14 @@ namespace saba
 			{
 				if (pmxMat.m_toonTextureIndex != -1)
 				{
-					mat.m_toonTexture = texturePaths[pmxMat.m_toonTextureIndex];
+					mat.m_toonTexture = PathUtil::Normalize(texturePaths[pmxMat.m_toonTextureIndex]);
 				}
 			}
 
 			// SpTexture
 			if (pmxMat.m_sphereTextureIndex != -1)
 			{
-				mat.m_spTexture = texturePaths[pmxMat.m_sphereTextureIndex];
+				mat.m_spTexture = PathUtil::Normalize(texturePaths[pmxMat.m_sphereTextureIndex]);
 				mat.m_spTextureMode = MMDMaterial::SphereTextureMode::None;
 				if (pmxMat.m_sphereMode == PMXSphereMode::Mul)
 				{
