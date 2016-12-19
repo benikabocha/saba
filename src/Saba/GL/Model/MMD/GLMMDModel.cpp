@@ -238,6 +238,7 @@ namespace saba
 		size_t vtxCount = m_mmdModel->GetVertexCount();
 		UpdateVBO(m_posVBO, m_mmdModel->GetUpdatePositions(), vtxCount);
 		UpdateVBO(m_norVBO, m_mmdModel->GetUpdateNormals(), vtxCount);
+		UpdateVBO(m_uvVBO, m_mmdModel->GetUpdateUVs(), vtxCount);
 		double endTime = GetTime();
 		m_updateTime = endTime - startTime;
 	}

@@ -95,9 +95,11 @@ namespace saba
 		{
 			node->BeginUpateTransform();
 		}
-		for (auto& morphPos : m_morphPositions)
+		size_t vtxCount = m_morphPositions.size();
+		for (size_t vtxIdx = 0; vtxIdx < vtxCount; vtxIdx++)
 		{
-			morphPos = glm::vec3(0);
+			m_morphPositions[vtxIdx] = glm::vec3(0);
+			m_morphUVs[vtxIdx] = glm::vec4(0);
 		}
 	}
 
@@ -190,10 +192,13 @@ namespace saba
 	{
 		const auto* position = m_positions.data();
 		const auto* normal = m_normals.data();
+		const auto* uv = m_uvs.data();
 		const auto* morphPos = m_morphPositions.data();
+		const auto* morphUV = m_morphUVs.data();
 		const auto* vtxInfo = m_vertexBoneInfos.data();
 		auto* updatePosition = m_updatePositions.data();
 		auto* updateNormal = m_updateNormals.data();
+		auto* updateUV = m_updateUVs.data();
 		size_t numVertices = m_positions.size();
 		auto& nodes = (*m_nodeMan.GetNodes());
 
@@ -242,13 +247,17 @@ namespace saba
 
 			*updatePosition = glm::vec3(m * glm::vec4(*position + *morphPos, 1));
 			*updateNormal = glm::normalize(glm::mat3(m) * *normal);
+			*updateUV = *uv + glm::vec2((*morphUV).x, (*morphUV).y);
 
 			vtxInfo++;
 			position++;
 			normal++;
+			uv++;
 			updatePosition++;
 			updateNormal++;
+			updateUV++;
 			morphPos++;
+			morphUV++;
 		}
 	}
 
@@ -335,8 +344,10 @@ namespace saba
 			m_bboxMin = glm::min(m_bboxMin, pos);
 		}
 		m_morphPositions.resize(m_positions.size());
+		m_morphUVs.resize(m_positions.size());
 		m_updatePositions.resize(m_positions.size());
 		m_updateNormals.resize(m_normals.size());
+		m_updateUVs.resize(m_uvs.size());
 
 
 		m_indexElementSize = pmx.m_header.m_vertexIndexSize;
@@ -591,14 +602,28 @@ namespace saba
 				morph->m_morphType = MorphType::Position;
 				morph->m_dataIndex = m_positionMorphDatas.size();
 				PositionMorphData morphData;
-				for (const auto vtx : pmxMorph.m_positionMorph)
+				for (const auto& vtx : pmxMorph.m_positionMorph)
 				{
-					MorphVertex morphVtx;
+					PositionMorph morphVtx;
 					morphVtx.m_index = vtx.m_vertexIndex;
 					morphVtx.m_position = vtx.m_position * glm::vec3(1, 1, -1);
 					morphData.m_morphVertices.push_back(morphVtx);
 				}
 				m_positionMorphDatas.emplace_back(std::move(morphData));
+			}
+			else if (pmxMorph.m_morphType == PMXMorphType::UV)
+			{
+				morph->m_morphType = MorphType::UV;
+				morph->m_dataIndex = m_uvMorphDatas.size();
+				UVMorphData morphData;
+				for (const auto& uv : pmxMorph.m_uvMorph)
+				{
+					UVMorph morphUV;
+					morphUV.m_index = uv.m_vertexIndex;
+					morphUV.m_uv = uv.m_uv;
+					morphData.m_morphUVs.push_back(morphUV);
+				}
+				m_uvMorphDatas.emplace_back(std::move(morphData));
 			}
 			else if (pmxMorph.m_morphType == PMXMorphType::Material)
 			{
@@ -716,6 +741,12 @@ namespace saba
 				weight
 			);
 			break;
+		case MorphType::UV:
+			MorphUV(
+				m_uvMorphDatas[morph->m_dataIndex],
+				weight
+			);
+			break;
 		case MorphType::Material:
 			MorphMaterial(
 				m_materialMorphDatas[morph->m_dataIndex],
@@ -750,10 +781,22 @@ namespace saba
 			return;
 		}
 
-		auto* updatePosition = m_updatePositions.data();
 		for (const auto& morphVtx : morphData.m_morphVertices)
 		{
 			m_morphPositions[morphVtx.m_index] += morphVtx.m_position * weight;
+		}
+	}
+
+	void PMXModel::MorphUV(const UVMorphData & morphData, float weight)
+	{
+		if (weight == 0)
+		{
+			return;
+		}
+
+		for (const auto& morphUV : morphData.m_morphUVs)
+		{
+			m_morphUVs[morphUV.m_index] += morphUV.m_uv * weight;
 		}
 	}
 

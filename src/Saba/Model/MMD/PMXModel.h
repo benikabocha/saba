@@ -71,12 +71,12 @@ namespace saba
 		MMDPhysicsManager* GetPhysicsManager() override { return &m_physicsMan; }
 
 		size_t GetVertexCount() const override { return m_positions.size(); }
-		const glm::vec3* GetPositions() const override { return &m_positions[0]; }
-		const glm::vec3* GetNormals() const override { return &m_normals[0]; }
-		const glm::vec2* GetUVs() const override { return &m_uvs[0]; }
-		const glm::vec3* GetUpdatePositions() const override { return &m_updatePositions[0]; }
-		const glm::vec3* GetUpdateNormals() const override { return &m_updateNormals[0]; }
-		const glm::vec2* GetUpdateUVs() const override { return &m_uvs[0]; }
+		const glm::vec3* GetPositions() const override { return m_positions.data(); }
+		const glm::vec3* GetNormals() const override { return m_normals.data(); }
+		const glm::vec2* GetUVs() const override { return m_uvs.data(); }
+		const glm::vec3* GetUpdatePositions() const override { return m_updatePositions.data(); }
+		const glm::vec3* GetUpdateNormals() const override { return m_updateNormals.data(); }
+		const glm::vec2* GetUpdateUVs() const override { return m_updateUVs.data(); }
 
 		size_t GetIndexElementSize() const override { return m_indexElementSize; }
 		size_t GetIndexCount() const override { return m_indexCount; }
@@ -119,7 +119,7 @@ namespace saba
 			glm::vec4		m_boneWeight;
 		};
 
-		struct MorphVertex
+		struct PositionMorph
 		{
 			uint32_t	m_index;
 			glm::vec3	m_position;
@@ -127,7 +127,18 @@ namespace saba
 
 		struct PositionMorphData
 		{
-			std::vector<MorphVertex>	m_morphVertices;
+			std::vector<PositionMorph>	m_morphVertices;
+		};
+
+		struct UVMorph
+		{
+			uint32_t	m_index;
+			glm::vec4	m_uv;
+		};
+
+		struct UVMorphData
+		{
+			std::vector<UVMorph>	m_morphUVs;
 		};
 
 		struct MaterialFactor
@@ -176,6 +187,7 @@ namespace saba
 		{
 			None,
 			Position,
+			UV,
 			Material,
 			Bone,
 			Group,
@@ -193,6 +205,8 @@ namespace saba
 
 		void MorphPosition(const PositionMorphData& morphData, float weight);
 
+		void MorphUV(const UVMorphData& morphData, float weight);
+
 		void BeginMorphMaterial();
 		void EndMorphMaterial();
 		void MorphMaterial(const MaterialMorphData& morphData, float weight);
@@ -206,6 +220,7 @@ namespace saba
 		std::vector<VertexBoneInfo>	m_vertexBoneInfos;
 		std::vector<glm::vec3>	m_updatePositions;
 		std::vector<glm::vec3>	m_updateNormals;
+		std::vector<glm::vec2>	m_updateUVs;
 		std::vector<glm::mat4>	m_transforms;
 
 		std::vector<char>	m_indices;
@@ -213,12 +228,14 @@ namespace saba
 		size_t				m_indexElementSize;
 
 		std::vector<PositionMorphData>	m_positionMorphDatas;
+		std::vector<UVMorphData>		m_uvMorphDatas;
 		std::vector<MaterialMorphData>	m_materialMorphDatas;
 		std::vector<BoneMorphData>		m_boneMorphDatas;
 		std::vector<GroupMorphData>		m_groupMorphDatas;
 
 		// PositionMorph用
 		std::vector<glm::vec3>	m_morphPositions;
+		std::vector<glm::vec4>	m_morphUVs;
 
 		// マテリアルMorph用
 		std::vector<MMDMaterial>	m_initMaterials;
