@@ -12,6 +12,11 @@ namespace saba
 	{
 	}
 
+	File::~File()
+	{
+		Close();
+	}
+
 	bool File::OpenFile(const char * filepath, const char * mode)
 	{
 		if (m_fp != nullptr)
