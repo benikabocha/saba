@@ -3,6 +3,9 @@ set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 
 project(saba)
 
+option (SABA_BULLET_ROOT "Bullet Root Directory" "")
+set (BULLET_ROOT ${SABA_BULLET_ROOT})
+
 find_package(OpenGL REQUIRED)
 find_package(Bullet REQUIRED)
 
