@@ -96,6 +96,8 @@ namespace saba
 		void EndAnimation() override;
 		// ノードを更新する
 		void UpdateAnimation(float elapsed) override;
+		// Physicsを更新する
+		void UpdatePhysics(float elapsed) override;
 		// 頂点データーを更新する
 		void Update(float elapsed) override;
 

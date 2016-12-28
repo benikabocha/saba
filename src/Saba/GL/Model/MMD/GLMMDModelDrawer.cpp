@@ -151,20 +151,25 @@ namespace saba
 		case PlayMode::None:
 			break;
 		case PlayMode::Play:
+			m_mmdModel->UpdateAnimation(elapsed);
 			m_mmdModel->Update(elapsed);
 			break;
 		case PlayMode::Stop:
+			m_mmdModel->Update(elapsed);
 			break;
 		case PlayMode::Update:
-			m_mmdModel->Update(0.0f);
+			m_mmdModel->UpdateAnimation(0.0f);
+			m_mmdModel->Update(elapsed);
 			m_playMode = PlayMode::Stop;
 			break;
 		case PlayMode::StepFF:
-			m_mmdModel->Update(1.0f / 30.0f);
+			m_mmdModel->UpdateAnimation(1.0f / 30.0f);
+			m_mmdModel->Update(elapsed);
 			m_playMode = PlayMode::Stop;
 			break;
 		case PlayMode::StepFR:
-			m_mmdModel->Update(-1.0f / 30.0f);
+			m_mmdModel->UpdateAnimation(-1.0f / 30.0f);
+			m_mmdModel->Update(elapsed);
 			m_playMode = PlayMode::Stop;
 			break;
 		default:
@@ -272,8 +277,10 @@ namespace saba
 				glBindTexture(GL_TEXTURE_2D, 0);
 			}
 
-			SetUniform(shader->m_uLightDir, glm::vec3(0, 0, 1));
-			SetUniform(shader->m_uLightColor, glm::vec3(1, 1, 1));
+			glm::vec3 lightColor = glm::vec3(0.6f);
+			glm::vec3 lightDir = glm::vec3(-0.5f, -1.0f, -0.5f);
+			SetUniform(shader->m_uLightDir, lightDir);
+			SetUniform(shader->m_uLightColor, lightColor);
 
 			if (mmdMat.m_bothFace)
 			{

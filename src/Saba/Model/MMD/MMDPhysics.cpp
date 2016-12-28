@@ -583,7 +583,7 @@ namespace saba
 
 		m_rigidBody = std::make_unique<btRigidBody>(rbInfo);
 		m_rigidBody->setUserPointer(this);
-		m_rigidBody->setSleepingThresholds(0.0f, 0.0f);
+		m_rigidBody->setSleepingThresholds(0.1f, glm::radians(1.0f));
 		m_rigidBody->setActivationState(DISABLE_DEACTIVATION);
 		if (pmxRigidBody.m_op == PMXRigidbody::Operation::Static)
 		{
@@ -764,27 +764,36 @@ namespace saba
 			pmdJoint.m_constrainRot2.z
 		));
 
-		if (pmdJoint.m_sprintPos.x != 0)
+		if (pmdJoint.m_springPos.x != 0)
 		{
 			constraint->enableSpring(0, true);
-			constraint->setStiffness(0, pmdJoint.m_sprintPos.x);
+			constraint->setStiffness(0, pmdJoint.m_springPos.x);
 		}
-		if (pmdJoint.m_sprintPos.y != 0)
+		if (pmdJoint.m_springPos.y != 0)
 		{
 			constraint->enableSpring(1, true);
-			constraint->setStiffness(1, pmdJoint.m_sprintPos.y);
+			constraint->setStiffness(1, pmdJoint.m_springPos.y);
 		}
-		if (pmdJoint.m_sprintPos.z != 0)
+		if (pmdJoint.m_springPos.z != 0)
 		{
 			constraint->enableSpring(2, true);
-			constraint->setStiffness(2, -pmdJoint.m_sprintPos.z);
+			constraint->setStiffness(2, -pmdJoint.m_springPos.z);
 		}
-		constraint->enableSpring(3, true);
-		constraint->setStiffness(3, pmdJoint.m_sprintRot.x);
-		constraint->enableSpring(4, true);
-		constraint->setStiffness(4, pmdJoint.m_sprintRot.y);
-		constraint->enableSpring(5, true);
-		constraint->setStiffness(5, pmdJoint.m_sprintRot.z);
+		if (pmdJoint.m_springRot.x != 0)
+		{
+			constraint->enableSpring(3, true);
+			constraint->setStiffness(3, pmdJoint.m_springRot.x);
+		}
+		if (pmdJoint.m_springRot.x != 0)
+		{
+			constraint->enableSpring(4, true);
+			constraint->setStiffness(4, pmdJoint.m_springRot.y);
+		}
+		if (pmdJoint.m_springRot.x != 0)
+		{
+			constraint->enableSpring(5, true);
+			constraint->setStiffness(5, pmdJoint.m_springRot.z);
+		}
 
 		m_constraint = std::move(constraint);
 
@@ -855,12 +864,21 @@ namespace saba
 			constraint->enableSpring(2, true);
 			constraint->setStiffness(2, pmxJoint.m_springTranslateFactor.z);
 		}
-		constraint->enableSpring(3, true);
-		constraint->setStiffness(3, pmxJoint.m_springRotateFactor.x);
-		constraint->enableSpring(4, true);
-		constraint->setStiffness(4, pmxJoint.m_springRotateFactor.y);
-		constraint->enableSpring(5, true);
-		constraint->setStiffness(5, pmxJoint.m_springRotateFactor.z);
+		if (pmxJoint.m_springRotateFactor.x != 0)
+		{
+			constraint->enableSpring(3, true);
+			constraint->setStiffness(3, pmxJoint.m_springRotateFactor.x);
+		}
+		if (pmxJoint.m_springRotateFactor.y != 0)
+		{
+			constraint->enableSpring(4, true);
+			constraint->setStiffness(4, pmxJoint.m_springRotateFactor.y);
+		}
+		if (pmxJoint.m_springRotateFactor.z != 0)
+		{
+			constraint->enableSpring(5, true);
+			constraint->setStiffness(5, pmxJoint.m_springRotateFactor.z);
+		}
 
 		m_constraint = std::move(constraint);
 

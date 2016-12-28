@@ -129,7 +129,10 @@ namespace saba
 		{
 			solver->Solve();
 		}
+	}
 
+	void PMDModel::UpdatePhysics(float elapsed)
+	{
 		MMDPhysicsManager* physicsMan = GetPhysicsManager();
 		auto physics = physicsMan->GetMMDPhysics();
 

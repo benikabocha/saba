@@ -420,8 +420,8 @@ namespace saba
 				Read(&joint.m_constrainPos2, file);
 				Read(&joint.m_constrainRot1, file);
 				Read(&joint.m_constrainRot2, file);
-				Read(&joint.m_sprintPos, file);
-				Read(&joint.m_sprintRot, file);
+				Read(&joint.m_springPos, file);
+				Read(&joint.m_springRot, file);
 			}
 
 			return !file.IsBad();

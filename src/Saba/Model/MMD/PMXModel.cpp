@@ -20,6 +20,8 @@ namespace saba
 {
 	void PMXModel::InitializeAnimation()
 	{
+		BeginAnimation();
+
 		for (auto& node : (*m_nodeMan.GetNodes()))
 		{
 			node->UpdateLocalTransform();
@@ -56,6 +58,8 @@ namespace saba
 			}
 		}
 
+		EndAnimation();
+
 		MMDPhysicsManager* physicsMan = GetPhysicsManager();
 		auto physics = physicsMan->GetMMDPhysics();
 
@@ -76,7 +80,7 @@ namespace saba
 			rb->BeginUpdate();
 		}
 
-		physics->Update(1.0f / 60.0f);
+		physics->Update(0.0f);
 
 		for (auto& rb : (*rigidbodys))
 		{
@@ -159,7 +163,10 @@ namespace saba
 				node->UpdateGlobalTransform();
 			}
 		}
+	}
 
+	void PMXModel::UpdatePhysics(float elapsed)
+	{
 		MMDPhysicsManager* physicsMan = GetPhysicsManager();
 		auto physics = physicsMan->GetMMDPhysics();
 

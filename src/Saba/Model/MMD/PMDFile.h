@@ -166,8 +166,8 @@ namespace saba
 		glm::vec3		m_constrainPos2;
 		glm::vec3		m_constrainRot1;
 		glm::vec3		m_constrainRot2;
-		glm::vec3		m_sprintPos;
-		glm::vec3		m_sprintRot;
+		glm::vec3		m_springPos;
+		glm::vec3		m_springRot;
 	};
 
 	struct PMDFile

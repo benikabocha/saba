@@ -13,6 +13,8 @@ namespace saba
 	GLMMDModel::GLMMDModel()
 	{
 		m_animTime = 0;
+		m_updateAnimTime = 0;
+		m_updatePhysicsTime = 0;
 		m_updateTime = 0;
 	}
 
@@ -190,21 +192,10 @@ namespace saba
 		return m_animTime;
 	}
 
-	void GLMMDModel::Update(double elapsed)
+	void GLMMDModel::UpdateAnimation(double elapsed)
 	{
-		m_updateTime = 0;
-		if (m_mmdModel == nullptr)
-		{
-			return;
-		}
-		//if (m_vmdAnim == nullptr)
-		//{
-		//	return;
-		//}
-
-		m_mmdModel->BeginAnimation();
-
 		double startTime = GetTime();
+		m_mmdModel->BeginAnimation();
 		if (m_vmdAnim != 0)
 		{
 			m_animTime += elapsed;
@@ -216,6 +207,27 @@ namespace saba
 
 		m_mmdModel->EndAnimation();
 
+		double endTime = GetTime();
+		m_updateAnimTime = endTime - startTime;
+	}
+
+	void GLMMDModel::Update(double elapsed)
+	{
+		m_updateTime = 0;
+		if (m_mmdModel == nullptr)
+		{
+			return;
+		}
+
+		if (m_vmdAnim != 0)
+		{
+			double startTime = GetTime();
+			m_mmdModel->UpdatePhysics(elapsed);
+			double endTime = GetTime();
+			m_updatePhysicsTime = endTime - startTime;
+		}
+
+		double startTime = GetTime();
 		m_mmdModel->Update((float)elapsed);
 
 		size_t matCount = m_mmdModel->GetMaterialCount();
@@ -240,7 +252,10 @@ namespace saba
 		UpdateVBO(m_norVBO, m_mmdModel->GetUpdateNormals(), vtxCount);
 		UpdateVBO(m_uvVBO, m_mmdModel->GetUpdateUVs(), vtxCount);
 		double endTime = GetTime();
-		m_updateTime = endTime - startTime;
+
+		m_updateTime = endTime - startTime + m_updateAnimTime + m_updatePhysicsTime;
+		m_updateAnimTime = 0;
+		m_updatePhysicsTime = 0;
 	}
 
 }

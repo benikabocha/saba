@@ -47,6 +47,7 @@ namespace saba
 
 		void SetAnimationTime(double time);
 		double GetAnimationTime() const;
+		void UpdateAnimation(double elapsed);
 		void Update(double elapsed);
 
 		const GLBufferObject& GetPositionVBO() const { return m_posVBO; }
@@ -87,6 +88,8 @@ namespace saba
 		std::vector<GLMMDMaterial>	m_materials;
 		std::vector<MMDSubMesh>		m_subMeshes;
 
+		double						m_updateAnimTime;
+		double						m_updatePhysicsTime;
 		double						m_updateTime;
 	};
 }
