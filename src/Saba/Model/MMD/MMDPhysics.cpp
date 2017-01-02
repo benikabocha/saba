@@ -48,7 +48,7 @@ namespace saba
 			m_collisionConfig.get()
 			);
 
-		m_world->setGravity(btVector3(0, -9.8f, 0));
+		m_world->setGravity(btVector3(0, -9.8f * 10.0f, 0));
 
 		m_groundShape = std::make_unique<btStaticPlaneShape>(btVector3(0, 1, 0), 0.0f);
 
@@ -461,7 +461,7 @@ namespace saba
 
 		m_rigidBody = std::make_unique<btRigidBody>(rbInfo);
 		m_rigidBody->setUserPointer(this);
-		m_rigidBody->setSleepingThresholds(0.0f, 0.0f);
+		m_rigidBody->setSleepingThresholds(0.01f, glm::radians(0.1f));
 		m_rigidBody->setActivationState(DISABLE_DEACTIVATION);
 		if (pmdRigidBody.m_rigidBodyType == PMDRigidBodyOperation::Static)
 		{
@@ -583,7 +583,7 @@ namespace saba
 
 		m_rigidBody = std::make_unique<btRigidBody>(rbInfo);
 		m_rigidBody->setUserPointer(this);
-		m_rigidBody->setSleepingThresholds(0.1f, glm::radians(1.0f));
+		m_rigidBody->setSleepingThresholds(0.01f, glm::radians(0.1f));
 		m_rigidBody->setActivationState(DISABLE_DEACTIVATION);
 		if (pmxRigidBody.m_op == PMXRigidbody::Operation::Static)
 		{
