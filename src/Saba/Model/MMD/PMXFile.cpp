@@ -194,8 +194,8 @@ namespace saba
 					Read(&vertex.m_boneWeights[3], file);
 					break;
 				case PMXVertexWeight::SDEF:
-					ReadIndex(&vertex.m_boneIndices[1], pmx->m_header.m_boneIndexSize, file);
 					ReadIndex(&vertex.m_boneIndices[0], pmx->m_header.m_boneIndexSize, file);
+					ReadIndex(&vertex.m_boneIndices[1], pmx->m_header.m_boneIndexSize, file);
 					Read(&vertex.m_boneWeights[0], file);
 					Read(&vertex.m_sdefC, file);
 					Read(&vertex.m_sdefR0, file);
