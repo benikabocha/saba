@@ -742,6 +742,18 @@ namespace saba
 		if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_PRESS)
 		{
 			m_cameraMode = CameraMode::Orbit;
+			if (glfwGetKey(m_window, GLFW_KEY_Z) == GLFW_PRESS)
+			{
+				m_cameraMode = CameraMode::Orbit;
+			}
+			else if (glfwGetKey(m_window, GLFW_KEY_X) == GLFW_PRESS)
+			{
+				m_cameraMode = CameraMode::Pan;
+			}
+			else if (glfwGetKey(m_window, GLFW_KEY_C) == GLFW_PRESS)
+			{
+				m_cameraMode = CameraMode::Dolly;
+			}
 		}
 		else if (button == GLFW_MOUSE_BUTTON_RIGHT && action == GLFW_PRESS)
 		{
