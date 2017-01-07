@@ -278,7 +278,9 @@ namespace saba
 			}
 
 			glm::vec3 lightColor = glm::vec3(0.6f);
-			glm::vec3 lightDir = glm::vec3(-0.5f, -1.0f, -0.5f);
+			glm::vec3 lightDir = glm::vec3(0.5f, 1.0f, 0.5f);
+			glm::mat3 viewMat = glm::mat3(ctxt->GetCamera()->GetViewMatrix());
+			lightDir = viewMat * lightDir;
 			SetUniform(shader->m_uLightDir, lightDir);
 			SetUniform(shader->m_uLightColor, lightColor);
 
