@@ -67,6 +67,8 @@ namespace saba
 		}
 		void SortKeys();
 
+		MMDNode* GetNode() const { return m_node; }
+
 	private:
 		MMDNode*	m_node;
 		std::vector<KeyType>	m_keys;
@@ -87,6 +89,8 @@ namespace saba
 			m_keys.push_back(key);
 		}
 		void SortKeys();
+
+		MMDMorph* GetMorph() const { return m_morph; }
 
 	private:
 		MMDMorph*				m_morph;
@@ -109,6 +113,8 @@ namespace saba
 		}
 		void SortKeys();
 
+		MMDIkSolver* GetIkSolver() const { return m_ikSolver; }
+
 	private:
 		MMDIkSolver*					m_ikSolver;
 		std::vector<VMDIKAnimationKey>	m_keys;
@@ -117,7 +123,8 @@ namespace saba
 	class VMDAnimation
 	{
 	public:
-		bool Create(const VMDFile& vmd, std::shared_ptr<MMDModel> model);
+		bool Create(std::shared_ptr<MMDModel> model);
+		bool Add(const VMDFile& vmd);
 		void Destroy();
 
 		void Evaluate(float t);

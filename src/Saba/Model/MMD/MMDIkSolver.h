@@ -32,6 +32,7 @@ namespace saba
 		void SetIterateCount(uint32_t count) { m_iterateCount = count; }
 		void SetLimitAngle(float angle) { m_limitAngle = angle; }
 		void Enable(bool enable) { m_enable = enable; }
+		bool Enabled() { return m_enable; }
 
 		void AddIKChain(MMDNode* node, bool isKnee = false);
 		void AddIKChain(

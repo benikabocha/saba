@@ -152,11 +152,21 @@ namespace saba
 		);
 	}
 
-	bool VMDAnimation::Create(const VMDFile& vmd, std::shared_ptr<MMDModel> model)
+	bool VMDAnimation::Create(std::shared_ptr<MMDModel> model)
 	{
 		m_model = model;
+		return true;
+	}
 
+	bool VMDAnimation::Add(const VMDFile & vmd)
+	{
 		std::map<std::string, NodeControllerPtr> nodeCtrlMap;
+		for (auto& nodeCtrl : m_nodeControllers)
+		{
+			std::string name = nodeCtrl->GetNode()->GetName();
+			nodeCtrlMap.emplace(std::make_pair(name, std::move(nodeCtrl)));
+		}
+		m_nodeControllers.clear();
 		for (const auto& motion : vmd.m_motions)
 		{
 			std::string nodeName = motion.m_boneName.ToUtf8String();
@@ -164,7 +174,7 @@ namespace saba
 			VMDNodeController* nodeCtrl = nullptr;
 			if (findIt == std::end(nodeCtrlMap))
 			{
-				auto node = model->GetNodeManager()->GetMMDNode(nodeName);
+				auto node = m_model->GetNodeManager()->GetMMDNode(nodeName);
 				if (node != nullptr)
 				{
 					auto val = std::make_pair(
@@ -198,6 +208,12 @@ namespace saba
 		nodeCtrlMap.clear();
 
 		std::map<std::string, IKControllerPtr> ikCtrlMap;
+		for (auto& ikCtrl : m_ikControllers)
+		{
+			std::string name = ikCtrl->GetIkSolver()->GetName();
+			ikCtrlMap.emplace(std::make_pair(name, std::move(ikCtrl)));
+		}
+		m_ikControllers.clear();
 		for (const auto& ik : vmd.m_iks)
 		{
 			for (const auto& ikInfo : ik.m_ikInfos)
@@ -207,7 +223,7 @@ namespace saba
 				VMDIKController* ikCtrl = nullptr;
 				if (findIt == std::end(ikCtrlMap))
 				{
-					auto* ikSolver = model->GetIKManager()->GetMMDIKSolver(ikName);
+					auto* ikSolver = m_model->GetIKManager()->GetMMDIKSolver(ikName);
 					if (ikSolver != nullptr)
 					{
 						auto val = std::make_pair(
@@ -242,6 +258,12 @@ namespace saba
 		ikCtrlMap.clear();
 
 		std::map<std::string, MorphControllerPtr> morphCtrlMap;
+		for (auto& bsCtrl : m_blendShapeControllers)
+		{
+			std::string name = bsCtrl->GetMorph()->GetName();
+			morphCtrlMap.emplace(std::make_pair(name, std::move(bsCtrl)));
+		}
+		m_blendShapeControllers.clear();
 		for (const auto& morph : vmd.m_morphs)
 		{
 			std::string bsName = morph.m_blendShapeName.ToUtf8String();
@@ -249,7 +271,7 @@ namespace saba
 			VMDMorphController* bsCtrl = nullptr;
 			if (findIt == std::end(morphCtrlMap))
 			{
-				auto* mmdBS = model->GetMorphManager()->GetMorph(bsName);
+				auto* mmdBS = m_model->GetMorphManager()->GetMorph(bsName);
 				if (mmdBS != nullptr)
 				{
 					auto val = std::make_pair(
@@ -365,15 +387,17 @@ namespace saba
 			std::end(m_keys),
 			[t](const VMDIKAnimationKey& key) {return key.m_time <= t;}
 		);
+		bool enable = false;
 		if (it == std::begin(m_keys))
 		{
-			m_ikSolver->Enable((*it).m_enable);
+			enable = (*it).m_enable;
 		}
 		else
 		{
 			const auto& key = *(it - 1);
-			m_ikSolver->Enable(key.m_enable);
+			enable = key.m_enable;
 		}
+		m_ikSolver->Enable(enable);
 	}
 
 	void VMDIKController::SortKeys()

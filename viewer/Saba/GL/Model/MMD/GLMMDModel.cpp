@@ -167,8 +167,17 @@ namespace saba
 			return false;
 		}
 
-		m_vmdAnim = std::make_unique<VMDAnimation>();
-		if (!m_vmdAnim->Create(vmd, m_mmdModel))
+		if (m_vmdAnim == nullptr)
+		{
+			m_vmdAnim = std::make_unique<VMDAnimation>();
+			if (!m_vmdAnim->Create(m_mmdModel))
+			{
+				m_vmdAnim.reset();
+				return false;
+			}
+		}
+
+		if (!m_vmdAnim->Add(vmd))
 		{
 			m_vmdAnim.reset();
 			return false;
@@ -222,7 +231,7 @@ namespace saba
 		if (m_vmdAnim != 0)
 		{
 			double startTime = GetTime();
-			m_mmdModel->UpdatePhysics(elapsed);
+			m_mmdModel->UpdatePhysics((float)elapsed);
 			double endTime = GetTime();
 			m_updatePhysicsTime = endTime - startTime;
 		}
