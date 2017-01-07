@@ -1,4 +1,9 @@
-﻿#include "GLMMDModel.h"
+﻿//
+// Copyright(c) 2016-2017 benikabocha.
+// Distributed under the MIT License (http://opensource.org/licenses/MIT)
+//
+
+#include "GLMMDModel.h"
 #include <Saba/GL/GLVertexUtil.h>
 #include <Saba/GL/GLTextureUtil.h>
 #include <Saba/Base/Log.h>

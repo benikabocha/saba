@@ -1,4 +1,9 @@
-﻿#include "ViewerCommand.h"
+﻿//
+// Copyright(c) 2016-2017 benikabocha.
+// Distributed under the MIT License (http://opensource.org/licenses/MIT)
+//
+
+#include "ViewerCommand.h"
 
 #include <algorithm>
 #include <cctype>

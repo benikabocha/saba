@@ -1,4 +1,9 @@
-﻿#include "GLMMDModelDrawContext.h"
+﻿//
+// Copyright(c) 2016-2017 benikabocha.
+// Distributed under the MIT License (http://opensource.org/licenses/MIT)
+//
+
+#include "GLMMDModelDrawContext.h"
 
 #include <Saba/Base/Log.h>
 #include <Saba/Viewer/ViewerContext.h>

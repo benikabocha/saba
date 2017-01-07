@@ -1,4 +1,9 @@
-﻿#include "GLSLUtil.h"
+﻿//
+// Copyright(c) 2016-2017 benikabocha.
+// Distributed under the MIT License (http://opensource.org/licenses/MIT)
+//
+
+#include "GLSLUtil.h"
 #include "GLShaderUtil.h"
 #include <Saba/Base/Path.h>
 #include <Saba/Base/File.h>

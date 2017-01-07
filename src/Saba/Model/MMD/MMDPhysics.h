@@ -1,4 +1,9 @@
-﻿#ifndef SABA_MODEL_MMDMODEL_MMDPHYSICS_H_
+﻿//
+// Copyright(c) 2016-2017 benikabocha.
+// Distributed under the MIT License (http://opensource.org/licenses/MIT)
+//
+
+#ifndef SABA_MODEL_MMDMODEL_MMDPHYSICS_H_
 #define SABA_MODEL_MMDMODEL_MMDPHYSICS_H_
 
 #include "PMDFile.h"

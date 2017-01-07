@@ -1,4 +1,9 @@
-﻿#include "ViewerContext.h"
+﻿//
+// Copyright(c) 2016-2017 benikabocha.
+// Distributed under the MIT License (http://opensource.org/licenses/MIT)
+//
+
+#include "ViewerContext.h"
 
 #include <Saba/Base/UnicodeUtil.h>
 #include <Saba/Base/Path.h>

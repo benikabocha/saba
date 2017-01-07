@@ -1,4 +1,9 @@
-﻿#include "PMDModel.h"
+﻿//
+// Copyright(c) 2016-2017 benikabocha.
+// Distributed under the MIT License (http://opensource.org/licenses/MIT)
+//
+
+#include "PMDModel.h"
 #include "PMDFile.h"
 #include "MMDPhysics.h"
 

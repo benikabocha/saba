@@ -1,4 +1,9 @@
-﻿#include "GLOBJModelDrawContext.h"
+﻿//
+// Copyright(c) 2016-2017 benikabocha.
+// Distributed under the MIT License (http://opensource.org/licenses/MIT)
+//
+
+#include "GLOBJModelDrawContext.h"
 
 #include <Saba/Base/Log.h>
 #include "../../../Viewer/ViewerContext.h"
