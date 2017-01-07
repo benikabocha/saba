@@ -111,6 +111,11 @@ namespace saba
 	void Camera::UpdateMatrix()
 	{
 		m_viewMatrix = glm::lookAtRH(m_eye, m_target, m_up);
+
+		if (m_width <= 0 || m_height <= 0)
+		{
+			return;
+		}
 		m_projectionMatrix = glm::perspectiveFovRH(
 			m_fovYRad,
 			m_width,
