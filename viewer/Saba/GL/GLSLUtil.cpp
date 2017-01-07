@@ -1,9 +1,9 @@
 ﻿#include "GLSLUtil.h"
 #include "GLShaderUtil.h"
-#include "../Base/Path.h"
-#include "../Base/File.h"
-#include "../Base/Singleton.h"
-#include "../Base/Log.h"
+#include <Saba/Base/Path.h>
+#include <Saba/Base/File.h>
+#include <Saba/Base/Singleton.h>
+#include <Saba/Base/Log.h>
 
 #include <iostream>
 #include <sstream>

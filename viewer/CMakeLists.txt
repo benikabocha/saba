@@ -1,0 +1,45 @@
+file (GLOB GL_SOURCE Saba/GL/*.cpp)
+file (GLOB GL_HEADER Saba/GL/*.h)
+file (GLOB GL_MODEL_OBJ_SOURCE Saba/GL/Model/OBJ/*.cpp)
+file (GLOB GL_MODEL_OBJ_HEADER Saba/GL/Model/OBJ/*.h)
+file (GLOB GL_MODEL_MMD_SOURCE Saba/GL/Model/MMD/*.cpp)
+file (GLOB GL_MODEL_MMD_HEADER Saba/GL/Model/MMD/*.h)
+
+file (GLOB VIEWER_SOURCE Saba/Viewer/*.cpp)
+file (GLOB VIEWER_HEADER Saba/Viewer/*.h)
+
+file (GLOB GL3W_SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/../external/gl3w/src/*.c)
+
+file (GLOB IMGUI_SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/../external/imgui/src/*.cpp)
+
+SOURCE_GROUP(GL FILES ${GL_SOURCE} ${GL_HEADER})
+SOURCE_GROUP(GL\\Model\\OBJ FILES ${GL_MODEL_OBJ_SOURCE} ${GL_MODEL_OBJ_HEADER})
+SOURCE_GROUP(GL\\Model\\MMD FILES ${GL_MODEL_MMD_SOURCE} ${GL_MODEL_MMD_HEADER})
+SOURCE_GROUP(Viewer FILES ${VIEWER_SOURCE} ${VIEWER_HEADER})
+SOURCE_GROUP(GL3W FILES ${GL3W_SOURCE})
+SOURCE_GROUP(IMGUI FILES ${IMGUI_SOURCE})
+
+# SabaViewer
+
+add_library(SabaViewer
+    ${GL_SOURCE}
+    ${GL_HEADER}
+    ${GL_MODEL_OBJ_SOURCE}
+    ${GL_MODEL_OBJ_HEADER}
+    ${GL_MODEL_MMD_SOURCE}
+    ${GL_MODEL_MMD_HEADER}
+    ${VIEWER_SOURCE}
+    ${VIEWER_HEADER}
+    ${GL3W_SOURCE}
+    ${IMGUI_SOURCE}
+    )
+target_link_libraries(SabaViewer
+    Saba
+    glfw
+    glslang
+    OSDependent
+    SPIRV
+    OGLCompiler
+    HLSL
+    ${OPENGL_LIBRARY}
+    )

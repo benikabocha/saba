@@ -3,7 +3,7 @@
 
 #include "../../GLObject.h"
 #include "../../GLVertexUtil.h"
-#include "../../../Model/OBJ/OBJModel.h"
+#include <Saba/Model/OBJ/OBJModel.h>
 
 namespace saba
 {

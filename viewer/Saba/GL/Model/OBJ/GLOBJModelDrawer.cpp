@@ -4,7 +4,7 @@
 #include "GLOBJModelDrawContext.h"
 #include "../../GLSLUtil.h"
 #include "../../GLShaderUtil.h"
-#include "../../../Base/Log.h"
+#include <Saba/Base/Log.h>
 
 namespace saba
 {

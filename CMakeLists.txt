@@ -15,6 +15,7 @@ option(SABA_ENABLE_GL_TEST "OpenGL test." off)
 set(CMAKE_CXX_STANDARD 14)
 
 include_directories(${PROJECT_SOURCE_DIR}/src)
+include_directories(${PROJECT_SOURCE_DIR}/viewer)
 include_directories(${PROJECT_SOURCE_DIR}/external/gl3w/include)
 include_directories(${PROJECT_SOURCE_DIR}/external/gli/include)
 include_directories(${PROJECT_SOURCE_DIR}/external/glm/include)
@@ -33,4 +34,14 @@ endif(WIN32)
 add_subdirectory(external)
 
 add_subdirectory(src)
+add_subdirectory(viewer)
 add_subdirectory(gtests)
+
+add_executable(saba_viewer main.cpp)
+target_link_libraries(saba_viewer SabaViewer)
+
+add_custom_command(TARGET saba_viewer POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E copy_directory
+    ${CMAKE_CURRENT_SOURCE_DIR}/viewer/Saba/Viewer/resource
+    ${CMAKE_CURRENT_BINARY_DIR}/resource
+)

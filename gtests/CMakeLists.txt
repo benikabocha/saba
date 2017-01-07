@@ -21,6 +21,7 @@ if (TARGET gmock)
     if (SABA_ENABLE_GL_TEST)
         target_link_libraries(gtests
             glfw
+            SabaViewer
             ${OPENGL_LIBRARY}
         )
         target_compile_definitions(gtests
