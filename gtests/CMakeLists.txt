@@ -14,6 +14,7 @@ if (TARGET gmock)
     add_executable(gtests ${SOURCE} ${HEADER} ${GL_TEST_SOURCE} ${GL_TEST_HEADER})
     target_link_libraries(gtests
         Saba
+        SabaViewer
         gtest
         glfw
         ${OPENGL_LIBRARY}
@@ -21,7 +22,6 @@ if (TARGET gmock)
     if (SABA_ENABLE_GL_TEST)
         target_link_libraries(gtests
             glfw
-            SabaViewer
             ${OPENGL_LIBRARY}
         )
         target_compile_definitions(gtests
