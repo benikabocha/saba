@@ -230,6 +230,15 @@ namespace saba
 		for (auto& chain : m_chains)
 		{
 			MMDNode* chainNode = chain.m_node;
+			if (chainNode == m_ikTarget)
+			{
+				/*
+				ターゲットとチェインが同じ場合、 chainTargetVec が0ベクトルとなる。
+				その後の計算で求める回転値がnanになるため、計算を行わない
+				対象モデル：ぽんぷ長式比叡.pmx
+				*/
+				continue;
+			}
 			auto targetPos = glm::vec3(m_ikTarget->GetGlobalTransform()[3]);
 
 			auto invChain = glm::inverse(chain.m_node->GetGlobalTransform());
