@@ -74,6 +74,27 @@ cmake -DCMAKE_BUILD_TYPE=RELEASE ..
 make -j4
 ```
 
+## 初期化設定
+
+起動時のカレントディレクトリに"init.json"ファイルを配置することにより初期化時の設定を行うことができます。
+
+```
+{
+    "MSAAEnable":	true,
+    "MSAACount":	8
+}
+
+```
+
+### MSAAEnable
+
+MSAA を有効にします。
+
+### MSAACount
+
+MSAA のサンプリング数を設定します。
+MSAAEnable が true の場合のみ有効です。
+
 ## 操作方法
 
 起動すると、以下の画面が表示されます。
