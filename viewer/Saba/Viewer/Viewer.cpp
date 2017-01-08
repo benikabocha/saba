@@ -71,7 +71,9 @@ namespace saba
 	};
 
 	Viewer::Viewer()
-		: m_glfwInitialized(false)
+		: m_msaaEnable(false)
+		, m_msaaCount(4)
+		, m_glfwInitialized(false)
 		, m_enableInfoUI(true)
 		, m_enableLogUI(true)
 		, m_enableCommandUI(true)
@@ -91,6 +93,16 @@ namespace saba
 		}
 	}
 
+	void Viewer::EnableMSAA(bool enable)
+	{
+		m_msaaEnable = enable;
+	}
+
+	void Viewer::SetMSAACount(int msaaCount)
+	{
+		m_msaaCount = msaaCount;
+	}
+
 	bool Viewer::Initialize()
 	{
 		auto logger = Singleton<saba::Logger>::Get();
@@ -101,6 +113,11 @@ namespace saba
 		glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 2);
 		glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
 		glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+		if (m_msaaEnable)
+		{
+			m_context.EnableMSAA(true);
+			glfwWindowHint(GLFW_SAMPLES, m_msaaCount);
+		}
 		m_window = glfwCreateWindow(1280, 800, "Saba Viewer", nullptr, nullptr);
 
 		if (m_window == nullptr)
@@ -142,6 +159,12 @@ namespace saba
 		{
 			SABA_ERROR("gl3w Init Fail.");
 			return false;
+		}
+
+		// MSAA の設定
+		if (m_msaaEnable)
+		{
+			glEnable(GL_MULTISAMPLE);
 		}
 
 		GLSLShaderUtil glslShaderUtil;

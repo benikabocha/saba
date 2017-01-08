@@ -19,8 +19,9 @@
 namespace saba
 {
 	ViewerContext::ViewerContext()
-		: m_enableUI(true)
+		: m_uiEnable(true)
 		, m_elapsed(0.0)
+		, m_msaaEnable(false)
 	{
 #if _WIN32
 		DWORD sz = GetCurrentDirectoryW(0, nullptr);

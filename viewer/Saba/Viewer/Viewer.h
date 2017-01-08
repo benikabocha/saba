@@ -33,6 +33,9 @@ namespace saba
 		Viewer();
 		~Viewer();
 
+		void EnableMSAA(bool enable);
+		void SetMSAACount(int msaaCount);
+
 		bool Initialize();
 		void Uninitislize();
 
@@ -97,6 +100,9 @@ namespace saba
 		void OnDrop(int count, const char** paths);
 
 	private:
+		bool	m_msaaEnable;
+		int		m_msaaCount;
+
 		ViewerContext	m_context;
 		std::unique_ptr<GLOBJModelDrawContext>	m_objModelDrawContext;
 		std::unique_ptr<GLMMDModelDrawContext>	m_mmdModelDrawContext;
