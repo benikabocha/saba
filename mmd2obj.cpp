@@ -1,4 +1,9 @@
-﻿#include <Saba/Base/UnicodeUtil.h>
+﻿//
+// Copyright(c) 2016-2017 benikabocha.
+// Distributed under the MIT License (http://opensource.org/licenses/MIT)
+//
+
+#include <Saba/Base/UnicodeUtil.h>
 #include <Saba/Base/Path.h>
 #include <Saba/Model/MMD/MMDModel.h>
 #include <Saba/Model/MMD/PMDModel.h>
