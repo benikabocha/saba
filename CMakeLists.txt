@@ -38,7 +38,7 @@ add_subdirectory(src)
 add_subdirectory(viewer)
 add_subdirectory(gtests)
 
-add_executable(saba_viewer main.cpp)
+add_executable(saba_viewer saba_viewer.cpp)
 target_link_libraries(saba_viewer SabaViewer)
 
 add_custom_command(TARGET saba_viewer POST_BUILD
