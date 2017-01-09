@@ -115,7 +115,7 @@ namespace saba
 		}
 	}
 
-	void PMDModel::UpdateAnimation(float elapsed)
+	void PMDModel::UpdateAnimation()
 	{
 		for (auto& node : (*m_nodeMan.GetNodes()))
 		{
@@ -166,7 +166,7 @@ namespace saba
 		}
 	}
 
-	void PMDModel::Update(float elapsed)
+	void PMDModel::Update()
 	{
 		const auto* position = &m_positions[0];
 		const auto* normal = &m_normals[0];

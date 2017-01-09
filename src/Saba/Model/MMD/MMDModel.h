@@ -124,7 +124,6 @@ namespace saba
 	public:
 		virtual MMDNodeManager* GetNodeManager() = 0;
 		virtual MMDIKManager* GetIKManager() = 0;
-		//virtual MMDBlendShapeManager* GetBlendShapeManager() = 0;
 		virtual MMDMorphManager* GetMorphManager() = 0;
 		virtual MMDPhysicsManager* GetPhysicsManager() = 0;
 
@@ -155,11 +154,11 @@ namespace saba
 		virtual void BeginAnimation() = 0;
 		virtual void EndAnimation() = 0;
 		// ノードを更新する
-		virtual void UpdateAnimation(float elapsed) = 0;
+		virtual void UpdateAnimation() = 0;
 		// Physicsを更新する
 		virtual void UpdatePhysics(float elapsed) = 0;
 		// 頂点を更新する
-		virtual void Update(float elapsed) = 0;
+		virtual void Update() = 0;
 
 	protected:
 		template <typename NodeType>

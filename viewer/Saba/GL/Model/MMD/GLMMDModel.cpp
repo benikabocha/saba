@@ -217,7 +217,7 @@ namespace saba
 			m_vmdAnim->Evaluate((float)frame);
 		}
 
-		m_mmdModel->UpdateAnimation((float)elapsed);
+		m_mmdModel->UpdateAnimation();
 
 		m_mmdModel->EndAnimation();
 
@@ -242,7 +242,7 @@ namespace saba
 		}
 
 		double startTime = GetTime();
-		m_mmdModel->Update((float)elapsed);
+		m_mmdModel->Update();
 
 		size_t matCount = m_mmdModel->GetMaterialCount();
 		for (size_t mi = 0; mi < matCount; mi++)

@@ -122,7 +122,7 @@ bool MMD2Obj(const std::vector<std::string>& args)
 
 	// ノードのアニメーションを実行
 	mmdModel->BeginAnimation();
-	mmdModel->UpdateAnimation(0.0f);
+	mmdModel->UpdateAnimation();
 	mmdModel->EndAnimation();
 
 	// Physics の状態を反映させるため、10程度秒進める
@@ -136,7 +136,7 @@ bool MMD2Obj(const std::vector<std::string>& args)
 	}
 
 	// 頂点を更新
-	mmdModel->Update(0.0f);
+	mmdModel->Update();
 
 	// OBJ へ書き出し
 	std::ofstream objFile;

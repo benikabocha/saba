@@ -120,7 +120,7 @@ namespace saba
 		}
 	}
 
-	void PMXModel::UpdateAnimation(float elapsed)
+	void PMXModel::UpdateAnimation()
 	{
 		// Morph の処理
 		BeginMorphMaterial();
@@ -200,7 +200,7 @@ namespace saba
 		}
 	}
 
-	void PMXModel::Update(float elapsed)
+	void PMXModel::Update()
 	{
 		const auto* position = m_positions.data();
 		const auto* normal = m_normals.data();
