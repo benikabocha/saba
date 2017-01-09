@@ -46,3 +46,6 @@ add_custom_command(TARGET saba_viewer POST_BUILD
     ${CMAKE_CURRENT_SOURCE_DIR}/viewer/Saba/Viewer/resource
     ${CMAKE_CURRENT_BINARY_DIR}/resource
 )
+
+add_executable(mmd2obj mmd2obj.cpp)
+target_link_libraries(mmd2obj Saba)
