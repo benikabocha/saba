@@ -1,10 +1,19 @@
 # Saba
 
-OpenGL の Viewer です。
+* MMD を再生できるライブラリ
+* 簡易 OpenGL Viewer
 
-一応、 Windows 、 Mac 、 Linux で動きます。
+![saba_viewer](./images/saba_viewer_01.png)
 
-対応ファイルは以下です。
+© 2017 Pronama LLC
+
+## 対応環境
+
+* Window
+* Linux
+* Mac
+
+## 対応ファイル
 
 * OBJ
 * PMD
@@ -14,14 +23,18 @@ OpenGL の Viewer です。
 ## ビルド方法
 
 ビルドには CMake を使用します。
+事前にインストールしてください。
+
+### 必要なライブラリ
 
 external ディレクトリに必要なライブラリはまとまっていますが、以下のライブラリは事前に用意してください。
 
-* bullet [bullet](http://bulletphysics.org/wordpress/)
+* OpenGL
+* [Bullet Physics](http://bulletphysics.org/wordpress/)
 
-### Bullet の準備 (Windows のみ)
+### Bullet Physics の準備 (Windows)
 
-Windows の場合、 Bullet のビルドをビルドする際、以下のように行ってください。
+Bullet Physics をビルドする際、以下の設定を参考にしてください。
 
 ```
 cmake -G "Visual Studio 14 2015 Win64" ^
@@ -39,7 +52,23 @@ cmake --build . --config Release --target ALL_BUILD
 cmake --build . --config Release --target INSTALL
 ```
 
--G "Visual Studio 14 2015 Win64" の部分は、環境により適宜変更してください。
+`-G "Visual Studio 14 2015 Win64"` の部分は、環境により適宜変更してください。
+
+### Bullet Physics の準備 (Mac / Linux)
+
+Mac であれば `brew` 、Linux であれば `apt-get` 、 `yum` 等でインストールしてください。
+
+### ソースコードのクローン
+
+いくつかのライブラリは submodule となっています。
+事前にサブモジュールの更新を行ってください。
+
+```
+git clone https://github.com/benikabocha/saba.git
+cd saba
+git submodule init
+git submodule update
+```
 
 ### CMake の実行
 
@@ -99,7 +128,7 @@ MSAAEnable が true の場合のみ有効です。
 
 起動すると、以下の画面が表示されます。
 
-![saba_viewer](./images/saba_viewer.png)
+![saba_viewer](./images/saba_viewer_02.png)
 
 見たいモデルをドラッグアンドドロップしてください。
 MMD の場合は、モデル (PMD、PMX) を読み込んだ後、アニメーション (VMD) を読み込ませると、アニメーションできます。
@@ -119,5 +148,14 @@ Linux ではドラッグアンドドロップに対応していない環境も�
 
 #### open
 
+`open <file path>`
+
 ファイルを開きます。
 動作はドラックアンドドロップと変わりません。
+
+対応ファイル:
+
+* PMD
+* PMX
+* VMD  (事前に PMD または PMX を開いてください)
+* OBJ
