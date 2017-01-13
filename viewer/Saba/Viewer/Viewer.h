@@ -41,6 +41,9 @@ namespace saba
 
 		int Run();
 
+
+		bool ExecuteCommand(const ViewerCommand& cmd);
+
 	private:
 		struct Mouse
 		{
@@ -74,8 +77,6 @@ namespace saba
 		void DrawInfoUI();
 		void DrawLogUI();
 		void DrawCommandUI();
-
-		bool ExecuteCommand(const ViewerCommand& cmd);
 
 		bool CmdOpen(const std::vector<std::string>& args);
 
