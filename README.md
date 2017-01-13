@@ -110,9 +110,18 @@ make -j4
 ```
 {
     "MSAAEnable":	true,
-    "MSAACount":	8
+    "MSAACount":	8,
+    "Commands":[
+        {
+            "Cmd":"open",
+            "Args":["test.pmx"]
+        },
+        {
+            "Cmd":"open",
+            "Args":["test.vmd"]
+        }
+    ]
 }
-
 ```
 
 ### MSAAEnable
@@ -123,6 +132,10 @@ MSAA を有効にします。
 
 MSAA のサンプリング数を設定します。
 MSAAEnable が true の場合のみ有効です。
+
+### Commands
+
+起動時に実行するコマンドを設定します。
 
 ## 操作方法
 
