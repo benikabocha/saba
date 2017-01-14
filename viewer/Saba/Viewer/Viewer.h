@@ -108,9 +108,10 @@ namespace saba
 		std::unique_ptr<GLOBJModelDrawContext>	m_objModelDrawContext;
 		std::unique_ptr<GLMMDModelDrawContext>	m_mmdModelDrawContext;
 
-		std::unique_ptr<ModelDrawer>	m_modelDrawer;
+		using ModelDrawerPtr = std::shared_ptr<ModelDrawer>;
 
-		std::shared_ptr<GLMMDModel>		m_mmdModel;
+		std::vector<ModelDrawerPtr>	m_modelDrawers;
+		ModelDrawerPtr				m_selectedModelDrawer;
 
 		bool		m_glfwInitialized;
 		GLFWwindow*	m_window;

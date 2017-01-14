@@ -30,6 +30,8 @@ namespace saba
 		bool Create();
 		void Destroy();
 
+		ModelDrawerType GetType() const override { return ModelDrawerType::OBJModelDrawer; }
+
 		void Update(ViewerContext* ctxt) override;
 		void DrawUI(ViewerContext* ctxt) override;
 		void Draw(ViewerContext* ctxt) override;

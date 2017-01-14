@@ -29,9 +29,13 @@ namespace saba
 		bool Create();
 		void Destroy();
 
+		ModelDrawerType GetType() const override { return ModelDrawerType::MMDModelDrawer; }
+
 		void Update(ViewerContext* ctxt) override;
 		void DrawUI(ViewerContext* ctxt) override;
 		void Draw(ViewerContext* ctxt) override;
+
+		GLMMDModel* GetModel() { return m_mmdModel.get(); }
 
 	private:
 		struct MaterialShader

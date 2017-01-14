@@ -10,6 +10,12 @@
 
 namespace saba
 {
+	enum class ModelDrawerType
+	{
+		OBJModelDrawer,
+		MMDModelDrawer,
+	};
+
 	class ModelDrawer
 	{
 	public:
@@ -18,6 +24,8 @@ namespace saba
 
 		ModelDrawer(const ModelDrawer&) = delete;
 		ModelDrawer& operator =(const ModelDrawer&) = delete;
+
+		virtual ModelDrawerType GetType() const = 0;
 
 		virtual void DrawUI(ViewerContext* ctxt) = 0;
 		virtual void Update(ViewerContext* ctxt) = 0;

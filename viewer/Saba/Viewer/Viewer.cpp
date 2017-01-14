@@ -373,22 +373,16 @@ namespace saba
 		m_grid.SetWVPMatrix(wvp);
 		m_grid.Draw();
 
-		// DrawUI
-		if (m_modelDrawer != nullptr)
+		for (auto& modelDrawer : m_modelDrawers)
 		{
-			m_modelDrawer->DrawUI(&m_context);
-		}
+			// DrawUI
+			modelDrawer->DrawUI(&m_context);
 
-		// Update
-		if (m_modelDrawer != nullptr)
-		{
-			m_modelDrawer->Update(&m_context);
-		}
+			// Update
+			modelDrawer->Update(&m_context);
 
-		// Draw
-		if (m_modelDrawer != nullptr)
-		{
-			m_modelDrawer->Draw(&m_context);
+			// Draw
+			modelDrawer->Draw(&m_context);
 		}
 	}
 
@@ -408,9 +402,14 @@ namespace saba
 		ImGui::Separator();
 		ImGui::Text("Time %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
 
-		if (m_mmdModel != nullptr)
+		if (m_selectedModelDrawer != nullptr && m_selectedModelDrawer->GetType() == ModelDrawerType::MMDModelDrawer)
 		{
-			ImGui::Text("MMD Model Update Time %.3f ms", m_mmdModel->GetUpdateTime() * 1000.0);
+			auto mmdModelDrawer = reinterpret_cast<GLMMDModelDrawer*>(m_selectedModelDrawer.get());
+			auto mmdModel = mmdModelDrawer->GetModel();
+			if (mmdModel != nullptr)
+			{
+				ImGui::Text("MMD Model Update Time %.3f ms", mmdModel->GetUpdateTime() * 1000.0);
+			}
 		}
 		ImGui::End();
 	}
@@ -564,7 +563,8 @@ namespace saba
 			SABA_WARN("GLOBJModelDrawer Create Fail.");
 			return false;
 		}
-		m_modelDrawer = std::move(objDrawer);
+		m_modelDrawers.emplace_back(std::move(objDrawer));
+		m_selectedModelDrawer = m_modelDrawers[m_modelDrawers.size() - 1];
 
 		auto bboxMin = objModel.GetBBoxMin();
 		auto bboxMax = objModel.GetBBoxMax();
@@ -630,7 +630,8 @@ namespace saba
 			SABA_WARN("GLMMDModelDrawer Create Fail.");
 			return false;
 		}
-		m_modelDrawer = std::move(mmdDrawer);
+		m_modelDrawers.emplace_back(std::move(mmdDrawer));
+		m_selectedModelDrawer = m_modelDrawers[m_modelDrawers.size() - 1];
 
 		auto bboxMin = pmdModel->GetBBoxMin();
 		auto bboxMax = pmdModel->GetBBoxMax();
@@ -662,7 +663,6 @@ namespace saba
 
 		SABA_INFO("radisu [{}] grid [{}]", radius, gridSize);
 
-		m_mmdModel = glMMDModel;
 
 		m_prevTime = GetTime();
 
@@ -698,7 +698,8 @@ namespace saba
 			SABA_WARN("GLMMDModelDrawer Create Fail.");
 			return false;
 		}
-		m_modelDrawer = std::move(mmdDrawer);
+		m_modelDrawers.emplace_back(std::move(mmdDrawer));
+		m_selectedModelDrawer = m_modelDrawers[m_modelDrawers.size() - 1];
 
 		auto bboxMin = pmxModel->GetBBoxMin();
 		auto bboxMax = pmxModel->GetBBoxMax();
@@ -730,8 +731,6 @@ namespace saba
 
 		SABA_INFO("radisu [{}] grid [{}]", radius, gridSize);
 
-		m_mmdModel = glMMDModel;
-
 		m_prevTime = GetTime();
 
 		return false;
@@ -739,9 +738,15 @@ namespace saba
 
 	bool Viewer::LoadVMDFile(const std::string & filename)
 	{
-		if (m_mmdModel == nullptr)
+		GLMMDModel* mmdModel = nullptr;
+		if (m_selectedModelDrawer != nullptr && m_selectedModelDrawer->GetType() == ModelDrawerType::MMDModelDrawer)
 		{
-			SABA_INFO("MMD Model is null.");
+			auto mmdModelDrawer = reinterpret_cast<GLMMDModelDrawer*>(m_selectedModelDrawer.get());
+			mmdModel = mmdModelDrawer->GetModel();
+		}
+		if (mmdModel == nullptr)
+		{
+			SABA_INFO("MMD Model not selected.");
 			return false;
 		}
 
@@ -751,7 +756,7 @@ namespace saba
 			return false;
 		}
 
-		return m_mmdModel->LoadAnimation(vmd);
+		return mmdModel->LoadAnimation(vmd);
 	}
 
 	void Viewer::OnMouseButtonStub(GLFWwindow * window, int button, int action, int mods)
