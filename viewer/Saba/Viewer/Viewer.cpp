@@ -478,6 +478,10 @@ namespace saba
 		{
 			return CmdOpen(cmd.GetArgs());
 		}
+		else if (strcmp("clearall", cmd.GetCommand().c_str()) == 0)
+		{
+			return CmdClearAll(cmd.GetArgs());
+		}
 		else
 		{
 			SABA_INFO("Unknown Command. [{}]", cmd.GetCommand());
@@ -536,6 +540,18 @@ namespace saba
 		SABA_INFO("Cmd Open Succeeded.");
 
 		return true;
+	}
+
+	bool Viewer::CmdClearAll(const std::vector<std::string>& args)
+	{
+		SABA_INFO("Cmd ClearAll Execute.");
+
+		m_selectedModelDrawer = nullptr;
+		m_modelDrawers.clear();
+
+		SABA_INFO("Cmd ClearAll Succeeded.");
+
+		return false;
 	}
 
 	bool Viewer::LoadOBJFile(const std::string & filename)
