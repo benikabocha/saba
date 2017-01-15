@@ -139,6 +139,16 @@ namespace saba
 		ImGui::End();
 	}
 
+	void GLMMDModelDrawer::Play()
+	{
+		m_playMode = PlayMode::Play;
+	}
+
+	void GLMMDModelDrawer::Stop()
+	{
+		m_playMode = PlayMode::Stop;
+	}
+
 	void GLMMDModelDrawer::Update(ViewerContext * ctxt)
 	{
 		double elapsed = ctxt->GetElapsed();

@@ -27,6 +27,9 @@ namespace saba
 
 		virtual ModelDrawerType GetType() const = 0;
 
+		virtual void Play() = 0;
+		virtual void Stop() = 0;
+
 		virtual void DrawUI(ViewerContext* ctxt) = 0;
 		virtual void Update(ViewerContext* ctxt) = 0;
 		virtual void Draw(ViewerContext* ctxt) = 0;

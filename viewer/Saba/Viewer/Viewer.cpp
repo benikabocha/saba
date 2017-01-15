@@ -478,9 +478,17 @@ namespace saba
 		{
 			return CmdOpen(cmd.GetArgs());
 		}
-		else if (strcmp("clearall", cmd.GetCommand().c_str()) == 0)
+		else if (strcmp("clear", cmd.GetCommand().c_str()) == 0)
 		{
-			return CmdClearAll(cmd.GetArgs());
+			return CmdClear(cmd.GetArgs());
+		}
+		else if (strcmp("play", cmd.GetCommand().c_str()) == 0)
+		{
+			return CmdPlay(cmd.GetArgs());
+		}
+		else if (strcmp("stop", cmd.GetCommand().c_str()) == 0)
+		{
+			return CmdStop(cmd.GetArgs());
 		}
 		else
 		{
@@ -542,7 +550,7 @@ namespace saba
 		return true;
 	}
 
-	bool Viewer::CmdClearAll(const std::vector<std::string>& args)
+	bool Viewer::CmdClear(const std::vector<std::string>& args)
 	{
 		SABA_INFO("Cmd ClearAll Execute.");
 
@@ -552,6 +560,34 @@ namespace saba
 		AdjustSceneScale();
 
 		SABA_INFO("Cmd ClearAll Succeeded.");
+
+		return true;
+	}
+
+	bool Viewer::CmdPlay(const std::vector<std::string>& args)
+	{
+		SABA_INFO("Cmd Play Execute.");
+
+		for (auto& modelDrawer : m_modelDrawers)
+		{
+			modelDrawer->Play();
+		}
+
+		SABA_INFO("Cmd Play Succeeded.");
+
+		return true;
+	}
+
+	bool Viewer::CmdStop(const std::vector<std::string>& args)
+	{
+		SABA_INFO("Cmd Stop Execute.");
+
+		for (auto& modelDrawer : m_modelDrawers)
+		{
+			modelDrawer->Stop();
+		}
+
+		SABA_INFO("Cmd Stop Succeeded.");
 
 		return true;
 	}

@@ -31,6 +31,9 @@ namespace saba
 
 		ModelDrawerType GetType() const override { return ModelDrawerType::MMDModelDrawer; }
 
+		void Play() override;
+		void Stop() override;
+
 		void Update(ViewerContext* ctxt) override;
 		void DrawUI(ViewerContext* ctxt) override;
 		void Draw(ViewerContext* ctxt) override;

@@ -79,7 +79,9 @@ namespace saba
 		void DrawCommandUI();
 
 		bool CmdOpen(const std::vector<std::string>& args);
-		bool CmdClearAll(const std::vector<std::string>& args);
+		bool CmdClear(const std::vector<std::string>& args);
+		bool CmdPlay(const std::vector<std::string>& args);
+		bool CmdStop(const std::vector<std::string>& args);
 
 		bool LoadOBJFile(const std::string& filename);
 		bool LoadPMDFile(const std::string& filename);
