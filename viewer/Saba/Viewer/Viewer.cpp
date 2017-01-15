@@ -30,6 +30,7 @@
 #include <deque>
 #include <sstream>
 #include <iomanip>
+#include <string>
 
 namespace saba
 {
@@ -501,6 +502,18 @@ namespace saba
 		{
 			return CmdSelect(cmd.GetArgs());
 		}
+		else if (strcmp("translate", cmd.GetCommand().c_str()) == 0)
+		{
+			return CmdTranslate(cmd.GetArgs());
+		}
+		else if (strcmp("rotate", cmd.GetCommand().c_str()) == 0)
+		{
+			return CmdRotate(cmd.GetArgs());
+		}
+		else if (strcmp("scale", cmd.GetCommand().c_str()) == 0)
+		{
+			return CmdScale(cmd.GetArgs());
+		}
 		else
 		{
 			SABA_INFO("Unknown Command. [{}]", cmd.GetCommand());
@@ -563,14 +576,39 @@ namespace saba
 
 	bool Viewer::CmdClear(const std::vector<std::string>& args)
 	{
-		SABA_INFO("Cmd ClearAll Execute.");
+		SABA_INFO("Cmd Clear Execute.");
 
-		m_selectedModelDrawer = nullptr;
-		m_modelDrawers.clear();
+		if (args.empty())
+		{
+			// 引数が空の場合は選択中のモデルを消す
+			if (m_selectedModelDrawer == nullptr)
+			{
+				SABA_INFO("Cmd Clear : Selected model is null.");
+				return false;
+			}
+			else
+			{
+				auto removeIt = std::remove(
+					m_modelDrawers.begin(),
+					m_modelDrawers.end(),
+					m_selectedModelDrawer
+				);
+				m_modelDrawers.erase(removeIt, m_modelDrawers.end());
+				m_selectedModelDrawer = nullptr;
+			}
+		}
+		else
+		{
+			if (args[0] == "-all")
+			{
+				m_selectedModelDrawer = nullptr;
+				m_modelDrawers.clear();
 
-		AdjustSceneScale();
+				AdjustSceneScale();
+			}
+		}
 
-		SABA_INFO("Cmd ClearAll Succeeded.");
+		SABA_INFO("Cmd Clear Succeeded.");
 
 		return true;
 	}
@@ -579,9 +617,28 @@ namespace saba
 	{
 		SABA_INFO("Cmd Play Execute.");
 
-		for (auto& modelDrawer : m_modelDrawers)
+		if (args.empty())
 		{
-			modelDrawer->Play();
+			// 引数が空の場合は選択中のモデルを再生
+			if (m_selectedModelDrawer == nullptr)
+			{
+				SABA_INFO("Cmd Play : Selected model is null.");
+				return false;
+			}
+			else
+			{
+				m_selectedModelDrawer->Play();
+			}
+		}
+		else
+		{
+			if (args[0] == "-all")
+			{
+				for (auto& modelDrawer : m_modelDrawers)
+				{
+					modelDrawer->Play();
+				}
+			}
 		}
 
 		SABA_INFO("Cmd Play Succeeded.");
@@ -593,9 +650,28 @@ namespace saba
 	{
 		SABA_INFO("Cmd Stop Execute.");
 
-		for (auto& modelDrawer : m_modelDrawers)
+		if (args.empty())
 		{
-			modelDrawer->Stop();
+			// 引数が空の場合は選択中のモデルを再生
+			if (m_selectedModelDrawer == nullptr)
+			{
+				SABA_INFO("Cmd Stop : Selected model is null.");
+				return false;
+			}
+			else
+			{
+				m_selectedModelDrawer->Stop();
+			}
+		}
+		else
+		{
+			if (args[0] == "-all")
+			{
+				for (auto& modelDrawer : m_modelDrawers)
+				{
+					modelDrawer->Stop();
+				}
+			}
 		}
 
 		SABA_INFO("Cmd Stop Succeeded.");
@@ -609,7 +685,7 @@ namespace saba
 
 		if (args.empty())
 		{
-			SABA_INFO("Cmd Select : Model name is mpty");
+			SABA_INFO("Cmd Select : Model name is empty");
 			return false;
 		}
 
@@ -623,6 +699,130 @@ namespace saba
 
 		SABA_INFO("Cmd Select Succeeded.");
 		return true;
+	}
+
+	namespace
+	{
+		bool ToFloat(const std::vector<std::string>& args, size_t offset, float* outVal)
+		{
+			if (outVal == nullptr)
+			{
+				return false;
+			}
+
+			if (args.size() < offset + 1)
+			{
+				return false;
+			}
+
+			size_t outPos;
+			float temp = std::stof(args[offset], &outPos);
+			if (outPos != args[offset].size())
+			{
+				return false;
+			}
+
+			*outVal = temp;
+
+			return true;
+		}
+
+		bool ToVec3(const std::vector<std::string>& args, size_t offset, glm::vec3* outVec)
+		{
+			if (outVec == nullptr)
+			{
+				return false;
+			}
+
+			if (args.size() < offset + 3)
+			{
+				return false;
+			}
+
+			glm::vec3 temp;
+			if (!ToFloat(args, offset + 0, &temp.x) ||
+				!ToFloat(args, offset + 1, &temp.y) ||
+				!ToFloat(args, offset + 2, &temp.z)
+				)
+			{
+				return false;
+			}
+
+			*outVec = temp;
+			return true;
+		}
+	}
+
+	bool Viewer::CmdTranslate(const std::vector<std::string>& args)
+	{
+		SABA_INFO("Cmd Select Execute.");
+
+		if (m_selectedModelDrawer == nullptr)
+		{
+			SABA_INFO("Cmd Translate : Selected model is null.");
+			return false;
+		}
+
+		glm::vec3 translate;
+		if (!ToVec3(args, 0, &translate))
+		{
+			SABA_INFO("Cmd Translate : Invalid Argument.");
+			return false;
+		}
+
+		m_selectedModelDrawer->SetTranslate(translate);
+
+		SABA_INFO("Cmd Translate Succeeded.");
+
+		return true;
+	}
+
+	bool Viewer::CmdRotate(const std::vector<std::string>& args)
+	{
+		SABA_INFO("Cmd Rotate Execute.");
+
+		if (m_selectedModelDrawer == nullptr)
+		{
+			SABA_INFO("Cmd Rotate : Selected model is null.");
+			return false;
+		}
+
+		glm::vec3 rotate;
+		if (!ToVec3(args, 0, &rotate))
+		{
+			SABA_INFO("Cmd Rotate : Invalid Argument.");
+			return false;
+		}
+
+		m_selectedModelDrawer->SetRotate(glm::radians(rotate));
+
+		SABA_INFO("Cmd Rotate Succeeded.");
+
+		return true;
+	}
+
+	bool Viewer::CmdScale(const std::vector<std::string>& args)
+	{
+		SABA_INFO("Cmd Scale Execute.");
+
+		if (m_selectedModelDrawer == nullptr)
+		{
+			SABA_INFO("Cmd Scale : Selected model is null.");
+			return false;
+		}
+
+		glm::vec3 scale;
+		if (!ToVec3(args, 0, &scale))
+		{
+			SABA_INFO("Cmd Scale : Invalid Argument.");
+			return false;
+		}
+
+		m_selectedModelDrawer->SetScale(scale);
+
+		SABA_INFO("Cmd Scale Succeeded.");
+
+		return false;
 	}
 
 	bool Viewer::LoadOBJFile(const std::string & filename)

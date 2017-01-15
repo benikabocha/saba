@@ -198,6 +198,7 @@ namespace saba
 		const auto& view = ctxt->GetCamera()->GetViewMatrix();
 		const auto& proj = ctxt->GetCamera()->GetProjectionMatrix();
 
+		m_world = GetTransform();
 		auto wv = view * m_world;
 		auto wvp = proj * view * m_world;
 		auto wvit = glm::mat3(view * m_world);

@@ -85,6 +85,9 @@ namespace saba
 		bool CmdPlay(const std::vector<std::string>& args);
 		bool CmdStop(const std::vector<std::string>& args);
 		bool CmdSelect(const std::vector<std::string>& args);
+		bool CmdTranslate(const std::vector<std::string>& args);
+		bool CmdRotate(const std::vector<std::string>& args);
+		bool CmdScale(const std::vector<std::string>& args);
 
 		bool LoadOBJFile(const std::string& filename);
 		bool LoadPMDFile(const std::string& filename);

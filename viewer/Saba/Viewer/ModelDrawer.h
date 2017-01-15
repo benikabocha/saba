@@ -19,7 +19,7 @@ namespace saba
 	class ModelDrawer
 	{
 	public:
-		ModelDrawer() {}
+		ModelDrawer();
 		virtual ~ModelDrawer() {};
 
 		ModelDrawer(const ModelDrawer&) = delete;
@@ -46,10 +46,25 @@ namespace saba
 		const glm::vec3& GetBBoxMin() const { return m_bboxMin; }
 		const glm::vec3& GetBBoxMax() const { return m_bboxMax; }
 
+		void SetTranslate(const glm::vec3& t);
+		void SetRotate(const glm::vec3& r);
+		void SetScale(const glm::vec3& s);
+
+		const glm::mat4& GetTransform() const { return m_transform; }
+
+	protected:
+		void UpdateTransform();
+
 	private:
 		std::string	m_name;
 		glm::vec3	m_bboxMin;
 		glm::vec3	m_bboxMax;
+
+		glm::vec3	m_translate;
+		glm::vec3	m_rotate;
+		glm::vec3	m_scale;
+
+		glm::mat4	m_transform;
 	};
 }
 
