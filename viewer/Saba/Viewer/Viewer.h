@@ -72,6 +72,8 @@ namespace saba
 		};
 
 	private:
+		using ModelDrawerPtr = std::shared_ptr<ModelDrawer>;
+
 		void SetupSjisGryphRanges();
 		void Draw();
 		void DrawInfoUI();
@@ -82,6 +84,7 @@ namespace saba
 		bool CmdClear(const std::vector<std::string>& args);
 		bool CmdPlay(const std::vector<std::string>& args);
 		bool CmdStop(const std::vector<std::string>& args);
+		bool CmdSelect(const std::vector<std::string>& args);
 
 		bool LoadOBJFile(const std::string& filename);
 		bool LoadPMDFile(const std::string& filename);
@@ -89,6 +92,8 @@ namespace saba
 		bool LoadVMDFile(const std::string& filename);
 
 		bool AdjustSceneScale();
+		std::string GetNewModelName();
+		ModelDrawerPtr FindModelDrawer(const std::string& name);
 
 		static void OnMouseButtonStub(GLFWwindow* window, int button, int action, int mods);
 		void OnMouseButton(int button, int action, int mods);
@@ -113,8 +118,6 @@ namespace saba
 		std::unique_ptr<GLOBJModelDrawContext>	m_objModelDrawContext;
 		std::unique_ptr<GLMMDModelDrawContext>	m_mmdModelDrawContext;
 
-		using ModelDrawerPtr = std::shared_ptr<ModelDrawer>;
-
 		std::vector<ModelDrawerPtr>	m_modelDrawers;
 		ModelDrawerPtr				m_selectedModelDrawer;
 
@@ -131,6 +134,9 @@ namespace saba
 		Grid		m_grid;
 
 		double		m_prevTime;
+
+		// Model Name
+		size_t	m_modelNameID;
 
 		//
 		std::vector<ImWchar>	m_gryphRanges;

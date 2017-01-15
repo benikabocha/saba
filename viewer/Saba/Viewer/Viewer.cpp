@@ -28,6 +28,8 @@
 
 #include <array>
 #include <deque>
+#include <sstream>
+#include <iomanip>
 
 namespace saba
 {
@@ -74,6 +76,11 @@ namespace saba
 		: m_msaaEnable(false)
 		, m_msaaCount(4)
 		, m_glfwInitialized(false)
+		, m_window(nullptr)
+		, m_uColor1(-1)
+		, m_uColor2(-2)
+		, m_prevTime(0)
+		, m_modelNameID(1)
 		, m_enableInfoUI(true)
 		, m_enableLogUI(true)
 		, m_enableCommandUI(true)
@@ -490,6 +497,10 @@ namespace saba
 		{
 			return CmdStop(cmd.GetArgs());
 		}
+		else if (strcmp("select", cmd.GetCommand().c_str()) == 0)
+		{
+			return CmdSelect(cmd.GetArgs());
+		}
 		else
 		{
 			SABA_INFO("Unknown Command. [{}]", cmd.GetCommand());
@@ -592,6 +603,28 @@ namespace saba
 		return true;
 	}
 
+	bool Viewer::CmdSelect(const std::vector<std::string>& args)
+	{
+		SABA_INFO("Cmd Select Execute.");
+
+		if (args.empty())
+		{
+			SABA_INFO("Cmd Select : Model name is mpty");
+			return false;
+		}
+
+		auto findModelDrawer = FindModelDrawer(args[0]);
+		if (findModelDrawer == nullptr)
+		{
+			SABA_INFO("Cmd Select : Model Not Found. [{}]", args[0]);
+			return false;
+		}
+		m_selectedModelDrawer = findModelDrawer;
+
+		SABA_INFO("Cmd Select Succeeded.");
+		return true;
+	}
+
 	bool Viewer::LoadOBJFile(const std::string & filename)
 	{
 		OBJModel objModel;
@@ -619,6 +652,7 @@ namespace saba
 		}
 		m_modelDrawers.emplace_back(std::move(objDrawer));
 		m_selectedModelDrawer = m_modelDrawers[m_modelDrawers.size() - 1];
+		m_selectedModelDrawer->SetName(GetNewModelName());
 		m_selectedModelDrawer->SetBBox(objModel.GetBBoxMin(), objModel.GetBBoxMax());
 
 		AdjustSceneScale();
@@ -659,6 +693,7 @@ namespace saba
 		}
 		m_modelDrawers.emplace_back(std::move(mmdDrawer));
 		m_selectedModelDrawer = m_modelDrawers[m_modelDrawers.size() - 1];
+		m_selectedModelDrawer->SetName(GetNewModelName());
 		m_selectedModelDrawer->SetBBox(pmdModel->GetBBoxMin(), pmdModel->GetBBoxMax());
 
 		AdjustSceneScale();
@@ -699,6 +734,7 @@ namespace saba
 		}
 		m_modelDrawers.emplace_back(std::move(mmdDrawer));
 		m_selectedModelDrawer = m_modelDrawers[m_modelDrawers.size() - 1];
+		m_selectedModelDrawer->SetName(GetNewModelName());
 		m_selectedModelDrawer->SetBBox(pmxModel->GetBBoxMin(), pmxModel->GetBBoxMax());
 
 		AdjustSceneScale();
@@ -780,6 +816,37 @@ namespace saba
 		SABA_INFO("radisu [{}] grid [{}]", radius, gridSize);
 
 		return true;
+	}
+
+	std::string Viewer::GetNewModelName()
+	{
+		std::string name;
+		while (true)
+		{
+			std::stringstream ss;
+			ss << "model_" << std::setfill('0') << std::setw(3) << m_modelNameID;
+			m_modelNameID++;
+			name = ss.str();
+			if (FindModelDrawer(name) == nullptr)
+			{
+				break;
+			}
+		}
+		return name;
+	}
+
+	Viewer::ModelDrawerPtr Viewer::FindModelDrawer(const std::string & name)
+	{
+		auto findIt = std::find_if(
+			m_modelDrawers.begin(),
+			m_modelDrawers.end(),
+			[name](const ModelDrawerPtr& md) {return md->GetName() == name; }
+		);
+		if (findIt != m_modelDrawers.end())
+		{
+			return (*findIt);
+		}
+		return nullptr;
 	}
 
 	void Viewer::OnMouseButtonStub(GLFWwindow * window, int button, int action, int mods)

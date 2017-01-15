@@ -34,6 +34,9 @@ namespace saba
 		virtual void Update(ViewerContext* ctxt) = 0;
 		virtual void Draw(ViewerContext* ctxt) = 0;
 
+		void SetName(const std::string& name) { m_name = name; }
+		const std::string& GetName() const { return m_name; }
+
 		void SetBBox(const glm::vec3& bboxMin, const glm::vec3& bboxMax)
 		{
 			m_bboxMin = bboxMin;
@@ -44,6 +47,7 @@ namespace saba
 		const glm::vec3& GetBBoxMax() const { return m_bboxMax; }
 
 	private:
+		std::string	m_name;
 		glm::vec3	m_bboxMin;
 		glm::vec3	m_bboxMax;
 	};
