@@ -549,9 +549,11 @@ namespace saba
 		m_selectedModelDrawer = nullptr;
 		m_modelDrawers.clear();
 
+		AdjustSceneScale();
+
 		SABA_INFO("Cmd ClearAll Succeeded.");
 
-		return false;
+		return true;
 	}
 
 	bool Viewer::LoadOBJFile(const std::string & filename)
@@ -581,36 +583,9 @@ namespace saba
 		}
 		m_modelDrawers.emplace_back(std::move(objDrawer));
 		m_selectedModelDrawer = m_modelDrawers[m_modelDrawers.size() - 1];
+		m_selectedModelDrawer->SetBBox(objModel.GetBBoxMin(), objModel.GetBBoxMax());
 
-		auto bboxMin = objModel.GetBBoxMin();
-		auto bboxMax = objModel.GetBBoxMax();
-		auto center = (bboxMax + bboxMin) * 0.5f;
-		auto radius = glm::length(bboxMax - center);
-		m_context.GetCamera()->Initialize(center, radius);
-
-		// グリッドのスケールを調節する
-		float gridSize = 1.0f;
-		if (radius < 1.0f)
-		{
-			while (!(gridSize <= radius && radius <= gridSize * 10.0f))
-			{
-				gridSize /= 10.0f;
-			}
-		}
-		else
-		{
-			while (!(gridSize <= radius && radius <= gridSize * 10.0f))
-			{
-				gridSize *= 10.0f;
-			}
-		}
-		if (!m_grid.Initialize(m_context, gridSize, 10, 5))
-		{
-			SABA_ERROR("grid Init Fail.");
-			return false;
-		}
-
-		SABA_INFO("radisu [{}] grid [{}]", radius, gridSize);
+		AdjustSceneScale();
 
 		m_prevTime = GetTime();
 
@@ -648,41 +623,13 @@ namespace saba
 		}
 		m_modelDrawers.emplace_back(std::move(mmdDrawer));
 		m_selectedModelDrawer = m_modelDrawers[m_modelDrawers.size() - 1];
+		m_selectedModelDrawer->SetBBox(pmdModel->GetBBoxMin(), pmdModel->GetBBoxMax());
 
-		auto bboxMin = pmdModel->GetBBoxMin();
-		auto bboxMax = pmdModel->GetBBoxMax();
-		auto center = (bboxMax + bboxMin) * 0.5f;
-		auto radius = glm::length(bboxMax - center);
-		m_context.GetCamera()->Initialize(center, radius);
-
-		// グリッドのスケールを調節する
-		float gridSize = 1.0f;
-		if (radius < 1.0f)
-		{
-			while (!(gridSize <= radius && radius <= gridSize * 10.0f))
-			{
-				gridSize /= 10.0f;
-			}
-		}
-		else
-		{
-			while (!(gridSize <= radius && radius <= gridSize * 10.0f))
-			{
-				gridSize *= 10.0f;
-			}
-		}
-		if (!m_grid.Initialize(m_context, gridSize, 10, 5))
-		{
-			SABA_ERROR("grid Init Fail.");
-			return false;
-		}
-
-		SABA_INFO("radisu [{}] grid [{}]", radius, gridSize);
-
+		AdjustSceneScale();
 
 		m_prevTime = GetTime();
 
-		return false;
+		return true;
 	}
 
 	bool Viewer::LoadPMXFile(const std::string & filename)
@@ -716,9 +663,58 @@ namespace saba
 		}
 		m_modelDrawers.emplace_back(std::move(mmdDrawer));
 		m_selectedModelDrawer = m_modelDrawers[m_modelDrawers.size() - 1];
+		m_selectedModelDrawer->SetBBox(pmxModel->GetBBoxMin(), pmxModel->GetBBoxMax());
 
-		auto bboxMin = pmxModel->GetBBoxMin();
-		auto bboxMax = pmxModel->GetBBoxMax();
+		AdjustSceneScale();
+
+		m_prevTime = GetTime();
+
+		return true;
+	}
+
+	bool Viewer::LoadVMDFile(const std::string & filename)
+	{
+		GLMMDModel* mmdModel = nullptr;
+		if (m_selectedModelDrawer != nullptr && m_selectedModelDrawer->GetType() == ModelDrawerType::MMDModelDrawer)
+		{
+			auto mmdModelDrawer = reinterpret_cast<GLMMDModelDrawer*>(m_selectedModelDrawer.get());
+			mmdModel = mmdModelDrawer->GetModel();
+		}
+		if (mmdModel == nullptr)
+		{
+			SABA_INFO("MMD Model not selected.");
+			return false;
+		}
+
+		VMDFile vmd;
+		if (!ReadVMDFile(&vmd, filename.c_str()))
+		{
+			return false;
+		}
+
+		return mmdModel->LoadAnimation(vmd);
+	}
+
+	bool Viewer::AdjustSceneScale()
+	{
+		auto bboxMin = glm::vec3(0);
+		auto bboxMax = glm::vec3(0);
+		if (m_modelDrawers.empty())
+		{
+			bboxMin = glm::vec3(-1);
+			bboxMax = glm::vec3(1);
+		}
+		else
+		{
+			bboxMin = m_modelDrawers[0]->GetBBoxMin();
+			bboxMax = m_modelDrawers[0]->GetBBoxMax();
+		}
+
+		for (const auto& modelDrawer : m_modelDrawers)
+		{
+			bboxMin = glm::min(bboxMin, modelDrawer->GetBBoxMin());
+			bboxMax = glm::max(bboxMax, modelDrawer->GetBBoxMax());
+		}
 		auto center = (bboxMax + bboxMin) * 0.5f;
 		auto radius = glm::length(bboxMax - center);
 		m_context.GetCamera()->Initialize(center, radius);
@@ -747,32 +743,7 @@ namespace saba
 
 		SABA_INFO("radisu [{}] grid [{}]", radius, gridSize);
 
-		m_prevTime = GetTime();
-
-		return false;
-	}
-
-	bool Viewer::LoadVMDFile(const std::string & filename)
-	{
-		GLMMDModel* mmdModel = nullptr;
-		if (m_selectedModelDrawer != nullptr && m_selectedModelDrawer->GetType() == ModelDrawerType::MMDModelDrawer)
-		{
-			auto mmdModelDrawer = reinterpret_cast<GLMMDModelDrawer*>(m_selectedModelDrawer.get());
-			mmdModel = mmdModelDrawer->GetModel();
-		}
-		if (mmdModel == nullptr)
-		{
-			SABA_INFO("MMD Model not selected.");
-			return false;
-		}
-
-		VMDFile vmd;
-		if (!ReadVMDFile(&vmd, filename.c_str()))
-		{
-			return false;
-		}
-
-		return mmdModel->LoadAnimation(vmd);
+		return true;
 	}
 
 	void Viewer::OnMouseButtonStub(GLFWwindow * window, int button, int action, int mods)

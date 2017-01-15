@@ -30,6 +30,19 @@ namespace saba
 		virtual void DrawUI(ViewerContext* ctxt) = 0;
 		virtual void Update(ViewerContext* ctxt) = 0;
 		virtual void Draw(ViewerContext* ctxt) = 0;
+
+		void SetBBox(const glm::vec3& bboxMin, const glm::vec3& bboxMax)
+		{
+			m_bboxMin = bboxMin;
+			m_bboxMax = bboxMax;
+		}
+
+		const glm::vec3& GetBBoxMin() const { return m_bboxMin; }
+		const glm::vec3& GetBBoxMax() const { return m_bboxMax; }
+
+	private:
+		glm::vec3	m_bboxMin;
+		glm::vec3	m_bboxMax;
 	};
 }
 

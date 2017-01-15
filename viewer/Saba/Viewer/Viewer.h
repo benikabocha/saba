@@ -86,6 +86,8 @@ namespace saba
 		bool LoadPMXFile(const std::string& filename);
 		bool LoadVMDFile(const std::string& filename);
 
+		bool AdjustSceneScale();
+
 		static void OnMouseButtonStub(GLFWwindow* window, int button, int action, int mods);
 		void OnMouseButton(int button, int action, int mods);
 
