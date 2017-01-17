@@ -1,4 +1,4 @@
-// stb_c_lexer.h - v0.07 - public domain Sean Barrett 2013
+// stb_c_lexer.h - v0.08 - public domain Sean Barrett 2013
 // lexer for making little C-like languages with recursive-descent parsers
 //
 // This file provides both the interface and the implementation.
@@ -10,6 +10,7 @@
 // suffixes on integer constants are not handled (you can override this).
 //
 // History:
+//     0.08 fix bad pointer comparison
 //     0.07 fix mishandling of hexadecimal constants parsed by strtol
 //     0.06 fix missing next character after ending quote mark (Andreas Fredriksson)
 //     0.05 refixed get_location because github version had lost the fix
@@ -29,6 +30,9 @@
 //     - haven't implemented octal/hex character constants
 //     - haven't implemented support for unicode CLEX_char
 //     - need to expand error reporting so you don't just get "CLEX_parse_error"
+//
+// Contributors:
+//   Arpad Goretity (bugfix)
 //
 // LICENSE
 //
@@ -84,7 +88,7 @@
 #define STB_C_LEX_DISCARD_PREPROCESSOR    Y   // discard C-preprocessor directives (e.g. after prepocess
                                               // still have #line, #pragma, etc)
 
-//#define STB_C_LEX_ISWHITE(str)    ... // return length in bytes of first character if it is whitespace
+//#define STB_C_LEX_ISWHITE(str)    ... // return length in bytes of whitespace characters if first char is whitespace
 
 #define STB_C_LEXER_DEFINITIONS         // This line prevents the header file from replacing your definitions
 // --END--
@@ -459,7 +463,7 @@ int stb_c_lexer_get_token(stb_lexer *lexer)
          int n;
          n = STB_C_LEX_ISWHITE(p);
          if (n == 0) break;
-         if (lexer->eof && lexer+n > lexer->eof)
+         if (lexer->eof && lexer->eof - lexer->parse_point < n)
             return stb__clex_token(tok, CLEX_parse_error, p,lexer->eof-1);
          p += n;
       }
