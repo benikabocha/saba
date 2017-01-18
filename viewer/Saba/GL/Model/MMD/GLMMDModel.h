@@ -27,6 +27,7 @@ namespace saba
 		glm::vec3		m_ambient;
 		uint8_t			m_edgeFlag;
 		GLTextureRef	m_texture;
+		bool			m_textureHaveAlpha;
 		GLTextureRef	m_spTexture;
 		SphereTextureMode	m_spTextureMode;
 		GLTextureRef	m_toonTexture;

@@ -115,6 +115,7 @@ namespace saba
 			if (!src.m_texture.empty())
 			{
 				dest.m_texture = CreateMMDTexture(texMan, src.m_texture, true, true);
+				dest.m_textureHaveAlpha = IsAlphaTexture(dest.m_texture);
 			}
 			dest.m_textureMulFactor = src.m_textureMulFactor;
 			dest.m_textureAddFactor = src.m_textureAddFactor;

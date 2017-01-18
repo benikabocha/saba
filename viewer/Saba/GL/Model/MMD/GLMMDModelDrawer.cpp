@@ -234,7 +234,7 @@ namespace saba
 			SetUniform(shader->m_uTex, (GLint)0);
 			if (mmdMat.m_texture != 0)
 			{
-				if (!IsAlphaTexture(mmdMat.m_texture))
+				if (!mmdMat.m_textureHaveAlpha)
 				{
 					// Use Material Alpha
 					SetUniform(shader->m_uTexMode, (GLint)1);
