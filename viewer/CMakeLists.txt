@@ -63,6 +63,7 @@ set (
     ${CMAKE_CURRENT_SOURCE_DIR}/../external/imgui/src/imgui.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/../external/imgui/src/imgui_draw.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/../external/imgui/src/imgui_impl_glfw_gl3.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/../external/imgui/src/ImGuizmo.cpp
 )
 
 SOURCE_GROUP(GL FILES ${GL_SOURCE} ${GL_HEADER})
@@ -85,7 +86,11 @@ add_library(SabaViewer
     ${VIEWER_HEADER}
     ${GL3W_SOURCE}
     ${IMGUI_SOURCE}
+    ${IMGUIZMO_SOURCE}
     )
+target_include_directories(SabaViewer PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}/../external/imgui/src
+)
 target_link_libraries(SabaViewer
     Saba
     glfw

@@ -25,6 +25,7 @@
 
 #include <imgui.h>
 #include <imgui_impl_glfw_gl3.h>
+#include <ImGuizmo.h>
 
 #include <array>
 #include <deque>
@@ -80,6 +81,7 @@ namespace saba
 		, m_window(nullptr)
 		, m_uColor1(-1)
 		, m_uColor2(-2)
+		, m_cameraMode(CameraMode::None)
 		, m_prevTime(0)
 		, m_frameBufferWidth(0)
 		, m_frameBufferHeight(0)
@@ -88,6 +90,9 @@ namespace saba
 		, m_enableLogUI(true)
 		, m_enableCommandUI(true)
 		, m_enableModelListUI(true)
+		, m_enableManip(false)
+		, m_currentManipOp(ImGuizmo::TRANSLATE)
+		, m_currentManipMode(ImGuizmo::WORLD)
 	{
 		if (!glfwInit())
 		{
@@ -222,9 +227,16 @@ namespace saba
 		while (!glfwWindowShouldClose(m_window))
 		{
 			ImGui_ImplGlfwGL3_NewFrame();
+			ImGuizmo::BeginFrame();
 
 			m_mouse.Update(m_window);
-			if (!ImGui::GetIO().WantCaptureMouse)
+			bool enableCameraControl = true;
+			if (ImGui::GetIO().WantCaptureMouse ||
+				ImGuizmo::IsOver())
+			{
+				enableCameraControl = false;
+			}
+			if (enableCameraControl)
 			{
 				if (m_cameraMode == CameraMode::Orbit)
 				{
@@ -244,6 +256,15 @@ namespace saba
 					m_context.GetCamera()->Dolly((float)m_mouse.m_scrollY * 0.1f);
 				}
 			}
+			else
+			{
+				/*
+				マニピュレーターを動作させるため、カメラコントロールが効かない場合は
+				強制的に None を設定する
+				*/
+				m_cameraMode = CameraMode::None;
+			}
+			ImGuizmo::Enable(m_cameraMode == CameraMode::None);
 
 			int w, h;
 			glfwGetFramebufferSize(m_window, &w, &h);
@@ -268,6 +289,11 @@ namespace saba
 						ImGui::MenuItem("Log", nullptr, &m_enableLogUI);
 						ImGui::MenuItem("Command", nullptr, &m_enableCommandUI);
 						ImGui::MenuItem("Model List", nullptr, &m_enableModelListUI);
+						ImGui::EndMenu();
+					}
+					if (ImGui::BeginMenu("Edit"))
+					{
+						ImGui::MenuItem("Manipulater", nullptr, &m_enableManip);
 						ImGui::EndMenu();
 					}
 					ImGui::EndMainMenuBar();
@@ -408,6 +434,7 @@ namespace saba
 		DrawLogUI();
 		DrawCommandUI();
 		DrawModelListUI();
+		DrawManip();
 	}
 
 	void Viewer::DrawInfoUI()
@@ -537,6 +564,71 @@ namespace saba
 
 		ImGui::EndChild();
 		ImGui::End();
+	}
+
+	void Viewer::DrawManip()
+	{
+		if (!m_enableManip)
+		{
+			return;
+		}
+		if (m_selectedModelDrawer == nullptr)
+		{
+			return;
+		}
+
+		float width = 200;
+		float height = 150;
+
+		ImGui::SetNextWindowSize(ImVec2(width, height), ImGuiSetCond_Once);
+		ImGui::SetNextWindowPos(ImVec2((float)m_frameBufferWidth - width, 120), ImGuiSetCond_Once);
+		ImGui::Begin("Model Maniplurator", &m_enableManip);
+
+		if (ImGui::RadioButton("Translate", m_currentManipOp == ImGuizmo::TRANSLATE))
+		{
+			m_currentManipOp = ImGuizmo::TRANSLATE;
+		}
+		ImGui::SameLine();
+		if (ImGui::RadioButton("Rotate", m_currentManipOp == ImGuizmo::ROTATE))
+		{
+			m_currentManipOp = ImGuizmo::ROTATE;
+		}
+		ImGui::SameLine();
+		if (ImGui::RadioButton("Scale", m_currentManipOp == ImGuizmo::SCALE))
+		{
+			m_currentManipOp = ImGuizmo::SCALE;
+		}
+
+		glm::vec3 t, r, s;
+		t = m_selectedModelDrawer->GetTranslate();
+		r = glm::degrees(m_selectedModelDrawer->GetRotate());
+		s = m_selectedModelDrawer->GetScale();
+
+		ImGui::InputFloat3("T", &t[0], 3);
+		ImGui::InputFloat3("R", &r[0], 3);
+		ImGui::InputFloat3("S", &s[0], 3);
+		m_selectedModelDrawer->SetTranslate(t);
+		m_selectedModelDrawer->SetRotate(glm::radians(r));
+		m_selectedModelDrawer->SetScale(s);
+
+		ImGui::End();
+
+		const auto& view = m_context.GetCamera()->GetViewMatrix();
+		const auto& proj = m_context.GetCamera()->GetProjectionMatrix();
+		auto world = m_selectedModelDrawer->GetTransform();
+
+		ImGuizmo::Manipulate(
+			&view[0][0],
+			&proj[0][0],
+			m_currentManipOp,
+			m_currentManipMode,
+			&world[0][0]
+		);
+
+		ImGuizmo::DecomposeMatrixToComponents(&world[0][0], &t[0], &r[0], &s[0]);
+		m_selectedModelDrawer->SetTranslate(t);
+		m_selectedModelDrawer->SetRotate(glm::radians(r));
+		m_selectedModelDrawer->SetScale(s);
 	}
 
 	bool Viewer::ExecuteCommand(const ViewerCommand & cmd)
@@ -1156,6 +1248,8 @@ namespace saba
 				m_cameraMode = CameraMode::None;
 			}
 		}
+
+		//ImGuizmo::Enable(m_cameraMode == CameraMode::None);
 	}
 
 	void Viewer::OnScrollStub(GLFWwindow * window, double offsetx, double offsety)

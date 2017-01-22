@@ -46,6 +46,9 @@ namespace saba
 		const glm::vec3& GetBBoxMin() const { return m_bboxMin; }
 		const glm::vec3& GetBBoxMax() const { return m_bboxMax; }
 
+		const glm::vec3& GetTranslate() const { return m_translate; }
+		const glm::vec3& GetRotate() const { return m_rotate; }
+		const glm::vec3& GetScale() const { return m_scale; }
 		void SetTranslate(const glm::vec3& t);
 		void SetRotate(const glm::vec3& r);
 		void SetScale(const glm::vec3& s);

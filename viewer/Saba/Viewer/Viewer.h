@@ -20,6 +20,7 @@
 #include <Saba/GL/Model/MMD/GLMMDModelDrawContext.h>
 
 #include <imgui.h>
+#include <ImGuizmo.h>
 
 #include <memory>
 
@@ -81,6 +82,7 @@ namespace saba
 		void DrawLogUI();
 		void DrawCommandUI();
 		void DrawModelListUI();
+		void DrawManip();
 
 		bool CmdOpen(const std::vector<std::string>& args);
 		bool CmdClear(const std::vector<std::string>& args);
@@ -162,6 +164,11 @@ namespace saba
 
 		// ModelListUI
 		bool	m_enableModelListUI;
+
+		// Manipulator
+		bool				m_enableManip;
+		ImGuizmo::OPERATION	m_currentManipOp;
+		ImGuizmo::MODE		m_currentManipMode;
 	};
 }
 
