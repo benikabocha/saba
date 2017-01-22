@@ -453,7 +453,7 @@ namespace saba
 			ImVec2(m_frameBufferWidth - width, m_frameBufferHeight - height - 80),
 			ImGuiSetCond_FirstUseEver
 		);
-		ImGui::Begin("Log");
+		ImGui::Begin("Log", &m_enableLogUI);
 		ImGui::BeginChild("scrolling", ImVec2(0, 0), false, ImGuiWindowFlags_HorizontalScrollbar);
 
 		for (const auto& log : m_imguiLogSink->GetBuffer())
@@ -490,7 +490,7 @@ namespace saba
 			ImVec2(m_frameBufferWidth - width, m_frameBufferHeight - height - 60),
 			ImGuiSetCond_FirstUseEver
 		);
-		ImGui::Begin("Command");
+		ImGui::Begin("Command", &m_enableCommandUI);
 		if (ImGui::InputText("Input", &inputBuffer[0], inputBuffer.size(), ImGuiInputTextFlags_EnterReturnsTrue, nullptr, nullptr))
 		{
 			const char* cmdLine = &inputBuffer[0];
@@ -523,7 +523,7 @@ namespace saba
 
 		ImGui::SetNextWindowSize(ImVec2(width, height), ImGuiSetCond_Once);
 		ImGui::SetNextWindowPos(ImVec2((float)m_frameBufferWidth - width, 20), ImGuiSetCond_Once);
-		ImGui::Begin("Model List");
+		ImGui::Begin("Model List", &m_enableModelListUI);
 		ImGui::BeginChild("models");
 
 		for (const auto& modelDrawer : m_modelDrawers)
