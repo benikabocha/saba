@@ -76,6 +76,7 @@ namespace saba
 
 		void SetupSjisGryphRanges();
 		void Draw();
+		void DrawUI();
 		void DrawInfoUI();
 		void DrawLogUI();
 		void DrawCommandUI();

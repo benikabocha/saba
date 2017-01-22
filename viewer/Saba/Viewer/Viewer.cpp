@@ -272,9 +272,7 @@ namespace saba
 
 			if (m_context.IsUIEnabled())
 			{
-				DrawInfoUI();
-				DrawLogUI();
-				DrawCommandUI();
+				DrawUI();
 				ImGui::Render();
 			}
 
@@ -392,6 +390,13 @@ namespace saba
 			// Draw
 			modelDrawer->Draw(&m_context);
 		}
+	}
+
+	void Viewer::DrawUI()
+	{
+		DrawInfoUI();
+		DrawLogUI();
+		DrawCommandUI();
 	}
 
 	void Viewer::DrawInfoUI()
