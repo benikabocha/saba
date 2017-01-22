@@ -80,6 +80,7 @@ namespace saba
 		void DrawInfoUI();
 		void DrawLogUI();
 		void DrawCommandUI();
+		void DrawModelListUI();
 
 		bool CmdOpen(const std::vector<std::string>& args);
 		bool CmdClear(const std::vector<std::string>& args);
@@ -139,6 +140,10 @@ namespace saba
 
 		double		m_prevTime;
 
+		// Framebuffer
+		int	m_frameBufferWidth;
+		int	m_frameBufferHeight;
+
 		// Model Name
 		size_t	m_modelNameID;
 
@@ -154,6 +159,9 @@ namespace saba
 
 		// CommandUI
 		bool	m_enableCommandUI;
+
+		// ModelListUI
+		bool	m_enableModelListUI;
 	};
 }
 

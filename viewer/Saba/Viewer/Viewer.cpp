@@ -81,10 +81,13 @@ namespace saba
 		, m_uColor1(-1)
 		, m_uColor2(-2)
 		, m_prevTime(0)
+		, m_frameBufferWidth(0)
+		, m_frameBufferHeight(0)
 		, m_modelNameID(1)
 		, m_enableInfoUI(true)
 		, m_enableLogUI(true)
 		, m_enableCommandUI(true)
+		, m_enableModelListUI(true)
 	{
 		if (!glfwInit())
 		{
@@ -246,6 +249,12 @@ namespace saba
 			glfwGetFramebufferSize(m_window, &w, &h);
 			m_context.GetCamera()->SetSize((float)w, (float)h);
 			m_context.GetCamera()->UpdateMatrix();
+			m_frameBufferWidth = w;
+			m_frameBufferHeight = h;
+			m_context.SetFrameBufferSize(w, h);
+			int windowW, windowH;
+			glfwGetWindowSize(m_window, &windowW, &windowH);
+			m_context.SetWindowSize(windowW, windowH);
 
 			glViewport(0, 0, w, h);
 
@@ -258,6 +267,7 @@ namespace saba
 						ImGui::MenuItem("Info", nullptr, &m_enableInfoUI);
 						ImGui::MenuItem("Log", nullptr, &m_enableLogUI);
 						ImGui::MenuItem("Command", nullptr, &m_enableCommandUI);
+						ImGui::MenuItem("Model List", nullptr, &m_enableModelListUI);
 						ImGui::EndMenu();
 					}
 					ImGui::EndMainMenuBar();
@@ -397,6 +407,7 @@ namespace saba
 		DrawInfoUI();
 		DrawLogUI();
 		DrawCommandUI();
+		DrawModelListUI();
 	}
 
 	void Viewer::DrawInfoUI()
@@ -434,7 +445,14 @@ namespace saba
 			return;
 		}
 
-		ImGui::SetNextWindowSize(ImVec2(500, 400), ImGuiSetCond_FirstUseEver);
+		float width = 500;
+		float height = 400;
+
+		ImGui::SetNextWindowSize(ImVec2(width, height), ImGuiSetCond_FirstUseEver);
+		ImGui::SetNextWindowPos(
+			ImVec2(m_frameBufferWidth - width, m_frameBufferHeight - height - 80),
+			ImGuiSetCond_FirstUseEver
+		);
 		ImGui::Begin("Log");
 		ImGui::BeginChild("scrolling", ImVec2(0, 0), false, ImGuiWindowFlags_HorizontalScrollbar);
 
@@ -462,8 +480,16 @@ namespace saba
 			return;
 		}
 
+		float width = 500;
+		float height = 0;
 		std::array<char, 256> inputBuffer;
 		inputBuffer.fill('\0');
+
+		ImGui::SetNextWindowSize(ImVec2(width, height), ImGuiSetCond_FirstUseEver);
+		ImGui::SetNextWindowPos(
+			ImVec2(m_frameBufferWidth - width, m_frameBufferHeight - height - 60),
+			ImGuiSetCond_FirstUseEver
+		);
 		ImGui::Begin("Command");
 		if (ImGui::InputText("Input", &inputBuffer[0], inputBuffer.size(), ImGuiInputTextFlags_EnterReturnsTrue, nullptr, nullptr))
 		{
@@ -482,6 +508,34 @@ namespace saba
 			}
 
 		}
+		ImGui::End();
+	}
+
+	void Viewer::DrawModelListUI()
+	{
+		if (!m_enableModelListUI)
+		{
+			return;
+		}
+
+		float width = 200;
+		float height = 100;
+
+		ImGui::SetNextWindowSize(ImVec2(width, height), ImGuiSetCond_Once);
+		ImGui::SetNextWindowPos(ImVec2((float)m_frameBufferWidth - width, 20), ImGuiSetCond_Once);
+		ImGui::Begin("Model List");
+		ImGui::BeginChild("models");
+
+		for (const auto& modelDrawer : m_modelDrawers)
+		{
+			bool selected = modelDrawer == m_selectedModelDrawer;
+			if (ImGui::Selectable(modelDrawer->GetName().c_str(), selected))
+			{
+				m_selectedModelDrawer = modelDrawer;
+			}
+		}
+
+		ImGui::EndChild();
 		ImGui::End();
 	}
 

@@ -86,6 +86,15 @@ namespace saba
 
 	void GLMMDModelDrawer::DrawUI(ViewerContext * ctxt)
 	{
+		float width = 200;
+		float height = 400;
+
+		ImGui::SetNextWindowSize(ImVec2(width, height), ImGuiSetCond_FirstUseEver);
+		ImGui::SetNextWindowPos(
+			ImVec2(20, (float)ctxt->GetFrameBufferHeight() - height - 20),
+			ImGuiSetCond_FirstUseEver
+		);
+
 		ImGui::Begin("MMDDrawCtrl");
 		if (ImGui::CollapsingHeader("Animation"))
 		{

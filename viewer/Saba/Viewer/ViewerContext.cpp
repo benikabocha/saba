@@ -22,6 +22,10 @@ namespace saba
 		: m_uiEnable(true)
 		, m_elapsed(0.0)
 		, m_msaaEnable(false)
+		, m_frameBufferWidth(0)
+		, m_frameBufferHeight(0)
+		, m_windowWidth(0)
+		, m_windowHeight(0)
 	{
 #if _WIN32
 		DWORD sz = GetCurrentDirectoryW(0, nullptr);
