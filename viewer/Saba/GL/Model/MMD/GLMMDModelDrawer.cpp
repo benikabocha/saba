@@ -91,7 +91,7 @@ namespace saba
 
 		ImGui::SetNextWindowSize(ImVec2(width, height), ImGuiSetCond_FirstUseEver);
 		ImGui::SetNextWindowPos(
-			ImVec2(20, (float)ctxt->GetFrameBufferHeight() - height - 20),
+			ImVec2(20, (float)ctxt->GetWindowHeight() - height - 20),
 			ImGuiSetCond_FirstUseEver
 		);
 

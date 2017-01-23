@@ -142,10 +142,6 @@ namespace saba
 
 		double		m_prevTime;
 
-		// Framebuffer
-		int	m_frameBufferWidth;
-		int	m_frameBufferHeight;
-
 		// Model Name
 		size_t	m_modelNameID;
 

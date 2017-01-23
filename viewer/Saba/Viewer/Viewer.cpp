@@ -83,8 +83,6 @@ namespace saba
 		, m_uColor2(-2)
 		, m_cameraMode(CameraMode::None)
 		, m_prevTime(0)
-		, m_frameBufferWidth(0)
-		, m_frameBufferHeight(0)
 		, m_modelNameID(1)
 		, m_enableInfoUI(true)
 		, m_enableLogUI(true)
@@ -270,8 +268,6 @@ namespace saba
 			glfwGetFramebufferSize(m_window, &w, &h);
 			m_context.GetCamera()->SetSize((float)w, (float)h);
 			m_context.GetCamera()->UpdateMatrix();
-			m_frameBufferWidth = w;
-			m_frameBufferHeight = h;
 			m_context.SetFrameBufferSize(w, h);
 			int windowW, windowH;
 			glfwGetWindowSize(m_window, &windowW, &windowH);
@@ -477,7 +473,7 @@ namespace saba
 
 		ImGui::SetNextWindowSize(ImVec2(width, height), ImGuiSetCond_FirstUseEver);
 		ImGui::SetNextWindowPos(
-			ImVec2(m_frameBufferWidth - width, m_frameBufferHeight - height - 80),
+			ImVec2((float)(m_context.GetWindowWidth()) - width, (float)(m_context.GetWindowHeight()) - height - 80),
 			ImGuiSetCond_FirstUseEver
 		);
 		ImGui::Begin("Log", &m_enableLogUI);
@@ -514,7 +510,7 @@ namespace saba
 
 		ImGui::SetNextWindowSize(ImVec2(width, height), ImGuiSetCond_FirstUseEver);
 		ImGui::SetNextWindowPos(
-			ImVec2(m_frameBufferWidth - width, m_frameBufferHeight - height - 60),
+			ImVec2((float)m_context.GetWindowWidth() - width, (float)m_context.GetWindowHeight() - height - 60),
 			ImGuiSetCond_FirstUseEver
 		);
 		ImGui::Begin("Command", &m_enableCommandUI);
@@ -549,7 +545,7 @@ namespace saba
 		float height = 100;
 
 		ImGui::SetNextWindowSize(ImVec2(width, height), ImGuiSetCond_Once);
-		ImGui::SetNextWindowPos(ImVec2((float)m_frameBufferWidth - width, 20), ImGuiSetCond_Once);
+		ImGui::SetNextWindowPos(ImVec2((float)m_context.GetWindowWidth() - width, 20), ImGuiSetCond_Once);
 		ImGui::Begin("Model List", &m_enableModelListUI);
 		ImGui::BeginChild("models");
 
@@ -581,7 +577,7 @@ namespace saba
 		float height = 150;
 
 		ImGui::SetNextWindowSize(ImVec2(width, height), ImGuiSetCond_Once);
-		ImGui::SetNextWindowPos(ImVec2((float)m_frameBufferWidth - width, 120), ImGuiSetCond_Once);
+		ImGui::SetNextWindowPos(ImVec2((float)m_context.GetWindowWidth() - width, 120), ImGuiSetCond_Once);
 		ImGui::Begin("Model Maniplurator", &m_enableManip);
 
 		if (ImGui::RadioButton("Translate", m_currentManipOp == ImGuizmo::TRANSLATE))
