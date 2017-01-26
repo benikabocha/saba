@@ -134,6 +134,8 @@ namespace saba
 			}
 			dest.m_toonTextureMulFactor = src.m_toonTextureMulFactor;
 			dest.m_toonTextureAddFactor = src.m_toonTextureAddFactor;
+
+			dest.m_bothFace = src.m_bothFace;
 		}
 
 		// SubMesh
