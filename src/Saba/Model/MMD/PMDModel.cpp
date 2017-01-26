@@ -330,7 +330,21 @@ namespace saba
 			auto asterPos = orgTexName.find_first_of('*');
 			if (asterPos == std::string::npos)
 			{
-				texName = orgTexName;
+				std::string ext = PathUtil::GetExt(orgTexName);
+				if (ext == "sph")
+				{
+					spTexName = orgTexName;
+					mat.m_spTextureMode = MMDMaterial::SphereTextureMode::Mul;
+				}
+				else if (ext == "spa")
+				{
+					spTexName = orgTexName;
+					mat.m_spTextureMode = MMDMaterial::SphereTextureMode::Add;
+				}
+				else
+				{
+					texName = orgTexName;
+				}
 			}
 			else
 			{
