@@ -68,7 +68,7 @@ namespace saba
 		const glm::mat4& GetGlobalTransform() const { return m_global; }
 
 		void CalculateInverseInitTransform();
-		const glm::mat4 GetInverseInitTransform() { return m_inverseInit; }
+		const glm::mat4& GetInverseInitTransform() const { return m_inverseInit; }
 
 		// ノードの初期化時に呼び出す
 		void SaveInitialTRS()
