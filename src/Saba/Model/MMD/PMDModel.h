@@ -11,6 +11,7 @@
 
 #include <glm/vec2.hpp>
 #include <glm/vec3.hpp>
+#include <glm/mat4x4.hpp>
 #include <vector>
 #include <string>
 #include <algorithm>
@@ -85,6 +86,7 @@ namespace saba
 		std::vector<glm::vec2>	m_boneWeights;
 		std::vector<glm::vec3>	m_updatePositions;
 		std::vector<glm::vec3>	m_updateNormals;
+		std::vector<glm::mat4>	m_transforms;
 
 		std::vector<uint16_t> m_indices;
 

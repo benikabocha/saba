@@ -228,14 +228,21 @@ namespace saba
 			}
 		}
 
+		// スキンメッシュに使用する変形マトリクスを事前計算
+		auto& nodes = (*m_nodeMan.GetNodes());
+		for (size_t i = 0; i < nodes.size(); i++)
+		{
+			m_transforms[i] = nodes[i]->GetGlobalTransform() * nodes[i]->GetInverseInitTransform();
+		}
+
 		for (size_t i = 0; i < numVertices; i++)
 		{
 			auto node0 = m_nodeMan.GetNode(bone->x);
 			auto node1 = m_nodeMan.GetNode(bone->y);
 			auto w0 = boneWeight->x;
 			auto w1 = boneWeight->y;
-			auto m0 = node0->GetGlobalTransform() * node0->GetInverseInitTransform();
-			auto m1 = node1->GetGlobalTransform() * node1->GetInverseInitTransform();
+			const auto& m0 = m_transforms[bone->x];
+			const auto& m1 = m_transforms[bone->y];
 
 			auto m = m0 * w0 + m1 * w1;
 			*updatePosition = glm::vec3(m * glm::vec4(*updatePosition, 1));
@@ -449,6 +456,7 @@ namespace saba
 			node->CalculateInverseInitTransform();
 			node->SaveInitialTRS();
 		}
+		m_transforms.resize(m_nodeMan.GetNodeCount());
 
 		// IKを作成
 		m_ikSolverMan.GetIKSolvers()->reserve(pmd.m_iks.size());
