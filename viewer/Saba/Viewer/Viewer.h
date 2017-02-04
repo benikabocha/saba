@@ -72,6 +72,13 @@ namespace saba
 			Pan,
 		};
 
+		enum class MouseLockMode
+		{
+			None,
+			RequestLock,
+			Lock,
+		};
+
 	private:
 		using ModelDrawerPtr = std::shared_ptr<ModelDrawer>;
 
@@ -139,6 +146,7 @@ namespace saba
 		Mouse		m_mouse;
 		CameraMode	m_cameraMode;
 		Grid		m_grid;
+		MouseLockMode	m_mouseLockMode;
 
 		double		m_prevTime;
 

@@ -82,6 +82,7 @@ namespace saba
 		, m_uColor1(-1)
 		, m_uColor2(-2)
 		, m_cameraMode(CameraMode::None)
+		, m_mouseLockMode(MouseLockMode::None)
 		, m_prevTime(0)
 		, m_modelNameID(1)
 		, m_enableInfoUI(true)
@@ -228,13 +229,22 @@ namespace saba
 			ImGuizmo::BeginFrame();
 
 			m_mouse.Update(m_window);
-			bool enableCameraControl = true;
-			if (ImGui::GetIO().WantCaptureMouse ||
-				ImGuizmo::IsOver())
+
+			if (m_mouseLockMode == MouseLockMode::RequestLock)
 			{
-				enableCameraControl = false;
+				if (ImGui::GetIO().WantCaptureMouse ||
+					ImGuizmo::IsOver())
+				{
+					m_mouseLockMode = MouseLockMode::None;
+					m_cameraMode = CameraMode::None;
+				}
+				else
+				{
+					m_mouseLockMode = MouseLockMode::Lock;
+				}
 			}
-			if (enableCameraControl)
+
+			if (m_mouseLockMode == MouseLockMode::Lock && m_cameraMode != CameraMode::None)
 			{
 				if (m_cameraMode == CameraMode::Orbit)
 				{
@@ -248,20 +258,13 @@ namespace saba
 				{
 					m_context.GetCamera()->Pan((float)m_mouse.m_dx, (float)m_mouse.m_dy);
 				}
+			}
 
-				if (m_mouse.m_scrollY != 0)
-				{
-					m_context.GetCamera()->Dolly((float)m_mouse.m_scrollY * 0.1f);
-				}
-			}
-			else
+			if (m_mouse.m_scrollY != 0)
 			{
-				/*
-				マニピュレーターを動作させるため、カメラコントロールが効かない場合は
-				強制的に None を設定する
-				*/
-				m_cameraMode = CameraMode::None;
+				m_context.GetCamera()->Dolly((float)m_mouse.m_scrollY * 0.1f);
 			}
+
 			ImGuizmo::Enable(m_cameraMode == CameraMode::None);
 
 			int w, h;
@@ -1209,6 +1212,7 @@ namespace saba
 
 	void Viewer::OnMouseButton(int button, int action, int mods)
 	{
+		auto prevCameraMode = m_cameraMode;
 		if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_PRESS)
 		{
 			m_cameraMode = CameraMode::Orbit;
@@ -1242,10 +1246,14 @@ namespace saba
 			if (action == GLFW_RELEASE)
 			{
 				m_cameraMode = CameraMode::None;
+				m_mouseLockMode = MouseLockMode::None;
 			}
 		}
 
-		//ImGuizmo::Enable(m_cameraMode == CameraMode::None);
+		if (prevCameraMode == CameraMode::None && m_cameraMode != CameraMode::None)
+		{
+			m_mouseLockMode = MouseLockMode::RequestLock;
+		}
 	}
 
 	void Viewer::OnScrollStub(GLFWwindow * window, double offsetx, double offsety)
