@@ -10,8 +10,19 @@
 
 #include <glm/gtc/matrix_transform.hpp>
 
+#include <btBulletCollisionCommon.h>
+#include <btBulletDynamicsCommon.h>
+
 namespace saba
 {
+	class MMDMotionState : public btMotionState
+	{
+	public:
+		virtual void Reset() = 0;
+		virtual void BeginUpdate() = 0;
+		virtual void EndUpdate() = 0;
+	};
+
 	namespace
 	{
 		glm::mat4 InvZ(const glm::mat4& m)
@@ -353,6 +364,14 @@ namespace saba
 		MMDNode*	m_node;
 		glm::mat4	m_offset;
 	};
+
+	MMDRigidBody::MMDRigidBody()
+	{
+	}
+
+	MMDRigidBody::~MMDRigidBody()
+	{
+	}
 
 	bool MMDRigidBody::Create(const PMDRigidBodyExt& pmdRigidBody, MMDModel* model, MMDNode* node)
 	{
@@ -720,6 +739,14 @@ namespace saba
 	//*******************
 	// MMDJoint
 	//*******************
+	MMDJoint::MMDJoint()
+	{
+	}
+
+	MMDJoint::~MMDJoint()
+	{
+	}
+
 	bool MMDJoint::CreateJoint(const PMDJointExt& pmdJoint, MMDRigidBody* rigidBodyA, MMDRigidBody* rigidBodyB)
 	{
 		Destroy();

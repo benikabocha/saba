@@ -9,9 +9,6 @@
 #include "PMDFile.h"
 #include "PMXFile.h"
 
-#include <btBulletCollisionCommon.h>
-#include <btBulletDynamicsCommon.h>
-
 #include <glm/vec3.hpp>
 #include <glm/mat4x4.hpp>
 
@@ -19,24 +16,30 @@
 #include <memory>
 #include <cinttypes>
 
+// Bullet Types
+class btRigidBody;
+class btCollisionShape;
+class btTypedConstraint;
+class btDiscreteDynamicsWorld;
+class btBroadphaseInterface;
+class btDefaultCollisionConfiguration;
+class btCollisionDispatcher;
+class btSequentialImpulseConstraintSolver;
+class btMotionState;
+
 namespace saba
 {
 	class MMDPhysics;
 	class MMDModel;
 	class MMDNode;
 
-	class MMDMotionState : public btMotionState
-	{
-	public:
-		virtual void Reset() = 0;
-		virtual void BeginUpdate() = 0;
-		virtual void EndUpdate() = 0;
-	};
+	class MMDMotionState;
 
 	class MMDRigidBody
 	{
 	public:
-		MMDRigidBody() = default;
+		MMDRigidBody();
+		~MMDRigidBody();
 		MMDRigidBody(const MMDRigidBody& rhs) = delete;
 		MMDRigidBody& operator = (const MMDRigidBody& rhs) = delete;
 
@@ -84,7 +87,8 @@ namespace saba
 	class MMDJoint
 	{
 	public:
-		MMDJoint() = default;
+		MMDJoint();
+		~MMDJoint();
 		MMDJoint(const MMDJoint& rhs) = delete;
 		MMDJoint& operator = (const MMDJoint& rhs) = delete;
 
