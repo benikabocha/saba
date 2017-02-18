@@ -88,8 +88,9 @@ add_library(SabaViewer
     ${IMGUI_SOURCE}
     ${IMGUIZMO_SOURCE}
     )
-target_include_directories(SabaViewer PRIVATE
-    ${CMAKE_CURRENT_SOURCE_DIR}/../external/imgui/src
+target_include_directories(SabaViewer
+    PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/../external/imgui/src
+    PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/../external/fcpp
 )
 target_link_libraries(SabaViewer
     PUBLIC Saba
@@ -99,5 +100,6 @@ target_link_libraries(SabaViewer
     PRIVATE SPIRV
     PRIVATE OGLCompiler
     PRIVATE HLSL
+    PRIVATE fcpp
     ${OPENGL_LIBRARY}
     )

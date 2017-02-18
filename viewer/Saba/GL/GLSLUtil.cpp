@@ -9,15 +9,110 @@
 #include <Saba/Base/File.h>
 #include <Saba/Base/Singleton.h>
 #include <Saba/Base/Log.h>
+#include <Saba/Base/UnicodeUtil.h>
 
 #include <iostream>
 #include <sstream>
 #include <fstream>
 
+#define USE_GLSLANG 0
+#if USE_GLSLANG
 #include <glslang/Public/ShaderLang.h>
+#endif
+
+extern "C"
+{
+#include <fpp.h>
+}
 
 namespace saba
 {
+	namespace
+	{
+		struct FppData
+		{
+			std::string::const_iterator	m_inputIt;
+			std::string::const_iterator	m_inputEnd;
+
+			std::stringstream		m_output;
+			std::stringstream		m_error;
+		};
+
+		char* FppInput(char* buffer, int size, void* userData)
+		{
+			FppData* fppData = reinterpret_cast<FppData*>(userData);
+
+			if (fppData->m_inputIt == fppData->m_inputEnd)
+			{
+				return nullptr;
+			}
+
+			int i = 0;
+			while (fppData->m_inputIt != fppData->m_inputEnd)
+			{
+				buffer[i] = (*fppData->m_inputIt);
+				fppData->m_inputIt++;
+				i++;
+				if (i == size)
+				{
+					buffer[i] = '\0';
+					break;
+				}
+			}
+			if (i != size)
+			{
+				buffer[i] = '\0';
+			}
+			return buffer;
+		}
+
+		void FppOutput(int ch, void* userData)
+		{
+			FppData* fppData = reinterpret_cast<FppData*>(userData);
+
+			fppData->m_output << (char)ch;
+		}
+
+		void FppError(void* userData, char* format, va_list vargs)
+		{
+			FppData* fppData = reinterpret_cast<FppData*>(userData);
+
+			char buffer[1024];
+			vsnprintf(buffer, sizeof(buffer), format, vargs);
+			fppData->m_error << "fpp error : " << buffer << "\n";
+		}
+
+		FILE* FppFileopen(const char* filename, void* userdata)
+		{
+			FILE* fp = NULL;
+#if _WIN32
+			std::wstring wFilepath = ToWString(filename);
+			std::wstring wMode = ToWString("r");
+			auto err = _wfopen_s(&fp, wFilepath.c_str(), wMode.c_str());
+			if (err != 0)
+			{
+				return nullptr;
+			}
+#else
+			fp = fopen(filename, "r");
+			if (fp == nullptr)
+			{
+				return nullptr;
+			}
+#endif
+			return fp;
+		}
+
+		std::vector<char> MakeStringBuffer(const std::string& str)
+		{
+			std::vector<char> buffer;
+			buffer.reserve(str.size() + 1);
+			buffer.assign(str.begin(), str.end());
+			buffer.push_back('\0');
+			return buffer;
+		}
+	}
+#if USE_GLSLANG
 	namespace
 	{
 		class GLSLangInitializer
@@ -39,6 +134,8 @@ namespace saba
 			bool m_initialized;
 		};
 	}
+#endif // USE_GLSLANG
+
 	void GLSLDefine::Define(const std::string & def, const std::string & defValue)
 	{
 		m_defines[def] = defValue;
@@ -70,6 +167,7 @@ namespace saba
 	}
 
 
+#if USE_GLSLANG
 	bool InitializeGLSLUtil()
 	{
 		return glslang::InitializeProcess();;
@@ -257,6 +355,7 @@ namespace saba
 			const GLSLInclude&	m_include;
 		};
 	}
+#endif // USE_GLSLANG
 
 	bool PreprocessGLSL(
 		std::string*		outCode,
@@ -267,6 +366,7 @@ namespace saba
 		std::string*		outMessage
 	)
 	{
+#if USE_GLSLANG
 		if (!Singleton<GLSLangInitializer>::Get()->IsInitialized())
 		{
 			return false;
@@ -390,7 +490,110 @@ namespace saba
 
 		outputString = outSS.str();
 		*outCode = std::move(outputString);
+#else // USE_GLSLANG
 
+		// Fpp
+		{
+			FppData fppData;
+			fppData.m_inputIt = inCode.begin();
+			fppData.m_inputEnd = inCode.end();
+
+			std::vector<fppTag> tags;
+			fppTag tag;
+			tag.tag = FPPTAG_USERDATA;
+			tag.data = &fppData;
+			tags.push_back(tag);
+
+			tag.tag = FPPTAG_INPUT;
+			tag.data = (void*)FppInput;
+			tags.push_back(tag);
+
+			tag.tag = FPPTAG_OUTPUT;
+			tag.data = (void*)FppOutput;
+			tags.push_back(tag);
+
+			tag.tag = FPPTAG_ERROR;
+			tag.data = (void*)FppError;
+			tags.push_back(tag);
+
+			tag.tag = FPPTAG_FILE_OPEN_EXT;
+			tag.data = (void*)FppFileopen;
+			tags.push_back(tag);
+
+			tag.tag = FPPTAG_IGNOREVERSION;
+			tag.data = (void*)0;
+			tags.push_back(tag);
+
+			tag.tag = FPPTAG_LINE;
+			tag.data = (void*)0;
+			tags.push_back(tag);
+
+			auto includeList = include.GetPathList();
+			std::vector<std::vector<char>> includeDirs;
+			const auto& workDir = include.GetWorkDir();
+			if (!workDir.empty())
+			{
+				includeDirs.emplace_back(MakeStringBuffer(workDir));
+			}
+			for (const auto& includeDir : includeList)
+			{
+				includeDirs.emplace_back(MakeStringBuffer(includeDir));
+			}
+			for (auto& includeDir : includeDirs)
+			{
+				tag.tag = FPPTAG_INCLUDE_DIR;
+				tag.data = (void*)includeDir.data();
+				tags.push_back(tag);
+			}
+
+			const char* filename = "GLSL";
+			tag.tag = FPPTAG_INPUT_NAME;
+			tag.data = (void*)filename;
+			tags.push_back(tag);
+
+			const auto& defineMap = define.GetMap();
+			std::vector<std::vector<char>> defineStrs;
+			for (const auto& definePair : defineMap)
+			{
+				const std::string& key = definePair.first;
+				const std::string& val = definePair.second;
+				if (val.empty())
+				{
+					defineStrs.emplace_back(MakeStringBuffer(key));
+				}
+				else
+				{
+					defineStrs.emplace_back(MakeStringBuffer(key + "=" + val));
+				}
+			}
+			for (auto& defineStr : defineStrs)
+			{
+				tag.tag = FPPTAG_DEFINE;
+				tag.data = (void*)defineStr.data();
+				tags.push_back(tag);
+			}
+
+			tag.tag = FPPTAG_END;
+			tag.data = nullptr;
+			tags.push_back(tag);
+
+			auto ret = fppPreProcess((fppTag*)tags.data());
+			auto errorMessage = fppData.m_error.str();
+			if (!errorMessage.empty())
+			{
+				SABA_WARN("GLSL Preprocess Message:\n{}", errorMessage);
+			}
+			if (outMessage != nullptr)
+			{
+				*outMessage = errorMessage;
+			}
+			if (ret != 0 || !errorMessage.empty())
+			{
+				return false;
+			}
+			*outCode = fppData.m_output.str();
+		}
+#endif
 		return true;
 	}
 

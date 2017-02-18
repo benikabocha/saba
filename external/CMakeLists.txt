@@ -33,6 +33,7 @@ else()
     "Google Mock was not found - tests based on that will not build")
 endif()
 
+# glfw
 if (IS_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/glfw)
   set(GLFW_BUILD_EXAMPLES off CACHE BOOL "" FORCE)
   set(GLFW_BUILD_TESTS off CACHE BOOL "" FORCE)
@@ -41,6 +42,10 @@ if (IS_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/glfw)
   add_subdirectory(glfw)
 endif()
 
+# glslang
 if (IS_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/glslang)
   add_subdirectory(glslang)
 endif()
+
+# fcpp
+add_subdirectory(fcpp)
