@@ -7,6 +7,7 @@ option (SABA_BULLET_ROOT "Bullet Root Directory" "")
 option (SABA_ENABLE_TEST "Enable Google test." on)
 option (SABA_ENABLE_GL_TEST "OpenGL test." off)
 option (SABA_USE_GLSLANG "glsl Preprocessor : glslang lib" off)
+option (SABA_INSTALL "Saba install." off)
 
 set (BULLET_ROOT ${SABA_BULLET_ROOT})
 
@@ -53,3 +54,11 @@ add_custom_command(TARGET saba_viewer POST_BUILD
 
 add_executable(mmd2obj mmd2obj.cpp)
 target_link_libraries(mmd2obj Saba)
+
+# Install
+if (SABA_INSTALL)
+    install (DIRECTORY src/Saba DESTINATION include  FILES_MATCHING PATTERN "*.h")
+    install (TARGETS saba_viewer RUNTIME DESTINATION bin)
+    install (DIRECTORY viewer/Saba/Viewer/resource DESTINATION bin)
+    install (TARGETS mmd2obj RUNTIME DESTINATION bin)
+endif()
