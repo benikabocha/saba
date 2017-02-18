@@ -92,12 +92,12 @@ target_include_directories(SabaViewer PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/../external/imgui/src
 )
 target_link_libraries(SabaViewer
-    Saba
-    glfw
-    glslang
-    OSDependent
-    SPIRV
-    OGLCompiler
-    HLSL
+    PUBLIC Saba
+    PUBLIC glfw
+    PRIVATE glslang
+    PRIVATE OSDependent
+    PRIVATE SPIRV
+    PRIVATE OGLCompiler
+    PRIVATE HLSL
     ${OPENGL_LIBRARY}
     )

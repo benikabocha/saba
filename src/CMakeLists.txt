@@ -71,7 +71,7 @@ add_library(
     ${MODEL_MMD_SOURCE}
     ${MODEL_MMD_HEADER}
 )
-target_link_libraries(Saba ${BULLET_LIBRARIES})
+target_link_libraries(Saba PRIVATE ${BULLET_LIBRARIES})
 
 SOURCE_GROUP(Base FILES ${BASE_SOURCE} ${BASE_HEADER})
 SOURCE_GROUP(Model\\OBJ FILES ${MODEL_OBJ_SOURCE} ${MODEL_OBJ_HEADER})
