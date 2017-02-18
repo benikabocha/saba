@@ -1,7 +1,5 @@
-if (TARGET gmock)
-    message(STATUS "Google Mock found - building tests")
-
-    include_directories(${CMAKE_CURRENT_SOURCE_DIR}/../external/googletest/googletest/include)
+if (SABA_ENABLE_TEST)
+    include_directories(${CMAKE_CURRENT_SOURCE_DIR}/external/googletest/include)
 
     file (GLOB SOURCE *.cpp)
     file (GLOB HEADER *.h)
@@ -11,11 +9,20 @@ if (TARGET gmock)
         file (GLOB GL_TEST_HEADER ${CMAKE_CURRENT_SOURCE_DIR}/GL.test/*.h)
     endif()
 
-    add_executable(gtests ${SOURCE} ${HEADER} ${GL_TEST_SOURCE} ${GL_TEST_HEADER})
+    add_executable(gtests
+        ${CMAKE_CURRENT_SOURCE_DIR}/external/googletest/src/gtest-all.cc
+        ${SOURCE}
+        ${HEADER}
+        ${GL_TEST_SOURCE}
+        ${GL_TEST_HEADER}
+    )
+
+    target_include_directories(gtests
+        PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/external/googletest
+    )
     target_link_libraries(gtests
         Saba
         SabaViewer
-        gtest
         glfw
         ${OPENGL_LIBRARY}
     )
@@ -40,6 +47,3 @@ if (TARGET gmock)
         COMMAND $<TARGET_FILE:gtests>
     )
 endif()
-
-
-
