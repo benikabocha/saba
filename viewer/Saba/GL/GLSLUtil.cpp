@@ -15,7 +15,6 @@
 #include <sstream>
 #include <fstream>
 
-#define USE_GLSLANG 0
 #if USE_GLSLANG
 #include <glslang/Public/ShaderLang.h>
 #endif

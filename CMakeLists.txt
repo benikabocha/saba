@@ -4,13 +4,15 @@ set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 project(saba)
 
 option (SABA_BULLET_ROOT "Bullet Root Directory" "")
+option (SABA_ENABLE_GL_TEST "OpenGL test." off)
+option (SABA_USE_GLSLANG "glsl Preprocessor : glslang lib" off)
+
 set (BULLET_ROOT ${SABA_BULLET_ROOT})
 
 find_package(OpenGL REQUIRED)
 find_package(Bullet REQUIRED)
 
 enable_testing()
-option(SABA_ENABLE_GL_TEST "OpenGL test." off)
 
 set(CMAKE_CXX_STANDARD 14)
 

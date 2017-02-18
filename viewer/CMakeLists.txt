@@ -87,19 +87,28 @@ add_library(SabaViewer
     ${GL3W_SOURCE}
     ${IMGUI_SOURCE}
     ${IMGUIZMO_SOURCE}
-    )
+)
 target_include_directories(SabaViewer
     PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/../external/imgui/src
     PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/../external/fcpp
 )
+
 target_link_libraries(SabaViewer
     PUBLIC Saba
     PUBLIC glfw
-    PRIVATE glslang
-    PRIVATE OSDependent
-    PRIVATE SPIRV
-    PRIVATE OGLCompiler
-    PRIVATE HLSL
     PRIVATE fcpp
     ${OPENGL_LIBRARY}
+)
+
+if (SABA_USE_GLSLANG)
+    target_compile_definitions(SabaViewer
+        PRIVATE USE_GLSLANG=1
     )
+    target_link_libraries(SabaViewer
+        PRIVATE glslang
+        PRIVATE OSDependent
+        PRIVATE SPIRV
+        PRIVATE OGLCompiler
+        PRIVATE HLSL
+    )
+endif()

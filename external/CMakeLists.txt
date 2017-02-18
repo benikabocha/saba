@@ -40,11 +40,17 @@ if (IS_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/glfw)
   set(GLFW_BUILD_DOCS off CACHE BOOL "" FORCE)
   set(GLFW_INSTALL off CACHE BOOL "" FORCE)
   add_subdirectory(glfw)
+else()
+  message(STATUS "glfw was not found.")
 endif()
 
 # glslang
-if (IS_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/glslang)
-  add_subdirectory(glslang)
+if (SABA_USE_GLSLANG)
+  if (IS_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/glslang)
+    add_subdirectory(glslang)
+  else()
+    message(STATUS "glslang was not found.")
+  endif()
 endif()
 
 # fcpp
