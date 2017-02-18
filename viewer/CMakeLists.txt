@@ -101,6 +101,7 @@ target_link_libraries(SabaViewer
 )
 
 if (SABA_USE_GLSLANG)
+    include_directories(${PROJECT_SOURCE_DIR}/external/glslang)
     target_compile_definitions(SabaViewer
         PRIVATE USE_GLSLANG=1
     )
