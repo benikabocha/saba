@@ -45,6 +45,9 @@ add_subdirectory(gtests)
 
 add_executable(saba_viewer saba_viewer.cpp)
 target_link_libraries(saba_viewer SabaViewer)
+if (UNIX)
+    target_link_libraries(saba_viewer ${CMAKE_DL_LIBS})
+endif(UNIX)
 
 add_custom_command(TARGET saba_viewer POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E copy_directory
