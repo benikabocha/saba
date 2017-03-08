@@ -44,6 +44,7 @@ cmake -G "Visual Studio 14 2015 Win64" ^
     -D BUILD_CPU_DEMOS=Off ^
     -D BUILD_OPENGL3_DEMOS=Off ^
     -D BUILD_BULLET2_DEMOS=Off ^
+    -D BUILD_UNIT_TESTS=Off ^
     ..
 
 cmake --build . --config Debug --target ALL_BUILD
