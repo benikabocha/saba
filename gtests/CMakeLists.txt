@@ -17,23 +17,19 @@ if (SABA_ENABLE_TEST)
         ${GL_TEST_HEADER}
     )
 
+    set (gtests_LIBRARIES Saba SabaViewer)
+    
+    if (UNIX)
+        find_package(Threads REQUIRED)
+        list (APPEND gtests_LIBRARIES ${CMAKE_DL_LIBS} ${CMAKE_THREAD_LIBS_INIT})
+    endif ()
+
     target_include_directories(gtests
         PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/external/googletest
     )
-    target_link_libraries(gtests
-        Saba
-        SabaViewer
-        glfw
-        ${OPENGL_LIBRARY}
-    )
+    target_link_libraries(gtests ${gtests_LIBRARIES})
     if (SABA_ENABLE_GL_TEST)
-        target_link_libraries(gtests
-            glfw
-            ${OPENGL_LIBRARY}
-        )
-        target_compile_definitions(gtests
-            PRIVATE ENABLE_GLTEST=1
-        )
+        target_compile_definitions (gtests PRIVATE ENABLE_GLTEST=1)
     endif()
 
     set(GLSLANG_TEST_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/../gtests/Data")

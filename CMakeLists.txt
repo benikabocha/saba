@@ -3,16 +3,35 @@ set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 
 project(saba)
 
+set (CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
+
 option (SABA_BULLET_ROOT "Bullet Root Directory" "")
 option (SABA_ENABLE_TEST "Enable Google test." on)
 option (SABA_ENABLE_GL_TEST "OpenGL test." off)
 option (SABA_USE_GLSLANG "glsl Preprocessor : glslang lib" off)
 option (SABA_INSTALL "Saba install." off)
+option (SABA_GLFW_ROOT "GLFW Root Directory" "")
+option (SABA_FORCE_GLFW_BUILD "Force glfw build." off)
 
 set (BULLET_ROOT ${SABA_BULLET_ROOT})
 
-find_package(OpenGL REQUIRED)
-find_package(Bullet REQUIRED)
+find_package (OpenGL REQUIRED)
+find_package (Bullet REQUIRED)
+
+if (NOT SABA_FORCE_GLFW_BUILD)
+    set (GLFW_ROOT ${SABA_GLFW_ROOT})
+    find_package (GLFW)
+endif ()
+
+if (NOT GLFW_FOUND)
+    set (SABA_FORCE_GLFW_BUILD on CACHE BOOL "" FORCE)
+endif ()
+
+if (SABA_FORCE_GLFW_BUILD)
+    include_directories (${PROJECT_SOURCE_DIR}/external/glfw/include)
+else ()
+    include_directories (${GLFW_INCLUDE_DIR})
+endif ()
 
 if (SABA_ENABLE_TEST)
     enable_testing()
@@ -44,10 +63,11 @@ add_subdirectory(viewer)
 add_subdirectory(gtests)
 
 add_executable(saba_viewer saba_viewer.cpp)
-target_link_libraries(saba_viewer SabaViewer)
+set (saba_viewer_LIBRARIES SabaViewer)
 if (UNIX)
-    target_link_libraries(saba_viewer ${CMAKE_DL_LIBS})
-endif(UNIX)
+    list (APPEND saba_viewer_LIBRARIES ${CMAKE_DL_LIBS})
+endif ()
+target_link_libraries(saba_viewer ${saba_viewer_LIBRARIES})
 
 add_custom_command(TARGET saba_viewer POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E copy_directory

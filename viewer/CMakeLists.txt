@@ -93,19 +93,22 @@ target_include_directories(SabaViewer
     PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/../external/fcpp
 )
 
-target_link_libraries(SabaViewer
-    PUBLIC Saba
-    PUBLIC glfw
-    PRIVATE fcpp
-    ${OPENGL_LIBRARY}
-)
+set (SabaViewer_LIBRARIES Saba fcpp ${OPENGL_LIBRARY})
 
+# Link GLFW library
+if (SABA_FORCE_GLFW_BUILD)
+    list (APPEND SabaViewer_LIBRARIES glfw)
+else ()
+    list (APPEND SabaViewer_LIBRARIES ${GLFW_LIBRARIES})
+endif ()
+
+# Use glslang library
 if (SABA_USE_GLSLANG)
     include_directories(${PROJECT_SOURCE_DIR}/external/glslang)
     target_compile_definitions(SabaViewer
         PRIVATE USE_GLSLANG=1
     )
-    target_link_libraries(SabaViewer
+    list (APPEND SabaViewer_LIBRARIES
         PRIVATE glslang
         PRIVATE OSDependent
         PRIVATE SPIRV
@@ -113,3 +116,5 @@ if (SABA_USE_GLSLANG)
         PRIVATE HLSL
     )
 endif()
+
+target_link_libraries(SabaViewer ${SabaViewer_LIBRARIES})
