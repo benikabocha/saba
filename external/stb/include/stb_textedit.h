@@ -1,4 +1,4 @@
-// stb_textedit.h - v1.10  - public domain - Sean Barrett
+// stb_textedit.h - v1.11  - public domain - Sean Barrett
 // Development of this library was sponsored by RAD Game Tools
 //
 // This C header file implements the guts of a multi-line text-editing
@@ -17,9 +17,7 @@
 //
 // LICENSE
 //
-//   This software is dual-licensed to the public domain and under the following
-//   license: you are granted a perpetual, irrevocable license to copy, modify,
-//   publish, and distribute this file as you see fit.
+// See end of file for license information.
 //
 //
 // DEPENDENCIES
@@ -31,6 +29,7 @@
 //
 // VERSION HISTORY
 //
+//   1.11 (2017-03-03) fix HOME on last line, dragging off single-line textfield
 //   1.10 (2016-10-25) supress warnings about casting away const with -Wcast-qual
 //   1.9  (2016-08-27) customizable move-by-word
 //   1.8  (2016-04-02) better keyboard handling when mouse button is down
@@ -50,12 +49,13 @@
 //
 //   Ulf Winklemann: move-by-word in 1.1
 //   Fabian Giesen: secondary key inputs in 1.5
-//   Martins Mozeiko: STB_TEXTEDIT_memmove
+//   Martins Mozeiko: STB_TEXTEDIT_memmove in 1.6
 //
 //   Bugfixes:
 //      Scott Graham
 //      Daniel Keller
 //      Omar Cornut
+//      Dan Thompson
 //
 // USAGE
 //
@@ -445,6 +445,15 @@ static int stb_text_locate_coord(STB_TEXTEDIT_STRING *str, float x, float y)
 // API click: on mouse down, move the cursor to the clicked location, and reset the selection
 static void stb_textedit_click(STB_TEXTEDIT_STRING *str, STB_TexteditState *state, float x, float y)
 {
+   // In single-line mode, just always make y = 0. This lets the drag keep working if the mouse
+   // goes off the top or bottom of the text
+   if( state->single_line )
+   {
+      StbTexteditRow r;
+      STB_TEXTEDIT_LAYOUTROW(&r, str, 0);
+      y = r.ymin;
+   }
+
    state->cursor = stb_text_locate_coord(str, x, y);
    state->select_start = state->cursor;
    state->select_end = state->cursor;
@@ -454,9 +463,21 @@ static void stb_textedit_click(STB_TEXTEDIT_STRING *str, STB_TexteditState *stat
 // API drag: on mouse drag, move the cursor and selection endpoint to the clicked location
 static void stb_textedit_drag(STB_TEXTEDIT_STRING *str, STB_TexteditState *state, float x, float y)
 {
-   int p = stb_text_locate_coord(str, x, y);
+   int p = 0;
+
+   // In single-line mode, just always make y = 0. This lets the drag keep working if the mouse
+   // goes off the top or bottom of the text
+   if( state->single_line )
+   {
+      StbTexteditRow r;
+      STB_TEXTEDIT_LAYOUTROW(&r, str, 0);
+      y = r.ymin;
+   }
+
    if (state->select_start == state->select_end)
       state->select_start = state->cursor;
+
+   p = stb_text_locate_coord(str, x, y);
    state->cursor = state->select_end = p;
 }
 
@@ -987,58 +1008,58 @@ retry:
 #ifdef STB_TEXTEDIT_K_LINESTART2
       case STB_TEXTEDIT_K_LINESTART2:
 #endif
-      case STB_TEXTEDIT_K_LINESTART: {
-         StbFindState find;
+      case STB_TEXTEDIT_K_LINESTART:
          stb_textedit_clamp(str, state);
          stb_textedit_move_to_first(state);
-         stb_textedit_find_charpos(&find, str, state->cursor, state->single_line);
-         state->cursor = find.first_char;
+         if (state->single_line)
+            state->cursor = 0;
+         else while (state->cursor > 0 && STB_TEXTEDIT_GETCHAR(str, state->cursor-1) != STB_TEXTEDIT_NEWLINE)
+            --state->cursor;
          state->has_preferred_x = 0;
          break;
-      }
 
 #ifdef STB_TEXTEDIT_K_LINEEND2
       case STB_TEXTEDIT_K_LINEEND2:
 #endif
       case STB_TEXTEDIT_K_LINEEND: {
-         StbFindState find;
+         int n = STB_TEXTEDIT_STRINGLEN(str);
          stb_textedit_clamp(str, state);
          stb_textedit_move_to_first(state);
-         stb_textedit_find_charpos(&find, str, state->cursor, state->single_line);
-
+         if (state->single_line)
+             state->cursor = n;
+         else while (state->cursor < n && STB_TEXTEDIT_GETCHAR(str, state->cursor) != STB_TEXTEDIT_NEWLINE)
+             ++state->cursor;
          state->has_preferred_x = 0;
-         state->cursor = find.first_char + find.length;
-         if (find.length > 0 && STB_TEXTEDIT_GETCHAR(str, state->cursor-1) == STB_TEXTEDIT_NEWLINE)
-            --state->cursor;
          break;
       }
 
 #ifdef STB_TEXTEDIT_K_LINESTART2
       case STB_TEXTEDIT_K_LINESTART2 | STB_TEXTEDIT_K_SHIFT:
 #endif
-      case STB_TEXTEDIT_K_LINESTART | STB_TEXTEDIT_K_SHIFT: {
-         StbFindState find;
+      case STB_TEXTEDIT_K_LINESTART | STB_TEXTEDIT_K_SHIFT:
          stb_textedit_clamp(str, state);
          stb_textedit_prep_selection_at_cursor(state);
-         stb_textedit_find_charpos(&find, str, state->cursor, state->single_line);
-         state->cursor = state->select_end = find.first_char;
+         if (state->single_line)
+            state->cursor = 0;
+         else while (state->cursor > 0 && STB_TEXTEDIT_GETCHAR(str, state->cursor-1) != STB_TEXTEDIT_NEWLINE)
+            --state->cursor;
+         state->select_end = state->cursor;
          state->has_preferred_x = 0;
          break;
-      }
 
 #ifdef STB_TEXTEDIT_K_LINEEND2
       case STB_TEXTEDIT_K_LINEEND2 | STB_TEXTEDIT_K_SHIFT:
 #endif
       case STB_TEXTEDIT_K_LINEEND | STB_TEXTEDIT_K_SHIFT: {
-         StbFindState find;
+         int n = STB_TEXTEDIT_STRINGLEN(str);
          stb_textedit_clamp(str, state);
          stb_textedit_prep_selection_at_cursor(state);
-         stb_textedit_find_charpos(&find, str, state->cursor, state->single_line);
-         state->has_preferred_x = 0;
-         state->cursor = find.first_char + find.length;
-         if (find.length > 0 && STB_TEXTEDIT_GETCHAR(str, state->cursor-1) == STB_TEXTEDIT_NEWLINE)
-            --state->cursor;
+         if (state->single_line)
+             state->cursor = n;
+         else while (state->cursor < n && STB_TEXTEDIT_GETCHAR(str, state->cursor) != STB_TEXTEDIT_NEWLINE)
+            ++state->cursor;
          state->select_end = state->cursor;
+         state->has_preferred_x = 0;
          break;
       }
 
@@ -1328,3 +1349,45 @@ static int stb_textedit_paste(STB_TEXTEDIT_STRING *str, STB_TexteditState *state
 #endif
 
 #endif//STB_TEXTEDIT_IMPLEMENTATION
+
+/*
+------------------------------------------------------------------------------
+This software is available under 2 licenses -- choose whichever you prefer.
+------------------------------------------------------------------------------
+ALTERNATIVE A - MIT License
+Copyright (c) 2017 Sean Barrett
+Permission is hereby granted, free of charge, to any person obtaining a copy of 
+this software and associated documentation files (the "Software"), to deal in 
+the Software without restriction, including without limitation the rights to 
+use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies 
+of the Software, and to permit persons to whom the Software is furnished to do 
+so, subject to the following conditions:
+The above copyright notice and this permission notice shall be included in all 
+copies or substantial portions of the Software.
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR 
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, 
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE 
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER 
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, 
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE 
+SOFTWARE.
+------------------------------------------------------------------------------
+ALTERNATIVE B - Public Domain (www.unlicense.org)
+This is free and unencumbered software released into the public domain.
+Anyone is free to copy, modify, publish, use, compile, sell, or distribute this 
+software, either in source code form or as a compiled binary, for any purpose, 
+commercial or non-commercial, and by any means.
+In jurisdictions that recognize copyright laws, the author or authors of this 
+software dedicate any and all copyright interest in the software to the public 
+domain. We make this dedication for the benefit of the public at large and to 
+the detriment of our heirs and successors. We intend this dedication to be an 
+overt act of relinquishment in perpetuity of all present and future rights to 
+this software under copyright law.
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR 
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, 
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE 
+AUTHORS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN 
+ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION 
+WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+------------------------------------------------------------------------------
+*/
