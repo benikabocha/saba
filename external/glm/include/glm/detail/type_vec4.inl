@@ -216,7 +216,7 @@ namespace detail
 
 	template <typename T, precision P>
 	template <typename A, typename B, typename C, precision Q>
-	GLM_FUNC_QUALIFIER GLM_CONSTEXPR tvec4<T, P>::tvec4(tvec2<A, Q> const & a, B b, C c) :
+	GLM_FUNC_QUALIFIER GLM_CONSTEXPR_CTOR tvec4<T, P>::tvec4(tvec2<A, Q> const & a, B b, C c) :
 		x(static_cast<T>(a.x)),
 		y(static_cast<T>(a.y)),
 		z(static_cast<T>(b)),
@@ -225,7 +225,7 @@ namespace detail
 
 	template <typename T, precision P>
 	template <typename A, typename B, typename C, precision Q>
-	GLM_FUNC_QUALIFIER GLM_CONSTEXPR tvec4<T, P>::tvec4(tvec2<A, Q> const & a, tvec1<B, Q> const & b, tvec1<C, Q> const & c) :
+	GLM_FUNC_QUALIFIER GLM_CONSTEXPR_CTOR tvec4<T, P>::tvec4(tvec2<A, Q> const & a, tvec1<B, Q> const & b, tvec1<C, Q> const & c) :
 		x(static_cast<T>(a.x)),
 		y(static_cast<T>(a.y)),
 		z(static_cast<T>(b.x)),
@@ -234,7 +234,7 @@ namespace detail
 
 	template <typename T, precision P>
 	template <typename A, typename B, typename C, precision Q>
-	GLM_FUNC_QUALIFIER GLM_CONSTEXPR tvec4<T, P>::tvec4(A s1, tvec2<B, Q> const & v, C s2) :
+	GLM_FUNC_QUALIFIER GLM_CONSTEXPR_CTOR tvec4<T, P>::tvec4(A s1, tvec2<B, Q> const & v, C s2) :
 		x(static_cast<T>(s1)),
 		y(static_cast<T>(v.x)),
 		z(static_cast<T>(v.y)),
@@ -243,7 +243,7 @@ namespace detail
 
 	template <typename T, precision P>
 	template <typename A, typename B, typename C, precision Q>
-	GLM_FUNC_QUALIFIER GLM_CONSTEXPR tvec4<T, P>::tvec4(tvec1<A, Q> const & a, tvec2<B, Q> const & b, tvec1<C, Q> const & c) :
+	GLM_FUNC_QUALIFIER GLM_CONSTEXPR_CTOR tvec4<T, P>::tvec4(tvec1<A, Q> const & a, tvec2<B, Q> const & b, tvec1<C, Q> const & c) :
 		x(static_cast<T>(a.x)),
 		y(static_cast<T>(b.x)),
 		z(static_cast<T>(b.y)),
@@ -252,7 +252,7 @@ namespace detail
 
 	template <typename T, precision P>
 	template <typename A, typename B, typename C, precision Q>
-	GLM_FUNC_QUALIFIER GLM_CONSTEXPR tvec4<T, P>::tvec4(A s1, B s2, tvec2<C, Q> const & v) :
+	GLM_FUNC_QUALIFIER GLM_CONSTEXPR_CTOR tvec4<T, P>::tvec4(A s1, B s2, tvec2<C, Q> const & v) :
 		x(static_cast<T>(s1)),
 		y(static_cast<T>(s2)),
 		z(static_cast<T>(v.x)),
@@ -261,7 +261,7 @@ namespace detail
 
 	template <typename T, precision P>
 	template <typename A, typename B, typename C, precision Q>
-	GLM_FUNC_QUALIFIER GLM_CONSTEXPR tvec4<T, P>::tvec4(tvec1<A, Q> const & a, tvec1<B, Q> const & b, tvec2<C, Q> const & c) :
+	GLM_FUNC_QUALIFIER GLM_CONSTEXPR_CTOR tvec4<T, P>::tvec4(tvec1<A, Q> const & a, tvec1<B, Q> const & b, tvec2<C, Q> const & c) :
 		x(static_cast<T>(a.x)),
 		y(static_cast<T>(b.x)),
 		z(static_cast<T>(c.x)),
@@ -270,7 +270,7 @@ namespace detail
 
 	template <typename T, precision P>
 	template <typename A, typename B, precision Q>
-	GLM_FUNC_QUALIFIER GLM_CONSTEXPR tvec4<T, P>::tvec4(tvec3<A, Q> const & a, B b) :
+	GLM_FUNC_QUALIFIER GLM_CONSTEXPR_CTOR tvec4<T, P>::tvec4(tvec3<A, Q> const & a, B b) :
 		x(static_cast<T>(a.x)),
 		y(static_cast<T>(a.y)),
 		z(static_cast<T>(a.z)),
@@ -279,7 +279,7 @@ namespace detail
 
 	template <typename T, precision P>
 	template <typename A, typename B, precision Q>
-	GLM_FUNC_QUALIFIER GLM_CONSTEXPR tvec4<T, P>::tvec4(tvec3<A, Q> const & a, tvec1<B, Q> const & b) :
+	GLM_FUNC_QUALIFIER GLM_CONSTEXPR_CTOR tvec4<T, P>::tvec4(tvec3<A, Q> const & a, tvec1<B, Q> const & b) :
 		x(static_cast<T>(a.x)),
 		y(static_cast<T>(a.y)),
 		z(static_cast<T>(a.z)),
@@ -288,7 +288,7 @@ namespace detail
 
 	template <typename T, precision P>
 	template <typename A, typename B, precision Q>
-	GLM_FUNC_QUALIFIER GLM_CONSTEXPR tvec4<T, P>::tvec4(A a, tvec3<B, Q> const & b) :
+	GLM_FUNC_QUALIFIER GLM_CONSTEXPR_CTOR tvec4<T, P>::tvec4(A a, tvec3<B, Q> const & b) :
 		x(static_cast<T>(a)),
 		y(static_cast<T>(b.x)),
 		z(static_cast<T>(b.y)),
@@ -297,7 +297,7 @@ namespace detail
 
 	template <typename T, precision P>
 	template <typename A, typename B, precision Q>
-	GLM_FUNC_QUALIFIER GLM_CONSTEXPR tvec4<T, P>::tvec4(tvec1<A, Q> const & a, tvec3<B, Q> const & b) :
+	GLM_FUNC_QUALIFIER GLM_CONSTEXPR_CTOR tvec4<T, P>::tvec4(tvec1<A, Q> const & a, tvec3<B, Q> const & b) :
 		x(static_cast<T>(a.x)),
 		y(static_cast<T>(b.x)),
 		z(static_cast<T>(b.y)),
@@ -306,7 +306,7 @@ namespace detail
 
 	template <typename T, precision P>
 	template <typename A, typename B, precision Q>
-	GLM_FUNC_QUALIFIER GLM_CONSTEXPR tvec4<T, P>::tvec4(tvec2<A, Q> const & a, tvec2<B, Q> const & b) :
+	GLM_FUNC_QUALIFIER GLM_CONSTEXPR_CTOR tvec4<T, P>::tvec4(tvec2<A, Q> const & a, tvec2<B, Q> const & b) :
 		x(static_cast<T>(a.x)),
 		y(static_cast<T>(a.y)),
 		z(static_cast<T>(b.x)),
@@ -315,7 +315,7 @@ namespace detail
 
 	template <typename T, precision P>
 	template <typename U, precision Q>
-	GLM_FUNC_QUALIFIER GLM_CONSTEXPR tvec4<T, P>::tvec4(tvec4<U, Q> const & v) :
+	GLM_FUNC_QUALIFIER GLM_CONSTEXPR_CTOR tvec4<T, P>::tvec4(tvec4<U, Q> const & v) :
 		x(static_cast<T>(v.x)),
 		y(static_cast<T>(v.y)),
 		z(static_cast<T>(v.z)),

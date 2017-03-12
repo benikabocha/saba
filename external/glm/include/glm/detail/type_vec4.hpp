@@ -26,7 +26,10 @@ namespace glm
 
 		// -- Data --
 
-#		if GLM_HAS_ALIGNED_TYPE
+#		if GLM_HAS_ONLY_XYZW
+			T x, y, z, w;
+
+#		elif GLM_HAS_ALIGNED_TYPE
 #			if GLM_COMPILER & GLM_COMPILER_GCC
 #				pragma GCC diagnostic push
 #				pragma GCC diagnostic ignored "-Wpedantic"
@@ -36,7 +39,7 @@ namespace glm
 #				pragma clang diagnostic ignored "-Wgnu-anonymous-struct"
 #				pragma clang diagnostic ignored "-Wnested-anon-types"
 #			endif
-		
+
 			union
 			{
 				struct { T x, y, z, w;};
@@ -109,41 +112,41 @@ namespace glm
 
 		/// Explicit conversions (From section 5.4.1 Conversion and scalar constructors of GLSL 1.30.08 specification)
 		template <typename A, typename B, typename C, precision Q>
-		GLM_FUNC_DECL GLM_CONSTEXPR tvec4(tvec2<A, Q> const & a, B b, C c);
+		GLM_FUNC_DECL GLM_CONSTEXPR_CTOR tvec4(tvec2<A, Q> const & a, B b, C c);
 		/// Explicit conversions (From section 5.4.1 Conversion and scalar constructors of GLSL 1.30.08 specification)
 		template <typename A, typename B, typename C, precision Q>
-		GLM_FUNC_DECL GLM_CONSTEXPR tvec4(tvec2<A, Q> const & a, tvec1<B, Q> const & b, tvec1<C, Q> const & c);
+		GLM_FUNC_DECL GLM_CONSTEXPR_CTOR tvec4(tvec2<A, Q> const & a, tvec1<B, Q> const & b, tvec1<C, Q> const & c);
 		/// Explicit conversions (From section 5.4.1 Conversion and scalar constructors of GLSL 1.30.08 specification)
 		template <typename A, typename B, typename C, precision Q>
-		GLM_FUNC_DECL GLM_CONSTEXPR tvec4(A a, tvec2<B, Q> const & b, C c);
+		GLM_FUNC_DECL GLM_CONSTEXPR_CTOR tvec4(A a, tvec2<B, Q> const & b, C c);
 		/// Explicit conversions (From section 5.4.1 Conversion and scalar constructors of GLSL 1.30.08 specification)
 		template <typename A, typename B, typename C, precision Q>
-		GLM_FUNC_DECL GLM_CONSTEXPR tvec4(tvec1<A, Q> const & a, tvec2<B, Q> const & b, tvec1<C, Q> const & c);
+		GLM_FUNC_DECL GLM_CONSTEXPR_CTOR tvec4(tvec1<A, Q> const & a, tvec2<B, Q> const & b, tvec1<C, Q> const & c);
 		/// Explicit conversions (From section 5.4.1 Conversion and scalar constructors of GLSL 1.30.08 specification)
 		template <typename A, typename B, typename C, precision Q>
-		GLM_FUNC_DECL GLM_CONSTEXPR tvec4(A a, B b, tvec2<C, Q> const & c);
+		GLM_FUNC_DECL GLM_CONSTEXPR_CTOR tvec4(A a, B b, tvec2<C, Q> const & c);
 		/// Explicit conversions (From section 5.4.1 Conversion and scalar constructors of GLSL 1.30.08 specification)
 		template <typename A, typename B, typename C, precision Q>
-		GLM_FUNC_DECL GLM_CONSTEXPR tvec4(tvec1<A, Q> const & a, tvec1<B, Q> const & b, tvec2<C, Q> const & c);
+		GLM_FUNC_DECL GLM_CONSTEXPR_CTOR tvec4(tvec1<A, Q> const & a, tvec1<B, Q> const & b, tvec2<C, Q> const & c);
 		/// Explicit conversions (From section 5.4.1 Conversion and scalar constructors of GLSL 1.30.08 specification)
 		template <typename A, typename B, precision Q>
-		GLM_FUNC_DECL GLM_CONSTEXPR tvec4(tvec3<A, Q> const & a, B b);
+		GLM_FUNC_DECL GLM_CONSTEXPR_CTOR tvec4(tvec3<A, Q> const & a, B b);
 		/// Explicit conversions (From section 5.4.1 Conversion and scalar constructors of GLSL 1.30.08 specification)
 		template <typename A, typename B, precision Q>
-		GLM_FUNC_DECL GLM_CONSTEXPR tvec4(tvec3<A, Q> const & a, tvec1<B, Q> const & b);
+		GLM_FUNC_DECL GLM_CONSTEXPR_CTOR tvec4(tvec3<A, Q> const & a, tvec1<B, Q> const & b);
 		/// Explicit conversions (From section 5.4.1 Conversion and scalar constructors of GLSL 1.30.08 specification)
 		template <typename A, typename B, precision Q>
-		GLM_FUNC_DECL GLM_CONSTEXPR tvec4(A a, tvec3<B, Q> const & b);
+		GLM_FUNC_DECL GLM_CONSTEXPR_CTOR tvec4(A a, tvec3<B, Q> const & b);
 		/// Explicit conversions (From section 5.4.1 Conversion and scalar constructors of GLSL 1.30.08 specification)
 		template <typename A, typename B, precision Q>
-		GLM_FUNC_DECL GLM_CONSTEXPR tvec4(tvec1<A, Q> const & a, tvec3<B, Q> const & b);
+		GLM_FUNC_DECL GLM_CONSTEXPR_CTOR tvec4(tvec1<A, Q> const & a, tvec3<B, Q> const & b);
 		/// Explicit conversions (From section 5.4.1 Conversion and scalar constructors of GLSL 1.30.08 specification)
 		template <typename A, typename B, precision Q>
-		GLM_FUNC_DECL GLM_CONSTEXPR tvec4(tvec2<A, Q> const & a, tvec2<B, Q> const & b);
+		GLM_FUNC_DECL GLM_CONSTEXPR_CTOR tvec4(tvec2<A, Q> const & a, tvec2<B, Q> const & b);
 
 		/// Explicit conversions (From section 5.4.1 Conversion and scalar constructors of GLSL 1.30.08 specification)
 		template <typename U, precision Q>
-		GLM_FUNC_DECL GLM_CONSTEXPR GLM_EXPLICIT tvec4(tvec4<U, Q> const& v);
+		GLM_FUNC_DECL GLM_CONSTEXPR_CTOR GLM_EXPLICIT tvec4(tvec4<U, Q> const& v);
 
 		// -- Swizzle constructors --
 #		if GLM_HAS_UNRESTRICTED_UNIONS && (GLM_SWIZZLE == GLM_SWIZZLE_ENABLED)
