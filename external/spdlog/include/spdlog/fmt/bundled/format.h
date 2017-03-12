@@ -4571,7 +4571,7 @@ struct UdlArg
     template <typename T>
     NamedArgWithType<Char, T> operator=(T &&value) const
     {
-        return{ str, std::forward<T>(value) };
+        return { str, std::forward<T>(value) };
     }
 };
 
@@ -4593,12 +4593,12 @@ std::string message = "The answer is {}"_format(42);
 inline internal::UdlFormat<char>
 operator"" _format(const char *s, std::size_t)
 {
-    return{ s };
+    return { s };
 }
 inline internal::UdlFormat<wchar_t>
 operator"" _format(const wchar_t *s, std::size_t)
 {
-    return{ s };
+    return { s };
 }
 
 /**
@@ -4614,12 +4614,12 @@ print("Elapsed time: {s:.2f} seconds", "s"_a=1.23);
 inline internal::UdlArg<char>
 operator"" _a(const char *s, std::size_t)
 {
-    return{ s };
+    return { s };
 }
 inline internal::UdlArg<wchar_t>
 operator"" _a(const wchar_t *s, std::size_t)
 {
-    return{ s };
+    return { s };
 }
 
 } // inline namespace literals
