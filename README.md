@@ -31,6 +31,7 @@ external ディレクトリに必要なライブラリはまとまっていま�
 
 * OpenGL
 * [Bullet Physics](http://bulletphysics.org/wordpress/)
+* [GLFW](http://www.glfw.org/)
 
 ### Bullet Physics の準備 (Windows)
 
@@ -67,8 +68,6 @@ Mac であれば `brew` 、Linux であれば `apt-get` 、 `yum` 等でイン�
 ```
 git clone https://github.com/benikabocha/saba.git
 cd saba
-git submodule init
-git submodule update
 ```
 
 ### CMake の実行
@@ -80,6 +79,7 @@ mkdir build
 cd build
 cmake -G "Visual Studio 14 2015 Win64" ^
     -D SABA_BULLET_ROOT=<bullet のインストールディレクトリ> ^
+    -D SABA_GLFW_ROOT=<GLFW のインストールディレクトリ> ^
     ..
 ```
 
@@ -102,6 +102,20 @@ make -j4
 ```
 cmake -DCMAKE_BUILD_TYPE=RELEASE ..
 make -j4
+```
+
+#### GLFW をビルドする場合 (Option)
+
+GLFW をビルドする場合はサブモジュールの更新を行ってください。
+
+```
+git clone https://github.com/benikabocha/saba.git
+cd saba
+git submodule init
+git submodule update
+mkdir build
+cd build
+cmake -D SABA_FORCE_GLFW_BUILD ..
 ```
 
 ## 初期化設定
