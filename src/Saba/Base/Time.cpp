@@ -10,7 +10,10 @@
 #if _WIN32
 #include <Windows.h>
 #else // _WIN32
-#include <time.h>
+#include <ctime>
+#if (_POSIX_TIMERS <= 0) || !defined(_POSIX_MONOTONIC_CLOCK)
+#include <sys/time.h>
+#endif
 #endif // _WIN32
 
 namespace saba
@@ -47,10 +50,17 @@ namespace saba
 
 			double GetTime() const
 			{
+# if (_POSIX_TIMERS > 0) && defined(_POSIX_MONOTONIC_CLOCK)
 				timespec ts;
 				clock_gettime(CLOCK_MONOTONIC, &ts);
 				uint64_t time = (uint64_t)ts.tv_sec * 1000000000 + (uint64_t)ts.tv_nsec;
 				return (double)time / 1000000000.0;
+#else
+				timeval tv;
+				gettimeofday(&tv, 0);
+				uint64_t time = (uint64_t)tv.tv_sec * 1000000 + (uint64_t)tv.tv_usec;
+				return (double)time / 1000000.0;
+#endif
 			}
 		};
 #endif // _WIN32
