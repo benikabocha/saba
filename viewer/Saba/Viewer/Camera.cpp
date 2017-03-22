@@ -113,6 +113,13 @@ namespace saba
 		m_eye += dx * xAxis + dy * yAxis;
 	}
 
+	void Camera::LookAt(const glm::vec3 & center, const glm::vec3 & eye, const glm::vec3 & up)
+	{
+		m_target = center;
+		m_eye = eye;
+		m_up = up;
+	}
+
 	void Camera::UpdateMatrix()
 	{
 		m_viewMatrix = glm::lookAtRH(m_eye, m_target, m_up);

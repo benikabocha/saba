@@ -36,12 +36,14 @@ set (
     Saba/Model/MMD/MMDMorph.cpp
     Saba/Model/MMD/MMDNode.cpp
     Saba/Model/MMD/MMDPhysics.cpp
+    Saba/Model/MMD/MMDCamera.cpp
     Saba/Model/MMD/PMDFile.cpp
     Saba/Model/MMD/PMDModel.cpp
     Saba/Model/MMD/PMXFile.cpp
     Saba/Model/MMD/PMXModel.cpp
     Saba/Model/MMD/SjisToUnicode.cpp
     Saba/Model/MMD/VMDAnimation.cpp
+    Saba/Model/MMD/VMDCameraAnimation.cpp
     Saba/Model/MMD/VMDFile.cpp
 )
 set (
@@ -53,12 +55,14 @@ set (
     Saba/Model/MMD/MMDMorph.h
     Saba/Model/MMD/MMDNode.h
     Saba/Model/MMD/MMDPhysics.h
+    Saba/Model/MMD/MMDCamera.h
     Saba/Model/MMD/PMDFile.h
     Saba/Model/MMD/PMDModel.h
     Saba/Model/MMD/PMXFile.h
     Saba/Model/MMD/PMXModel.h
     Saba/Model/MMD/SjisToUnicode.h
     Saba/Model/MMD/VMDAnimation.h
+    Saba/Model/MMD/VMDCameraAnimation.h
     Saba/Model/MMD/VMDFile.h
 )
 

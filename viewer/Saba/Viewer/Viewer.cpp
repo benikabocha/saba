@@ -4,6 +4,7 @@
 //
 
 #include "Viewer.h"
+#include "VMDCameraOverrider.h"
 
 #include <Saba/Base/Singleton.h>
 #include <Saba/Base/Log.h>
@@ -92,6 +93,7 @@ namespace saba
 		, m_enableManip(false)
 		, m_currentManipOp(ImGuizmo::TRANSLATE)
 		, m_currentManipMode(ImGuizmo::WORLD)
+		, m_cameraOverride(true)
 	{
 		if (!glfwInit())
 		{
@@ -196,7 +198,7 @@ namespace saba
 		m_bgVAO.Create();
 
 		m_mouse.Initialize(m_window);
-		m_context.GetCamera()->Initialize(glm::vec3(0), 10.0f);
+		m_context.m_camera.Initialize(glm::vec3(0), 10.0f);
 		if (!m_grid.Initialize(m_context, 0.5f, 10, 5))
 		{
 			SABA_ERROR("grid Init Fail.");
@@ -248,29 +250,28 @@ namespace saba
 			{
 				if (m_cameraMode == CameraMode::Orbit)
 				{
-					m_context.GetCamera()->Orbit((float)m_mouse.m_dx, (float)m_mouse.m_dy);
+					m_context.m_camera.Orbit((float)m_mouse.m_dx, (float)m_mouse.m_dy);
 				}
 				if (m_cameraMode == CameraMode::Dolly)
 				{
-					m_context.GetCamera()->Dolly((float)m_mouse.m_dx + (float)m_mouse.m_dy);
+					m_context.m_camera.Dolly((float)m_mouse.m_dx + (float)m_mouse.m_dy);
 				}
 				if (m_cameraMode == CameraMode::Pan)
 				{
-					m_context.GetCamera()->Pan((float)m_mouse.m_dx, (float)m_mouse.m_dy);
+					m_context.m_camera.Pan((float)m_mouse.m_dx, (float)m_mouse.m_dy);
 				}
 			}
 
 			if (m_mouse.m_scrollY != 0)
 			{
-				m_context.GetCamera()->Dolly((float)m_mouse.m_scrollY * 0.1f);
+				m_context.m_camera.Dolly((float)m_mouse.m_scrollY * 0.1f);
 			}
 
 			ImGuizmo::Enable(m_cameraMode == CameraMode::None);
 
 			int w, h;
 			glfwGetFramebufferSize(m_window, &w, &h);
-			m_context.GetCamera()->SetSize((float)w, (float)h);
-			m_context.GetCamera()->UpdateMatrix();
+			m_context.m_camera.SetSize((float)w, (float)h);
 			m_context.SetFrameBufferSize(w, h);
 			int windowW, windowH;
 			glfwGetWindowSize(m_window, &windowW, &windowH);
@@ -295,6 +296,23 @@ namespace saba
 						ImGui::MenuItem("Manipulater", nullptr, &m_enableManip);
 						ImGui::EndMenu();
 					}
+					if (ImGui::BeginMenu("Viewer"))
+					{
+						bool cameraOverride = m_cameraOverride;
+						bool cameraOverrideEnable = true;
+						if (m_cameraOverrider == nullptr)
+						{
+							cameraOverride = false;
+							cameraOverrideEnable = false;
+						}
+						ImGui::MenuItem("CameraOverride", nullptr, &cameraOverride, cameraOverrideEnable);
+						if (m_cameraOverrider != nullptr)
+						{
+							m_cameraOverride = cameraOverride;
+						}
+						ImGui::MenuItem("ClipElapsed", nullptr, &m_clipElapsed);
+						ImGui::EndMenu();
+					}
 					ImGui::EndMainMenuBar();
 				}
 			}
@@ -302,7 +320,10 @@ namespace saba
 			double time = GetTime();
 			double elapsed = time - m_prevTime;
 			m_prevTime = time;
+			m_context.SetClipElapsed(m_clipElapsed);
 			m_context.SetElapsedTime(elapsed);
+			m_context.UpdateAnimationTime();
+			m_context.EnableCameraOverride(m_cameraOverride);
 			Draw();
 
 			if (m_context.IsUIEnabled())
@@ -402,6 +423,14 @@ namespace saba
 		glBindVertexArray(0);
 
 		glEnable(GL_DEPTH_TEST);
+
+		if (m_cameraOverride && m_cameraOverrider)
+		{
+			Camera overrideCam = *m_context.GetCamera();
+			m_cameraOverrider->Override(&m_context, &overrideCam);
+			m_context.SetCamera(overrideCam);
+		}
+		m_context.m_camera.UpdateMatrix();
 
 		auto world = glm::mat4(1.0);
 		auto view = m_context.GetCamera()->GetViewMatrix();
@@ -753,6 +782,7 @@ namespace saba
 			{
 				m_selectedModelDrawer = nullptr;
 				m_modelDrawers.clear();
+				m_cameraOverrider.reset();
 
 				AdjustSceneScale();
 			}
@@ -1114,6 +1144,16 @@ namespace saba
 			return false;
 		}
 
+		if (!vmd.m_cameras.empty())
+		{
+			auto vmdCamOverrider = std::make_unique<VMDCameraOverrider>();
+			if (!vmdCamOverrider->Create(vmd))
+			{
+				return false;
+			}
+			m_cameraOverrider = std::move(vmdCamOverrider);
+		}
+
 		return mmdModel->LoadAnimation(vmd);
 	}
 
@@ -1139,7 +1179,7 @@ namespace saba
 		}
 		auto center = (bboxMax + bboxMin) * 0.5f;
 		auto radius = glm::length(bboxMax - center);
-		m_context.GetCamera()->Initialize(center, radius);
+		m_context.m_camera.Initialize(center, radius);
 
 		// グリッドのスケールを調節する
 		float gridSize = 1.0f;

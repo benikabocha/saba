@@ -13,6 +13,7 @@
 #include "ViewerCommand.h"
 #include "Grid.h"
 #include "ModelDrawer.h"
+#include "CameraOverrider.h"
 
 #include <Saba/GL/GLObject.h>
 #include <Saba/GL/Model/MMD/GLMMDModel.h>
@@ -135,6 +136,8 @@ namespace saba
 		std::vector<ModelDrawerPtr>	m_modelDrawers;
 		ModelDrawerPtr				m_selectedModelDrawer;
 
+		std::unique_ptr<CameraOverrider>	m_cameraOverrider;
+
 		bool		m_glfwInitialized;
 		GLFWwindow*	m_window;
 
@@ -173,6 +176,12 @@ namespace saba
 		bool				m_enableManip;
 		ImGuizmo::OPERATION	m_currentManipOp;
 		ImGuizmo::MODE		m_currentManipMode;
+
+		// Camera Override
+		bool	m_cameraOverride;
+
+		// Clip Elapsed
+		bool	m_clipElapsed;
 	};
 }
 

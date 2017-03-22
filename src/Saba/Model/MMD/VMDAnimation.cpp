@@ -14,6 +14,27 @@
 
 namespace saba
 {
+	namespace
+	{
+		void SetVMDBezier(VMDBezier& bezier, const unsigned char* cp)
+		{
+			int x0 = cp[0];
+			int y0 = cp[4];
+			int x1 = cp[8];
+			int y1 = cp[12];
+
+			bezier.m_cp[0] = glm::vec2(0, 0);
+			bezier.m_cp[1] = glm::vec2((float)x0 / 127.0f, (float)y0 / 127.0f);
+			bezier.m_cp[2] = glm::vec2((float)x1 / 127.0f, (float)y1 / 127.0f);
+			bezier.m_cp[3] = glm::vec2(1, 1);
+		}
+
+		glm::mat3 InvZ(const glm::mat3& m)
+		{
+			const glm::mat3 invZ = glm::scale(glm::mat4(), glm::vec3(1, 1, -1));
+			return invZ * m * invZ;
+		}
+	} // namespace
 
 	float VMDBezier::EvalX(float t) const
 	{
@@ -49,36 +70,33 @@ namespace saba
 		return t3 * y[3] + 3 * t2 * it * y[2] + 3 * t * it2 * y[1] + it3 * y[0];
 	}
 
-	namespace
-	{
-		float FindBezierX(const VMDBezier& b, float time)
-		{
-			const float e = 0.00001f;
-			float start = 0.0f;
-			float stop = 1.0f;
-			float t = 0.5f;
-			float x = b.EvalX(t);
-			while (std::abs(time - x) > e)
-			{
-				if (time < x)
-				{
-					stop = t;
-				}
-				else
-				{
-					start = t;
-				}
-				t = (stop + start) * 0.5f;
-				x = b.EvalX(t);
-			}
-
-			return t;
-		}
-	}
-
 	glm::vec2 VMDBezier::Eval(float t) const
 	{
 		return glm::vec2(EvalX(t), EvalY(t));
+	}
+
+	float VMDBezier::FindBezierX(float time) const
+	{
+		const float e = 0.00001f;
+		float start = 0.0f;
+		float stop = 1.0f;
+		float t = 0.5f;
+		float x = EvalX(t);
+		while (std::abs(time - x) > e)
+		{
+			if (time < x)
+			{
+				stop = t;
+			}
+			else
+			{
+				start = t;
+			}
+			t = (stop + start) * 0.5f;
+			x = EvalX(t);
+		}
+
+		return t;
 	}
 
 	VMDNodeController::VMDNodeController()
@@ -129,14 +147,14 @@ namespace saba
 
 				float timeRange = key1.m_time - key0.m_time;
 				float time = (t - key0.m_time) / timeRange;
-				float tx_x = FindBezierX(key0.m_txBezier, time);
-				float ty_x = FindBezierX(key0.m_tyBezier, time);
-				float tz_x = FindBezierX(key0.m_tzBezier, time);
-				float rot_x = FindBezierX(key0.m_rotBezier, time);
+				float tx_x = key0.m_txBezier.FindBezierX(time);
+				float ty_x = key0.m_txBezier.FindBezierX(time);
+				float tz_x = key0.m_txBezier.FindBezierX(time);
+				float rot_x = key0.m_rotBezier.FindBezierX(time);
 				float tx_y = key0.m_txBezier.EvalY(tx_x);
 				float ty_y = key0.m_txBezier.EvalY(ty_x);
 				float tz_y = key0.m_txBezier.EvalY(tz_x);
-				float rot_y = key0.m_txBezier.EvalY(rot_x);
+				float rot_y = key0.m_rotBezier.EvalY(rot_x);
 
 				glm::vec3 dt = key1.m_translate - key0.m_translate;
 				vt = dt * glm::vec3(tx_y, ty_y, tz_y) + key0.m_translate;
@@ -157,6 +175,10 @@ namespace saba
 		);
 	}
 
+	VMDAnimation::VMDAnimation()
+	{
+	}
+
 	bool VMDAnimation::Create(std::shared_ptr<MMDModel> model)
 	{
 		m_model = model;
@@ -165,6 +187,7 @@ namespace saba
 
 	bool VMDAnimation::Add(const VMDFile & vmd)
 	{
+		// Node Controller
 		std::map<std::string, NodeControllerPtr> nodeCtrlMap;
 		for (auto& nodeCtrl : m_nodeControllers)
 		{
@@ -212,6 +235,7 @@ namespace saba
 		}
 		nodeCtrlMap.clear();
 
+		// IK Contoroller
 		std::map<std::string, IKControllerPtr> ikCtrlMap;
 		for (auto& ikCtrl : m_ikControllers)
 		{
@@ -262,6 +286,7 @@ namespace saba
 		}
 		ikCtrlMap.clear();
 
+		// Morph Controller
 		std::map<std::string, MorphControllerPtr> morphCtrlMap;
 		for (auto& bsCtrl : m_blendShapeControllers)
 		{
@@ -316,6 +341,8 @@ namespace saba
 	{
 		m_model.reset();
 		m_nodeControllers.clear();
+		m_ikControllers.clear();
+		m_blendShapeControllers.clear();
 	}
 
 	void VMDAnimation::Evaluate(float t)
@@ -336,22 +363,6 @@ namespace saba
 		}
 	}
 
-	namespace
-	{
-		void SetVMDBezier(VMDBezier& bezier, const unsigned char* cp)
-		{
-			int x0 = cp[0];
-			int y0 = cp[4];
-			int x1 = cp[8];
-			int y1 = cp[12];
-
-			bezier.m_cp[0] = glm::vec2(0, 0);
-			bezier.m_cp[1] = glm::vec2((float)x0 / 127.0f, (float)y0 / 127.0f);
-			bezier.m_cp[2] = glm::vec2((float)x1 / 127.0f, (float)y1 / 127.0f);
-			bezier.m_cp[3] = glm::vec2(1, 1);
-		}
-	} // namespace
-
 	void VMDNodeAnimationKey::Set(const VMDMotion & motion)
 	{
 		m_time = (float)motion.m_frame;
@@ -359,9 +370,8 @@ namespace saba
 		m_translate = motion.m_translate * glm::vec3(1, 1, -1);
 
 		const glm::quat q = motion.m_quaternion;
-		auto invZ = glm::mat3(glm::scale(glm::mat4(1), glm::vec3(1, 1, -1)));
 		auto rot0 = glm::mat3_cast(q);
-		auto rot1 = invZ * rot0 * invZ;
+		auto rot1 = InvZ(rot0);
 		m_rotate = glm::quat_cast(rot1);
 
 		SetVMDBezier(m_txBezier, &motion.m_interpolation[0]);
@@ -476,5 +486,4 @@ namespace saba
 			[](const KeyType& a, const KeyType& b) { return a.m_time < b.m_time; }
 		);
 	}
-
 }

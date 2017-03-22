@@ -73,6 +73,9 @@ namespace saba
 		const std::vector<MMDSubMesh>& GetSubMeshes() const { return m_subMeshes; }
 
 		double GetUpdateTime() const { return m_updateTime; }
+
+		VMDAnimation* GetVMDAnimation() const { return m_vmdAnim.get(); }
+
 	private:
 		std::shared_ptr<MMDModel>		m_mmdModel;
 

@@ -11,7 +11,6 @@
 #include "VMDFile.h"
 #include "MMDIkSolver.h"
 
-
 #include <vector>
 #include <algorithm>
 #include <memory>
@@ -26,6 +25,8 @@ namespace saba
 		float EvalX(float t) const;
 		float EvalY(float t) const;
 		glm::vec2 Eval(float t) const;
+
+		float FindBezierX(float time) const;
 
 		glm::vec2	m_cp[4];
 	};
@@ -128,6 +129,8 @@ namespace saba
 	class VMDAnimation
 	{
 	public:
+		VMDAnimation();
+
 		bool Create(std::shared_ptr<MMDModel> model);
 		bool Add(const VMDFile& vmd);
 		void Destroy();
@@ -139,10 +142,10 @@ namespace saba
 		using IKControllerPtr = std::unique_ptr<VMDIKController>;
 		using MorphControllerPtr = std::unique_ptr<VMDMorphController>;
 
-		std::shared_ptr<MMDModel>		m_model;
-		std::vector<NodeControllerPtr>	m_nodeControllers;
-		std::vector<IKControllerPtr>	m_ikControllers;
-		std::vector<MorphControllerPtr>	m_blendShapeControllers;
+		std::shared_ptr<MMDModel>			m_model;
+		std::vector<NodeControllerPtr>		m_nodeControllers;
+		std::vector<IKControllerPtr>		m_ikControllers;
+		std::vector<MorphControllerPtr>		m_blendShapeControllers;
 	};
 
 }

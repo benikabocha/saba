@@ -45,6 +45,8 @@ set (
     Saba/Viewer/Viewer.cpp
     Saba/Viewer/ViewerCommand.cpp
     Saba/Viewer/ViewerContext.cpp
+    Saba/Viewer/CameraOverrider.cpp
+    Saba/Viewer/VMDCameraOverrider.cpp
 )
 set (
     VIEWER_HEADER
@@ -54,6 +56,8 @@ set (
     Saba/Viewer/Viewer.h
     Saba/Viewer/ViewerCommand.h
     Saba/Viewer/ViewerContext.h
+    Saba/Viewer/CameraOverrider.h
+    Saba/Viewer/VMDCameraOverrider.h
 )
 
 set (GL3W_SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/../external/gl3w/src/gl3w.c)

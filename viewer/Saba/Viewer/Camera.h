@@ -22,6 +22,8 @@ namespace saba
 		void Dolly(float z);
 		void Pan(float x, float y);
 
+		void LookAt(const glm::vec3& center, const glm::vec3& eye, const glm::vec3& up);
+
 		void SetFovY(float fovY);
 		void SetSize(float w, float h);
 		void SetClip(float nearClip, float farClip);

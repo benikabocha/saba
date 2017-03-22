@@ -20,7 +20,10 @@ namespace saba
 {
 	ViewerContext::ViewerContext()
 		: m_uiEnable(true)
+		, m_cameraOverride(true)
+		, m_clipElapsed(true)
 		, m_elapsed(0.0)
+		, m_animationTime(0.0)
 		, m_msaaEnable(false)
 		, m_frameBufferWidth(0)
 		, m_frameBufferHeight(0)
@@ -40,6 +43,26 @@ namespace saba
 
 		m_resourceDir = PathUtil::Combine(m_workDir, u8"resource");
 		m_shaderDir = PathUtil::Combine(m_resourceDir, u8"shader");
+	}
+
+	void ViewerContext::SetElapsedTime(double elapsed)
+	{
+		if (m_clipElapsed)
+		{
+			if (elapsed > 1.0f / 30.0f)
+			{
+				m_elapsed = 1.0f / 30.0f;
+			}
+		}
+		else
+		{
+			m_elapsed = elapsed;
+		}
+	}
+
+	void ViewerContext::UpdateAnimationTime()
+	{
+		m_animationTime += m_elapsed;
 	}
 
 }
