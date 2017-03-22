@@ -53,6 +53,10 @@ namespace saba
 			{
 				m_elapsed = 1.0f / 30.0f;
 			}
+			else
+			{
+				m_elapsed = elapsed;
+			}
 		}
 		else
 		{
