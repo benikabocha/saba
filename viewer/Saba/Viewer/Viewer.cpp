@@ -479,6 +479,11 @@ namespace saba
 			// Draw
 			modelDrawer->Draw(&m_context);
 		}
+
+		if (m_context.GetPlayMode() == ViewerContext::PlayMode::Update)
+		{
+			m_context.SetPlayMode(ViewerContext::PlayMode::Stop);
+		}
 	}
 
 	void Viewer::DrawUI()
@@ -745,15 +750,14 @@ namespace saba
 			break;
 		case ViewerContext::PlayMode::Update:
 			m_context.SetAnimationTime(animTime);
-			m_context.SetPlayMode(ViewerContext::PlayMode::Stop);
 			break;
 		case ViewerContext::PlayMode::NextFrame:
 			m_context.SetAnimationTime(animTime + 1.0f / m_animCtrlEditFPS);
-			m_context.SetPlayMode(ViewerContext::PlayMode::Stop);
+			m_context.SetPlayMode(ViewerContext::PlayMode::Update);
 			break;
 		case ViewerContext::PlayMode::PrevFrame:
 			m_context.SetAnimationTime(animTime - 1.0f / m_animCtrlEditFPS);
-			m_context.SetPlayMode(ViewerContext::PlayMode::Stop);
+			m_context.SetPlayMode(ViewerContext::PlayMode::Update);
 			break;
 		default:
 			break;
