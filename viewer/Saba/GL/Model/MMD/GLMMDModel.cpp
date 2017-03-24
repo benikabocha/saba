@@ -209,15 +209,24 @@ namespace saba
 		return m_animTime;
 	}
 
-	void GLMMDModel::UpdateAnimation(double animTime)
+	void GLMMDModel::EvaluateAnimation(double animTime)
 	{
-		double startTime = GetTime();
-		m_mmdModel->BeginAnimation();
 		if (m_vmdAnim != 0)
 		{
 			m_animTime = animTime;
 			double frame = m_animTime * 30.0;
 			m_vmdAnim->Evaluate((float)frame);
+		}
+	}
+
+	void GLMMDModel::UpdateAnimation(double animTime, bool evaluateAnim)
+	{
+		double startTime = GetTime();
+		m_mmdModel->BeginAnimation();
+
+		if (evaluateAnim)
+		{
+			EvaluateAnimation(animTime);
 		}
 
 		m_mmdModel->UpdateAnimation();

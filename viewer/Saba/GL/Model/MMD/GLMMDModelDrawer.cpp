@@ -106,6 +106,8 @@ namespace saba
 				if (ImGui::SliderFloat(morph->GetName().c_str(), &weight, 0.0f, 1.0f))
 				{
 					morph->SetWeight(weight);
+					auto animTime = ctxt->GetAnimationTime();
+					m_mmdModel->UpdateAnimation(animTime, false);
 				}
 			}
 		}
