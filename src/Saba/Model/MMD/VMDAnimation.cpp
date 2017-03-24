@@ -126,8 +126,8 @@ namespace saba
 		auto boundIt = std::upper_bound(
 			std::begin(m_keys),
 			std::end(m_keys),
-			t,
-			[](float lhs, const KeyType& rhs) { return lhs < rhs.m_time; }
+			int32_t(t),
+			[](int32_t lhs, const KeyType& rhs) { return lhs < rhs.m_time; }
 		);
 		glm::vec3 vt;
 		glm::quat q;
@@ -145,8 +145,8 @@ namespace saba
 				const auto& key0 = *(boundIt - 1);
 				const auto& key1 = *boundIt;
 
-				float timeRange = key1.m_time - key0.m_time;
-				float time = (t - key0.m_time) / timeRange;
+				float timeRange = float(key1.m_time - key0.m_time);
+				float time = (t - float(key0.m_time)) / timeRange;
 				float tx_x = key0.m_txBezier.FindBezierX(time);
 				float ty_x = key0.m_txBezier.FindBezierX(time);
 				float tz_x = key0.m_txBezier.FindBezierX(time);
@@ -222,7 +222,6 @@ namespace saba
 			if (nodeCtrl != nullptr)
 			{
 				VMDNodeAnimationKey key;
-				key.m_time = (float)motion.m_frame;
 				key.Set(motion);
 				nodeCtrl->AddKey(key);
 			}
@@ -272,7 +271,7 @@ namespace saba
 				if (ikCtrl != nullptr)
 				{
 					VMDIKAnimationKey key;
-					key.m_time = (float)ik.m_frame;
+					key.m_time = int32_t(ik.m_frame);
 					key.m_enable = ikInfo.m_enable != 0;
 					ikCtrl->AddKey(key);
 				}
@@ -321,7 +320,7 @@ namespace saba
 			if (bsCtrl != nullptr)
 			{
 				VMDMorphAnimationKey key;
-				key.m_time = (float)morph.m_frame;
+				key.m_time = int32_t(morph.m_frame);
 				key.m_weight = morph.m_weight;
 				bsCtrl->AddKey(key);
 			}
@@ -365,7 +364,7 @@ namespace saba
 
 	void VMDNodeAnimationKey::Set(const VMDMotion & motion)
 	{
-		m_time = (float)motion.m_frame;
+		m_time = int32_t(motion.m_frame);
 
 		m_translate = motion.m_translate * glm::vec3(1, 1, -1);
 
@@ -397,10 +396,11 @@ namespace saba
 			return;
 		}
 
+		int32_t intTime = int32_t(t);
 		auto it = std::partition_point(
 			std::begin(m_keys),
 			std::end(m_keys),
-			[t](const VMDIKAnimationKey& key) {return key.m_time <= t;}
+			[intTime](const VMDIKAnimationKey& key) {return key.m_time <= intTime;}
 		);
 		bool enable = false;
 		if (it == std::begin(m_keys))
@@ -449,8 +449,8 @@ namespace saba
 		auto findIt = std::upper_bound(
 			std::begin(m_keys),
 			std::end(m_keys),
-			t,
-			[](float lhs, const KeyType& rhs) { return lhs < rhs.m_time; }
+			int32_t(t),
+			[](int32_t lhs, const KeyType& rhs) { return lhs < rhs.m_time; }
 		);
 
 		VMDMorphAnimationKey key;
@@ -470,8 +470,8 @@ namespace saba
 			VMDMorphAnimationKey key0 = *(findIt - 1);
 			VMDMorphAnimationKey key1 = *findIt;
 
-			float timeRange = key1.m_time - key0.m_time;
-			float time = (t - key0.m_time) / timeRange;
+			float timeRange = float(key1.m_time - key0.m_time);
+			float time = (t - float(key0.m_time)) / timeRange;
 			weight = (key1.m_weight - key0.m_weight) * time + key0.m_weight;
 		}
 

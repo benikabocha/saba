@@ -35,7 +35,7 @@ namespace saba
 	{
 		void Set(const VMDMotion& motion);
 
-		float		m_time;
+		int32_t		m_time;
 		glm::vec3	m_translate;
 		glm::quat	m_rotate;
 
@@ -47,13 +47,13 @@ namespace saba
 
 	struct VMDMorphAnimationKey
 	{
-		float	m_time;
+		int32_t	m_time;
 		float	m_weight;
 	};
 
 	struct VMDIKAnimationKey
 	{
-		float	m_time;
+		int32_t	m_time;
 		bool	m_enable;
 	};
 

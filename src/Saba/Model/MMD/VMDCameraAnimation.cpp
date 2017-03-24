@@ -30,8 +30,8 @@ namespace saba
 		auto boundIt = std::upper_bound(
 			std::begin(m_keys),
 			std::end(m_keys),
-			t,
-			[](float lhs, const KeyType& rhs) { return lhs < rhs.m_time; }
+			int32_t(t),
+			[](int32_t lhs, const KeyType& rhs) { return lhs < rhs.m_time; }
 		);
 		if (boundIt == std::end(m_keys))
 		{
@@ -53,8 +53,8 @@ namespace saba
 				const auto& key0 = *(boundIt - 1);
 				const auto& key1 = *boundIt;
 
-				float timeRange = key1.m_time - key0.m_time;
-				float time = (t - key0.m_time) / timeRange;
+				float timeRange = float(key1.m_time - key0.m_time);
+				float time = (t - float(key0.m_time)) / timeRange;
 				float ix_x = key0.m_ixBezier.FindBezierX(time);
 				float iy_x = key0.m_iyBezier.FindBezierX(time);
 				float iz_x = key0.m_izBezier.FindBezierX(time);
@@ -100,7 +100,7 @@ namespace saba
 			for (const auto& cam : vmd.m_cameras)
 			{
 				VMDCameraAnimationKey key;
-				key.m_time = (float)cam.m_frame;
+				key.m_time = int32_t(cam.m_frame);
 				key.m_interest = cam.m_interest * glm::vec3(1, 1, -1);
 				key.m_rotate = cam.m_rotate;
 				key.m_distance = cam.m_distance;

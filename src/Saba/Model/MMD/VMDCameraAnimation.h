@@ -9,13 +9,14 @@
 #include "MMDCamera.h"
 #include "VMDAnimation.h"
 
+#include <cstdint>
 #include <memory>
 
 namespace saba
 {
 	struct VMDCameraAnimationKey
 	{
-		float		m_time;
+		int32_t		m_time;
 		glm::vec3	m_interest;
 		glm::vec3	m_rotate;
 		float		m_distance;
