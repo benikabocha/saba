@@ -17,6 +17,16 @@ namespace saba
 	{
 		friend class Viewer;
 	public:
+		enum class PlayMode
+		{
+			None,
+			Play,
+			Stop,
+			Update,
+			NextFrame,
+			PrevFrame,
+		};
+
 		ViewerContext();
 
 		const std::string& GetWorkDir() const { return m_workDir; }
@@ -35,6 +45,7 @@ namespace saba
 		int GetFrameBufferHeight() const { return m_frameBufferHeight; }
 		int GetWindowWidth() const { return m_windowWidth; }
 		int GetWindowHeight() const { return m_windowHeight; }
+		PlayMode GetPlayMode() const { return m_playMode; }
 
 	private:
 		void EnableUI(bool enable) { m_uiEnable = enable; }
@@ -42,10 +53,10 @@ namespace saba
 		void SetClipElapsed(bool enable) { m_clipElapsed = enable; }
 		void SetElapsedTime(double elapsed);
 		void SetAnimationTime(double animTime) { m_animationTime = animTime; }
-		void UpdateAnimationTime();
 		void EnableMSAA(bool enable) { m_msaaEnable = enable; }
 		void SetFrameBufferSize(int w, int h) { m_frameBufferWidth = w; m_frameBufferHeight = h; }
 		void SetWindowSize(int w, int h) { m_windowWidth = w; m_windowHeight = h; }
+		void SetPlayMode(PlayMode playMode) { m_playMode = playMode; }
 
 		void SetCamera(const Camera& cam) { m_camera = cam; }
 
@@ -69,6 +80,8 @@ namespace saba
 		int		m_frameBufferHeight;
 		int		m_windowWidth;
 		int		m_windowHeight;
+
+		PlayMode	m_playMode;
 	};
 }
 

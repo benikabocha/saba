@@ -53,7 +53,7 @@ namespace saba
 
 		void SetAnimationTime(double time);
 		double GetAnimationTime() const;
-		void UpdateAnimation(double elapsed);
+		void UpdateAnimation(double animTime);
 		void Update(double elapsed);
 
 		const GLBufferObject& GetPositionVBO() const { return m_posVBO; }

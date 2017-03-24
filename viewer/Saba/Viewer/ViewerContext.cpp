@@ -29,6 +29,7 @@ namespace saba
 		, m_frameBufferHeight(0)
 		, m_windowWidth(0)
 		, m_windowHeight(0)
+		, m_playMode(PlayMode::None)
 	{
 #if _WIN32
 		DWORD sz = GetCurrentDirectoryW(0, nullptr);
@@ -62,11 +63,6 @@ namespace saba
 		{
 			m_elapsed = elapsed;
 		}
-	}
-
-	void ViewerContext::UpdateAnimationTime()
-	{
-		m_animationTime += m_elapsed;
 	}
 
 }

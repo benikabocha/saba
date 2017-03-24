@@ -48,16 +48,6 @@ namespace saba
 			GLVertexArrayObject	m_vao;
 		};
 
-		enum class PlayMode
-		{
-			None,
-			Play,
-			Stop,
-			Update,
-			StepFF,
-			StepFR,
-		};
-
 	private:
 		GLMMDModelDrawContext*		m_drawContext;
 		std::shared_ptr<GLMMDModel>	m_mmdModel;
@@ -68,7 +58,6 @@ namespace saba
 
 
 		// IMGui
-		PlayMode	m_playMode;
 		bool		m_clipElapsed;
 	};
 }

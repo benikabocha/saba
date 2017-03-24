@@ -91,6 +91,8 @@ namespace saba
 		void DrawCommandUI();
 		void DrawModelListUI();
 		void DrawManip();
+		void DrawAnimCtrlUI();
+		void UpdateAnimation();
 
 		bool CmdOpen(const std::vector<std::string>& args);
 		bool CmdClear(const std::vector<std::string>& args);
@@ -124,6 +126,13 @@ namespace saba
 
 		static void OnDropStub(GLFWwindow* window, int count, const char** paths);
 		void OnDrop(int count, const char** paths);
+
+	private:
+		enum class FPSMode
+		{
+			FPS30,
+			FPS60,
+		};
 
 	private:
 		bool	m_msaaEnable;
@@ -176,6 +185,11 @@ namespace saba
 		bool				m_enableManip;
 		ImGuizmo::OPERATION	m_currentManipOp;
 		ImGuizmo::MODE		m_currentManipMode;
+
+		// AnimCtrlUI
+		bool		m_enableAnimCtrlUI;
+		float		m_animCtrlEditFPS;
+		FPSMode		m_animCtrlFPSMode;
 
 		// Camera Override
 		bool	m_cameraOverride;

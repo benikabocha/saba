@@ -93,7 +93,11 @@ namespace saba
 		, m_enableManip(false)
 		, m_currentManipOp(ImGuizmo::TRANSLATE)
 		, m_currentManipMode(ImGuizmo::WORLD)
+		, m_enableAnimCtrlUI(true)
+		, m_animCtrlEditFPS(30.0f)
+		, m_animCtrlFPSMode(FPSMode::FPS30)
 		, m_cameraOverride(true)
+		, m_clipElapsed(true)
 	{
 		if (!glfwInit())
 		{
@@ -289,6 +293,7 @@ namespace saba
 						ImGui::MenuItem("Log", nullptr, &m_enableLogUI);
 						ImGui::MenuItem("Command", nullptr, &m_enableCommandUI);
 						ImGui::MenuItem("Model List", nullptr, &m_enableModelListUI);
+						ImGui::MenuItem("Animation Control", nullptr, &m_enableAnimCtrlUI);
 						ImGui::EndMenu();
 					}
 					if (ImGui::BeginMenu("Edit"))
@@ -313,6 +318,20 @@ namespace saba
 						ImGui::MenuItem("ClipElapsed", nullptr, &m_clipElapsed);
 						ImGui::EndMenu();
 					}
+					if (ImGui::BeginMenu("Animation"))
+					{
+						if (ImGui::MenuItem("30 FPS", nullptr, m_animCtrlFPSMode == FPSMode::FPS30))
+						{
+							m_animCtrlFPSMode = FPSMode::FPS30;
+							m_animCtrlEditFPS = 30.0f;
+						}
+						if (ImGui::MenuItem("60 FPS", nullptr, m_animCtrlFPSMode == FPSMode::FPS60))
+						{
+							m_animCtrlFPSMode = FPSMode::FPS60;
+							m_animCtrlEditFPS = 60.0f;
+						}
+						ImGui::EndMenu();
+					}
 					ImGui::EndMainMenuBar();
 				}
 			}
@@ -322,13 +341,12 @@ namespace saba
 			m_prevTime = time;
 			m_context.SetClipElapsed(m_clipElapsed);
 			m_context.SetElapsedTime(elapsed);
-			m_context.UpdateAnimationTime();
 			m_context.EnableCameraOverride(m_cameraOverride);
+
 			Draw();
 
 			if (m_context.IsUIEnabled())
 			{
-				DrawUI();
 				ImGui::Render();
 			}
 
@@ -424,6 +442,13 @@ namespace saba
 
 		glEnable(GL_DEPTH_TEST);
 
+		if (m_context.IsUIEnabled())
+		{
+			DrawUI();
+		}
+
+		UpdateAnimation();
+
 		if (m_cameraOverride && m_cameraOverrider)
 		{
 			Camera overrideCam = *m_context.GetCamera();
@@ -462,6 +487,7 @@ namespace saba
 		DrawLogUI();
 		DrawCommandUI();
 		DrawModelListUI();
+		DrawAnimCtrlUI();
 		DrawManip();
 	}
 
@@ -659,6 +685,81 @@ namespace saba
 		m_selectedModelDrawer->SetScale(s);
 	}
 
+	void Viewer::DrawAnimCtrlUI()
+	{
+		if (!m_enableAnimCtrlUI)
+		{
+			return;
+		}
+		float width = 200;
+		float height = 150;
+
+		ImGui::SetNextWindowSize(ImVec2(width, height), ImGuiSetCond_Once);
+		ImGui::SetNextWindowPos(ImVec2(0, 100 + 20), ImGuiSetCond_Once);
+		ImGui::Begin("Animation Control", &m_enableAnimCtrlUI);
+		float animFrame = float(m_context.GetAnimationTime() * m_animCtrlEditFPS);
+		if (ImGui::InputFloat("Frame", &animFrame))
+		{
+			m_context.SetAnimationTime(animFrame / m_animCtrlEditFPS);
+			m_context.SetPlayMode(ViewerContext::PlayMode::Update);
+		}
+
+		if (m_context.GetPlayMode() == ViewerContext::PlayMode::Play)
+		{
+			if (ImGui::Button("Stop"))
+			{
+				m_context.SetPlayMode(ViewerContext::PlayMode::Stop);
+			}
+		}
+		else
+		{
+			if (ImGui::Button("Play"))
+			{
+				m_context.SetPlayMode(ViewerContext::PlayMode::Play);
+			}
+		}
+		if (ImGui::Button("Next Frame"))
+		{
+			m_context.SetPlayMode(ViewerContext::PlayMode::NextFrame);
+		}
+		if (ImGui::Button("Prev Frame"))
+		{
+			m_context.SetPlayMode(ViewerContext::PlayMode::PrevFrame);
+		}
+
+		ImGui::End();
+	}
+
+	void Viewer::UpdateAnimation()
+	{
+		double animTime = m_context.GetAnimationTime();
+		switch (m_context.GetPlayMode())
+		{
+		case ViewerContext::PlayMode::None:
+			break;
+		case ViewerContext::PlayMode::Play:
+			m_context.SetAnimationTime(animTime + m_context.GetElapsed());
+			break;
+		case ViewerContext::PlayMode::Stop:
+			m_context.SetAnimationTime(animTime);
+			break;
+		case ViewerContext::PlayMode::Update:
+			m_context.SetAnimationTime(animTime);
+			m_context.SetPlayMode(ViewerContext::PlayMode::Stop);
+			break;
+		case ViewerContext::PlayMode::NextFrame:
+			m_context.SetAnimationTime(animTime + 1.0f / m_animCtrlEditFPS);
+			m_context.SetPlayMode(ViewerContext::PlayMode::Stop);
+			break;
+		case ViewerContext::PlayMode::PrevFrame:
+			m_context.SetAnimationTime(animTime - 1.0f / m_animCtrlEditFPS);
+			m_context.SetPlayMode(ViewerContext::PlayMode::Stop);
+			break;
+		default:
+			break;
+		}
+	}
+
 	bool Viewer::ExecuteCommand(const ViewerCommand & cmd)
 	{
 		if (strcmp("open", cmd.GetCommand().c_str()) == 0)
@@ -748,6 +849,8 @@ namespace saba
 			return false;
 		}
 
+		m_context.SetPlayMode(ViewerContext::PlayMode::None);
+
 		SABA_INFO("Cmd Open Succeeded.");
 
 		return true;
@@ -788,6 +891,8 @@ namespace saba
 			}
 		}
 
+		m_context.SetPlayMode(ViewerContext::PlayMode::None);
+
 		SABA_INFO("Cmd Clear Succeeded.");
 
 		return true;
@@ -821,6 +926,9 @@ namespace saba
 			}
 		}
 
+
+		m_context.SetPlayMode(ViewerContext::PlayMode::Play);
+
 		SABA_INFO("Cmd Play Succeeded.");
 
 		return true;
@@ -853,6 +961,8 @@ namespace saba
 				}
 			}
 		}
+
+		m_context.SetPlayMode(ViewerContext::PlayMode::Stop);
 
 		SABA_INFO("Cmd Stop Succeeded.");
 

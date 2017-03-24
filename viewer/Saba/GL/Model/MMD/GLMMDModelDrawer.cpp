@@ -18,7 +18,6 @@ namespace saba
 	GLMMDModelDrawer::GLMMDModelDrawer(GLMMDModelDrawContext * ctxt, std::shared_ptr<GLMMDModel> mmdModel)
 		: m_drawContext(ctxt)
 		, m_mmdModel(mmdModel)
-		, m_playMode(PlayMode::None)
 		, m_clipElapsed(true)
 	{
 		SABA_ASSERT(ctxt != nullptr);
@@ -75,7 +74,6 @@ namespace saba
 
 			matIdx++;
 		}
-		m_playMode = PlayMode::Stop;
 		return true;
 	}
 
@@ -96,39 +94,6 @@ namespace saba
 		);
 
 		ImGui::Begin("MMDDrawCtrl");
-		if (ImGui::CollapsingHeader("Animation"))
-		{
-			ImGui::Checkbox("Clip Elapsed", &m_clipElapsed);
-			float animFrame = (float)(m_mmdModel->GetAnimationTime() * 30.0);
-			if (ImGui::InputFloat("Frame", &animFrame))
-			{
-				m_mmdModel->SetAnimationTime(animFrame / 30.0);
-				m_playMode = PlayMode::Update;
-			}
-
-			if (m_playMode == PlayMode::Play)
-			{
-				if (ImGui::Button("Stop"))
-				{
-					m_playMode = PlayMode::Stop;
-				}
-			}
-			else
-			{
-				if (ImGui::Button("Play"))
-				{
-					m_playMode = PlayMode::Play;
-				}
-			}
-			if (ImGui::Button("Step FF"))
-			{
-				m_playMode = PlayMode::StepFF;
-			}
-			if (ImGui::Button("Step FR"))
-			{
-				m_playMode = PlayMode::StepFR;
-			}
-		}
 		if (ImGui::CollapsingHeader("Morph"))
 		{
 			auto model = m_mmdModel->GetMMDModel();
@@ -141,7 +106,6 @@ namespace saba
 				if (ImGui::SliderFloat(morph->GetName().c_str(), &weight, 0.0f, 1.0f))
 				{
 					morph->SetWeight(weight);
-					m_playMode = PlayMode::Update;
 				}
 			}
 		}
@@ -150,55 +114,21 @@ namespace saba
 
 	void GLMMDModelDrawer::Play()
 	{
-		m_playMode = PlayMode::Play;
 	}
 
 	void GLMMDModelDrawer::Stop()
 	{
-		m_playMode = PlayMode::Stop;
 	}
 
 	void GLMMDModelDrawer::Update(ViewerContext * ctxt)
 	{
+		if (ctxt->GetPlayMode() != ViewerContext::PlayMode::Stop)
+		{
+			double animTime = ctxt->GetAnimationTime();
+			m_mmdModel->UpdateAnimation(animTime);
+		}
 		double elapsed = ctxt->GetElapsed();
-		float animFrame = (float)(m_mmdModel->GetAnimationTime() * 30.0);
-		if (m_clipElapsed)
-		{
-			if (elapsed > 1.0f / 30.0f)
-			{
-				elapsed = 1.0f / 30.0f;
-			}
-		}
-
-		switch (m_playMode)
-		{
-		case PlayMode::None:
-			break;
-		case PlayMode::Play:
-			m_mmdModel->UpdateAnimation(elapsed);
-			m_mmdModel->Update(elapsed);
-			break;
-		case PlayMode::Stop:
-			m_mmdModel->Update(elapsed);
-			break;
-		case PlayMode::Update:
-			m_mmdModel->UpdateAnimation(0.0f);
-			m_mmdModel->Update(elapsed);
-			m_playMode = PlayMode::Stop;
-			break;
-		case PlayMode::StepFF:
-			m_mmdModel->UpdateAnimation(1.0f / 30.0f);
-			m_mmdModel->Update(elapsed);
-			m_playMode = PlayMode::Stop;
-			break;
-		case PlayMode::StepFR:
-			m_mmdModel->UpdateAnimation(-1.0f / 30.0f);
-			m_mmdModel->Update(elapsed);
-			m_playMode = PlayMode::Stop;
-			break;
-		default:
-			break;
-		}
+		m_mmdModel->Update(elapsed);
 	}
 
 
