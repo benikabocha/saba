@@ -902,30 +902,10 @@ namespace saba
 	{
 		SABA_INFO("Cmd Play Execute.");
 
-		if (args.empty())
+		for (auto& modelDrawer : m_modelDrawers)
 		{
-			// 引数が空の場合は選択中のモデルを再生
-			if (m_selectedModelDrawer == nullptr)
-			{
-				SABA_INFO("Cmd Play : Selected model is null.");
-				return false;
-			}
-			else
-			{
-				m_selectedModelDrawer->Play();
-			}
+			modelDrawer->Play();
 		}
-		else
-		{
-			if (args[0] == "-all")
-			{
-				for (auto& modelDrawer : m_modelDrawers)
-				{
-					modelDrawer->Play();
-				}
-			}
-		}
-
 
 		m_context.SetPlayMode(ViewerContext::PlayMode::Play);
 
@@ -938,28 +918,9 @@ namespace saba
 	{
 		SABA_INFO("Cmd Stop Execute.");
 
-		if (args.empty())
+		for (auto& modelDrawer : m_modelDrawers)
 		{
-			// 引数が空の場合は選択中のモデルを再生
-			if (m_selectedModelDrawer == nullptr)
-			{
-				SABA_INFO("Cmd Stop : Selected model is null.");
-				return false;
-			}
-			else
-			{
-				m_selectedModelDrawer->Stop();
-			}
-		}
-		else
-		{
-			if (args[0] == "-all")
-			{
-				for (auto& modelDrawer : m_modelDrawers)
-				{
-					modelDrawer->Stop();
-				}
-			}
+			modelDrawer->Stop();
 		}
 
 		m_context.SetPlayMode(ViewerContext::PlayMode::Stop);
