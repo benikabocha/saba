@@ -114,20 +114,13 @@ namespace saba
 		}
 	}
 
-	void Viewer::EnableMSAA(bool enable)
-	{
-		m_msaaEnable = enable;
-	}
-
-	void Viewer::SetMSAACount(int msaaCount)
-	{
-		m_msaaCount = msaaCount;
-	}
-
-	bool Viewer::Initialize()
+	bool Viewer::Initialize(const InitializeParameter& initParam)
 	{
 		auto logger = Singleton<saba::Logger>::Get();
 		m_imguiLogSink = logger->AddSink<ImGUILogSink>();
+
+		m_msaaEnable = initParam.m_msaaEnable;
+		m_msaaCount = initParam.m_msaaCount;
 
 		SABA_INFO("CurDir = {}", m_context.GetWorkDir());
 		glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);

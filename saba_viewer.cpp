@@ -68,10 +68,11 @@ int main()
 	}
 
 	saba::Viewer viewer;
+	saba::Viewer::InitializeParameter	viewerInitParam;
 	if (msaaEnable)
 	{
 		SABA_INFO("Enable MSAA");
-		viewer.EnableMSAA(true);
+		viewerInitParam.m_msaaEnable = true;
 
 		if (msaaCount != 2 && msaaCount != 4 && msaaCount != 8)
 		{
@@ -80,10 +81,10 @@ int main()
 		}
 
 		SABA_INFO("MSAA Count : {}", msaaCount);
-		viewer.SetMSAACount(msaaCount);
+		viewerInitParam.m_msaaCount = msaaCount;
 	}
 
-	if (!viewer.Initialize())
+	if (!viewer.Initialize(viewerInitParam))
 	{
 		return -1;
 	}

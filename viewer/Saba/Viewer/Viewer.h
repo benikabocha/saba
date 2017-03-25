@@ -35,14 +35,18 @@ namespace saba
 		Viewer();
 		~Viewer();
 
-		void EnableMSAA(bool enable);
-		void SetMSAACount(int msaaCount);
+		struct InitializeParameter
+		{
+			InitializeParameter() = default;
 
-		bool Initialize();
+			bool	m_msaaEnable = false;
+			int		m_msaaCount = 4;
+		};
+
+		bool Initialize(const InitializeParameter& initParam = InitializeParameter());
 		void Uninitislize();
 
 		int Run();
-
 
 		bool ExecuteCommand(const ViewerCommand& cmd);
 
