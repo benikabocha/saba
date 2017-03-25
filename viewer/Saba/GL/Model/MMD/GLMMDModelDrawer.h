@@ -34,6 +34,7 @@ namespace saba
 		void Play() override;
 		void Stop() override;
 
+		void InitializeAnimation(ViewerContext* ctxt) override;
 		void Update(ViewerContext* ctxt) override;
 		void DrawUI(ViewerContext* ctxt) override;
 		void Draw(ViewerContext* ctxt) override;

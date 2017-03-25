@@ -93,6 +93,7 @@ namespace saba
 		void DrawManip();
 		void DrawAnimCtrlUI();
 		void UpdateAnimation();
+		void InitializeAnimation();
 
 		bool CmdOpen(const std::vector<std::string>& args);
 		bool CmdClear(const std::vector<std::string>& args);

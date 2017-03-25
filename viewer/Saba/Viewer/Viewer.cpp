@@ -764,6 +764,16 @@ namespace saba
 		}
 	}
 
+	void Viewer::InitializeAnimation()
+	{
+		m_context.SetPlayMode(ViewerContext::PlayMode::None);
+		m_context.SetAnimationTime(0);
+		for (auto& modelDrawer : m_modelDrawers)
+		{
+			modelDrawer->InitializeAnimation(&m_context);
+		}
+	}
+
 	bool Viewer::ExecuteCommand(const ViewerCommand & cmd)
 	{
 		if (strcmp("open", cmd.GetCommand().c_str()) == 0)
@@ -853,7 +863,7 @@ namespace saba
 			return false;
 		}
 
-		m_context.SetPlayMode(ViewerContext::PlayMode::None);
+		InitializeAnimation();
 
 		SABA_INFO("Cmd Open Succeeded.");
 
@@ -895,7 +905,7 @@ namespace saba
 			}
 		}
 
-		m_context.SetPlayMode(ViewerContext::PlayMode::None);
+		InitializeAnimation();
 
 		SABA_INFO("Cmd Clear Succeeded.");
 
