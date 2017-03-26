@@ -120,9 +120,10 @@ cmake -D SABA_FORCE_GLFW_BUILD ..
 
 ## 初期化設定
 
-起動時のカレントディレクトリに"init.json"ファイルを配置することにより初期化時の設定を行うことができます。
+起動時のカレントディレクトリに"init.json"または、"init.lua"ファイルを配置することにより初期化時の設定を行うことができます。
 
-```
+### init.json を使用する
+```javascript
 {
     "MSAAEnable":	true,
     "MSAACount":	8,
@@ -138,19 +139,73 @@ cmake -D SABA_FORCE_GLFW_BUILD ..
     ]
 }
 ```
-
-### MSAAEnable
+#### MSAAEnable
 
 MSAA を有効にします。
 
-### MSAACount
+#### MSAACount
 
 MSAA のサンプリング数を設定します。
 MSAAEnable が true の場合のみ有効です。
 
-### Commands
+#### Commands
 
 起動時に実行するコマンドを設定します。
+
+### init.lua を使用する
+```lua
+MSAA = {
+    Enable	= true,
+    Cout	= 8
+}
+
+Commands = {
+    {
+        Cmd = "open",
+        Args = {"test.pmx"},
+    },
+    {
+        Cmd = "open",
+        Args = {"test.vmd"},
+    },
+    {
+        Cmd = "play"
+    },
+}
+```
+
+"init.lua" ではスクリプトを実行することもできます。
+プログラムに渡されるコマンドライン引数は`Args`で取得できます。
+
+```lua
+MSAA = {
+    Enable	= true,
+    Cout	= 8
+}
+
+Models = {
+    "test1.pmx",
+    "test2.pmx"
+}
+
+ModelIndex = 1
+print(Args[1])
+
+Commands = {
+    {
+        Cmd = "open",
+        Args = {Models[ModelIndex]},
+    },
+    {
+        Cmd = "open",
+        Args = {"test.vmd"},
+    },
+    {
+        Cmd = "play"
+    },
+}
+```
+
 
 ## 操作方法
 

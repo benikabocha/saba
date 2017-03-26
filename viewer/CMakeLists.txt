@@ -97,7 +97,7 @@ target_include_directories(SabaViewer
     PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/../external/fcpp
 )
 
-set (SabaViewer_LIBRARIES Saba fcpp ${OPENGL_LIBRARY})
+set (SabaViewer_LIBRARIES Saba fcpp ${OPENGL_LIBRARY} lua)
 
 # Link GLFW library
 if (SABA_FORCE_GLFW_BUILD)
