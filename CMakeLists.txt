@@ -49,7 +49,7 @@ include_directories(${PROJECT_SOURCE_DIR}/external/spdlog/include)
 include_directories(${PROJECT_SOURCE_DIR}/external/tinyobjloader/include)
 include_directories(${PROJECT_SOURCE_DIR}/external/imgui/include)
 include_directories(${PROJECT_SOURCE_DIR}/external/picojson/include)
-include_directories(${PROJECT_SOURCE_DIR}/external/lua)
+include_directories(BEFORE ${PROJECT_SOURCE_DIR}/external/lua)
 include_directories(${PROJECT_SOURCE_DIR}/external/sol2/include)
 include_directories(${BULLET_INCLUDE_DIRS})
 
