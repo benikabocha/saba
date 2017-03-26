@@ -155,21 +155,21 @@ MSAAEnable が true の場合のみ有効です。
 ### init.lua を使用する
 ```lua
 MSAA = {
-    Enable	= true,
-    Cout	= 8
+    Enable  = true,
+    Count    = 8
 }
 
 Commands = {
     {
-        Cmd = "open",
-        Args = {"test.pmx"},
+        Cmd     = "open",
+        Args    = {"test.pmx"},
     },
     {
-        Cmd = "open",
-        Args = {"test.vmd"},
+        Cmd     = "open",
+        Args    = {"test.vmd"},
     },
     {
-        Cmd = "play"
+        Cmd     = "play"
     },
 }
 ```
@@ -179,8 +179,8 @@ Commands = {
 
 ```lua
 MSAA = {
-    Enable	= true,
-    Cout	= 8
+    Enable  = true,
+    Count   = 8
 }
 
 Models = {
@@ -193,15 +193,15 @@ print(Args[1])
 
 Commands = {
     {
-        Cmd = "open",
-        Args = {Models[ModelIndex]},
+        Cmd     = "open",
+        Args    = {Models[ModelIndex]},
     },
     {
-        Cmd = "open",
-        Args = {"test.vmd"},
+        Cmd     = "open",
+        Args    = {"test.vmd"},
     },
     {
-        Cmd = "play"
+        Cmd     = "play"
     },
 }
 ```
