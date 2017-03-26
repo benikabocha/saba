@@ -75,6 +75,12 @@ namespace saba
 		bool					m_added;
 	};
 
+	Viewer::InitializeParameter::InitializeParameter()
+		: m_msaaEnable(false)
+		, m_msaaCount(4)
+	{
+	}
+
 	Viewer::Viewer()
 		: m_msaaEnable(false)
 		, m_msaaCount(4)

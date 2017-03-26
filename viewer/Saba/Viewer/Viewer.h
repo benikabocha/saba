@@ -37,10 +37,10 @@ namespace saba
 
 		struct InitializeParameter
 		{
-			InitializeParameter() = default;
+			InitializeParameter();
 
-			bool	m_msaaEnable = false;
-			int		m_msaaCount = 4;
+			bool	m_msaaEnable;
+			int		m_msaaCount;
 		};
 
 		bool Initialize(const InitializeParameter& initParam = InitializeParameter());
