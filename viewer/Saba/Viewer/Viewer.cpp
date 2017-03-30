@@ -211,6 +211,9 @@ namespace saba
 		m_objModelDrawContext = std::make_unique<GLOBJModelDrawContext>(&m_context);
 		m_mmdModelDrawContext = std::make_unique<GLMMDModelDrawContext>(&m_context);
 
+		RegisterCommand();
+		RefreshCustomCommand();
+
 		m_prevTime = GetTime();
 
 		return true;
@@ -328,6 +331,19 @@ namespace saba
 						{
 							m_animCtrlFPSMode = FPSMode::FPS60;
 							m_animCtrlEditFPS = 60.0f;
+						}
+						ImGui::EndMenu();
+					}
+					if (ImGui::BeginMenu("CustomCommand"))
+					{
+						for (auto& customCmd : m_customCommands)
+						{
+							if (ImGui::MenuItem(customCmd.m_menuName.c_str()))
+							{
+								ViewerCommand cmd;
+								cmd.SetCommand(customCmd.m_name);
+								ExecuteCommand(cmd);
+							}
 						}
 						ImGui::EndMenu();
 					}
@@ -773,47 +789,173 @@ namespace saba
 		}
 	}
 
-	bool Viewer::ExecuteCommand(const ViewerCommand & cmd)
+	void Viewer::RegisterCommand()
 	{
-		if (strcmp("open", cmd.GetCommand().c_str()) == 0)
+		using Args = std::vector<std::string>;
+		m_commands.emplace_back(Command{ "open", [this](const Args& args) { return CmdOpen(args); } });
+		m_commands.emplace_back(Command{ "clear", [this](const Args& args) { return CmdClear(args); } });
+		m_commands.emplace_back(Command{ "play", [this](const Args& args) { return CmdPlay(args); } });
+		m_commands.emplace_back(Command{ "stop", [this](const Args& args) { return CmdStop(args); } });
+		m_commands.emplace_back(Command{ "select", [this](const Args& args) { return CmdSelect(args); } });
+		m_commands.emplace_back(Command{ "translate", [this](const Args& args) { return CmdTranslate(args); } });
+		m_commands.emplace_back(Command{ "rotate", [this](const Args& args) { return CmdRotate(args); } });
+		m_commands.emplace_back(Command{ "scale", [this](const Args& args) { return CmdScale(args); } });
+		m_commands.emplace_back(Command{ "refreshCustomCommand", [this](const Args& args) { return CmdRefreshCustomCommand(args); } });
+	}
+
+	void Viewer::RefreshCustomCommand()
+	{
+		std::string workDir = m_context.GetWorkDir();
+		std::string cmdLuaPath = PathUtil::Combine(workDir, "command.lua");
+		File cmdLuaFile;
+		if (cmdLuaFile.Open(cmdLuaPath))
 		{
-			return CmdOpen(cmd.GetArgs());
-		}
-		else if (strcmp("clear", cmd.GetCommand().c_str()) == 0)
-		{
-			return CmdClear(cmd.GetArgs());
-		}
-		else if (strcmp("play", cmd.GetCommand().c_str()) == 0)
-		{
-			return CmdPlay(cmd.GetArgs());
-		}
-		else if (strcmp("stop", cmd.GetCommand().c_str()) == 0)
-		{
-			return CmdStop(cmd.GetArgs());
-		}
-		else if (strcmp("select", cmd.GetCommand().c_str()) == 0)
-		{
-			return CmdSelect(cmd.GetArgs());
-		}
-		else if (strcmp("translate", cmd.GetCommand().c_str()) == 0)
-		{
-			return CmdTranslate(cmd.GetArgs());
-		}
-		else if (strcmp("rotate", cmd.GetCommand().c_str()) == 0)
-		{
-			return CmdRotate(cmd.GetArgs());
-		}
-		else if (strcmp("scale", cmd.GetCommand().c_str()) == 0)
-		{
-			return CmdScale(cmd.GetArgs());
+			std::vector<char> cmdText;
+			if (cmdLuaFile.ReadAll(&cmdText))
+			{
+				m_customCommands.clear();
+				m_lua = std::make_unique<sol::state>();
+				m_lua->open_libraries(sol::lib::base, sol::lib::package);
+
+				(*m_lua)["RegisterCommand"] = [this](
+					const std::string& name,
+					sol::object func,
+					const std::string& menuName
+					)
+				{
+					std::string cmdName = name;
+					if (name.empty())
+					{
+						cmdName = "@unnamed_" + std::to_string(m_customCommands.size());
+					}
+					if (func.is<sol::function>())
+					{
+						// Look for a registerd command with same name.
+						bool findRegCmd = m_commands.end() != std::find_if(
+							m_commands.begin(),
+							m_commands.end(),
+							[&cmdName](const Command& regCmd) { return regCmd.m_name == cmdName; }
+						);
+						if (findRegCmd)
+						{
+							SABA_WARN("RegisterCommand : [{}] is registered command.", cmdName);
+							return;
+						}
+
+						// Look for a custom command with same name.
+						bool findCutomCmd = m_customCommands.end() != std::find_if(
+							m_customCommands.begin(),
+							m_customCommands.end(),
+							[&cmdName](const CustomCommand& customCmd) { return customCmd.m_name == cmdName; }
+						);
+						if (findCutomCmd)
+						{
+							SABA_WARN("RegisterCommand : [{}] is already exists.", cmdName);
+							return;
+						}
+
+						// Register custom command.
+						CustomCommand cmd;
+						cmd.m_name = cmdName;
+						cmd.m_commandFunc = func;
+						cmd.m_menuName = menuName;
+						m_customCommands.emplace_back(std::move(cmd));
+					}
+					else
+					{
+						SABA_WARN("RegisterCommand : func is not function.");
+					}
+				};
+
+				(*m_lua)["ExecuteCommand"] = [this](const std::string&	cmd, sol::object args)
+				{
+					ViewerCommand viewerCmd;
+					viewerCmd.SetCommand(cmd);
+					if (args.valid())
+					{
+						if (args.is<sol::table>())
+						{
+							sol::table argsTable = args;
+							for (auto& argIt = argsTable.begin(); argIt != argsTable.end(); ++argIt)
+							{
+								auto arg = (*argIt).second.as<std::string>();
+								viewerCmd.AddArg(arg);
+							}
+						}
+						else
+						{
+							viewerCmd.AddArg(args.as<std::string>());
+						}
+					}
+					return ExecuteCommand(viewerCmd);
+				};
+
+				sol::load_result cmd = m_lua->load_buffer(cmdText.data(), cmdText.size(), "command.lua");
+				if (cmd.valid())
+				{
+					try
+					{
+						cmd();
+					}
+					catch (sol::error e)
+					{
+						SABA_ERROR("command.lua execute fail.\n{}", e.what());
+					}
+				}
+				else
+				{
+					std::string errorMessage = cmd;
+					SABA_ERROR("command.lua load fail.\n{}", errorMessage);
+				}
+			}
+			else
+			{
+				SABA_ERROR("command.lua read fail.");
+			}
 		}
 		else
 		{
-			SABA_INFO("Unknown Command. [{}]", cmd.GetCommand());
-			return false;
+			SABA_INFO("command.lua not found.");
+		}
+	}
+
+	bool Viewer::ExecuteCommand(const ViewerCommand & cmd)
+	{
+		// Register Command
+		{
+			auto findIt = std::find_if(
+				m_commands.begin(),
+				m_commands.end(),
+				[&cmd](const Command& regCmd) { return cmd.GetCommand() == regCmd.m_name; }
+			);
+			if (findIt != m_commands.end())
+			{
+				return (*findIt).m_commandFunc(cmd.GetArgs());
+			}
 		}
 
-		return true;
+		// Custom Command
+		{
+			auto findIt = std::find_if(
+				m_customCommands.begin(),
+				m_customCommands.end(),
+				[&cmd](const CustomCommand& customCmd) { return cmd.GetCommand() == customCmd.m_name; }
+			);
+			if (findIt != m_customCommands.end())
+			{
+				const auto& args = cmd.GetArgs();
+				sol::table argsTable = m_lua->create_table(args.size(), 0);
+				for (const auto& arg : args)
+				{
+					argsTable.add(arg);
+				}
+				sol::function_result ret = (*findIt).m_commandFunc(argsTable);
+				return ret.valid();
+			}
+		}
+
+		SABA_INFO("Unknown Command. [{}]", cmd.GetCommand());
+		return false;
 	}
 
 	bool Viewer::CmdOpen(const std::vector<std::string>& args)
@@ -1087,6 +1229,17 @@ namespace saba
 		SABA_INFO("Cmd Scale Succeeded.");
 
 		return false;
+	}
+
+	bool Viewer::CmdRefreshCustomCommand(const std::vector<std::string>& args)
+	{
+		SABA_INFO("Cmd RefreshCustomCommand Execute.");
+
+		RefreshCustomCommand();
+
+		SABA_INFO("Cmd RefreshCustomCommand Succeeded.");
+
+		return true;
 	}
 
 	bool Viewer::LoadOBJFile(const std::string & filename)

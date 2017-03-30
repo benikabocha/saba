@@ -122,6 +122,8 @@ cmake -D SABA_FORCE_GLFW_BUILD ..
 
 起動時のカレントディレクトリに"init.json"または、"init.lua"ファイルを配置することにより初期化時の設定を行うことができます。
 
+"init.json" 、 "initlua" は、 UTF-8 で記述してください。
+
 ### init.json を使用する
 ```javascript
 {
@@ -291,3 +293,80 @@ saba_viewer で使用できるコマンドです。
 `scale x y z`
 
 選択中のモデルをスケールします。
+
+#### refreshCustomCommand
+
+`refreshCustomCommand`
+
+カスタムコマンドをリフレッシュします。
+再起動せずにカスタムコマンドを更新できます。
+
+## カスタムコマンド
+
+Lua でカスタムコマンドを作成することができます。
+カレントディレクトリに "command.lua" を配置し、起動すると Lua で作成したカスタムコマンドが使用できます。
+
+例えば、以下のようなモデル、アニメーションのロードのスクリプトを作成し、ロードの操作をマクロとして登録することができます。
+
+"command.lua" は、 UTF-8 で記述してください。
+
+```lua
+function OpenModel(files)
+    return function ()
+        ExecuteCommand("clear", "-all")
+        for i, filename in ipairs(files) do
+            ExecuteCommand("open", filename)
+        end
+    end
+end
+
+function OpenAnim(files, isPlay)
+    return function ()
+        for i, filename in ipairs(files) do
+            ExecuteCommand("open", filename)
+        end
+        if isPlay then
+            ExecuteCommand("play")
+        end
+    end
+end
+
+-- Register Model Load Command
+RegisterCommand("", OpenModel({"Model1_Path"}), "Menu1")
+RegisterCommand("", OpenModel({"Model2_Path"}), "Menu2")
+
+-- Register Animation Load Command
+anims = {
+    "ModelAnim_Path",
+    "CameraAnim_Path",
+}
+RegisterCommand("", OpenAnim(anims, true), "Anim1")
+
+```
+
+"command.lua" で使用できるコマンドは以下になります。
+
+### RegisterCommand
+```lua
+RegisterCommand(commandName, commandFunc, menuName)
+-- コマンドを登録します。
+
+-- commandName : コマンド名
+-- 空文字列の場合、コマンド名は自動的に作成されます。
+
+-- commandFunc : コマンド関数
+
+-- menuName : メニュー名
+-- カスタムコマンドをメニューに追加する際の名前です。
+-- 空の場合はメニューに追加されません
+```
+
+```lua
+ExecuteCommand(command, args)
+-- コマンドを実行します。
+
+-- command : 実行するコマンド
+
+--- args : コマンドに渡す引数
+--- 文字列または、テーブルです。
+```

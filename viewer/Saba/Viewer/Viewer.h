@@ -23,6 +23,8 @@
 #include <imgui.h>
 #include <ImGuizmo.h>
 
+#include <sol.hpp>
+
 #include <memory>
 
 namespace saba
@@ -98,6 +100,8 @@ namespace saba
 		void DrawAnimCtrlUI();
 		void UpdateAnimation();
 		void InitializeAnimation();
+		void RegisterCommand();
+		void RefreshCustomCommand();
 
 		bool CmdOpen(const std::vector<std::string>& args);
 		bool CmdClear(const std::vector<std::string>& args);
@@ -107,6 +111,7 @@ namespace saba
 		bool CmdTranslate(const std::vector<std::string>& args);
 		bool CmdRotate(const std::vector<std::string>& args);
 		bool CmdScale(const std::vector<std::string>& args);
+		bool CmdRefreshCustomCommand(const std::vector<std::string>& args);
 
 		bool LoadOBJFile(const std::string& filename);
 		bool LoadPMDFile(const std::string& filename);
@@ -139,6 +144,19 @@ namespace saba
 			FPS60,
 		};
 
+		struct Command
+		{
+			std::string												m_name;
+			std::function<bool(const std::vector<std::string>&)>	m_commandFunc;
+		};
+
+		struct CustomCommand
+		{
+			std::string		m_name;
+			sol::function	m_commandFunc;
+			std::string		m_menuName;
+		};
+
 	private:
 		bool	m_msaaEnable;
 		int		m_msaaCount;
@@ -146,6 +164,7 @@ namespace saba
 		ViewerContext	m_context;
 		std::unique_ptr<GLOBJModelDrawContext>	m_objModelDrawContext;
 		std::unique_ptr<GLMMDModelDrawContext>	m_mmdModelDrawContext;
+		std::vector<Command>	m_commands;
 
 		std::vector<ModelDrawerPtr>	m_modelDrawers;
 		ModelDrawerPtr				m_selectedModelDrawer;
@@ -172,6 +191,9 @@ namespace saba
 
 		//
 		std::vector<ImWchar>	m_gryphRanges;
+
+		std::unique_ptr<sol::state>	m_lua;
+		std::vector<CustomCommand>	m_customCommands;
 
 		// InfoUI
 		bool	m_enableInfoUI;
