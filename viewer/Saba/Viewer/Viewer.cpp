@@ -876,7 +876,7 @@ namespace saba
 						if (args.is<sol::table>())
 						{
 							sol::table argsTable = args;
-							for (auto& argIt = argsTable.begin(); argIt != argsTable.end(); ++argIt)
+							for (auto argIt = argsTable.begin(); argIt != argsTable.end(); ++argIt)
 							{
 								auto arg = (*argIt).second.as<std::string>();
 								viewerCmd.AddArg(arg);
