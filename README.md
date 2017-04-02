@@ -1,5 +1,7 @@
 # Saba
 
+[![Build status](https://ci.appveyor.com/api/projects/status/kjk8chdx0du65m3n?svg=true)](https://ci.appveyor.com/project/benikabocha/saba)
+
 * MMD を再生できるライブラリ
 * 簡易 OpenGL Viewer
 
