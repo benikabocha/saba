@@ -62,25 +62,24 @@ cache:
 
 before_install:
   - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then
-      brew update;
-      brew install glfw;
+      brew update
+      brew install glfw
     fi
   - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then
-      export GLFW_ROOT="${TRAVIS_BUILD_DIR}/deps/glfw" ;
+      export GLFW_ROOT="${TRAVIS_BUILD_DIR}/deps/glfw"
       if [[ -z "$(ls -A ${GLFW_ROOT})" ]]; then
         (
-          travis_retry git clone --depth 1 -b 3.2.1 https://github.com/glfw/glfw.git &&
-          cd glfw && mkdir build && cd build &&
-          cmake -D GLFW_INSTALL=ON -D GLFW_BUILD_EXAMPLES=OFF
-            -D GLFW_BUILD_DOCS=OFF -D GLFW_BUILD_TESTS=OFF
-            -D CMAKE_INSTALL_PREFIX=${GLFW_ROOT} .. &&
+          travis_retry git clone --depth 1 -b 3.2.1 https://github.com/glfw/glfw.git
+          cd glfw && mkdir build && cd build
+          cmake -D GLFW_INSTALL=ON -D GLFW_BUILD_EXAMPLES=OFF \
+            -D GLFW_BUILD_DOCS=OFF -D GLFW_BUILD_TESTS=OFF \
+            -D CMAKE_INSTALL_PREFIX=${GLFW_ROOT} ..
           make install
         )
       fi
     fi
   
 script:
-  - mkdir build && cd build && cmake
-    -D CMAKE_C_COMPILER=${C_COMPILER} -D CMAKE_CXX_COMPILER=${CXX_COMPILER}
-    -D SABA_GLFW_ROOT=${GLFW_ROOT} .. &&
+  - mkdir build && cd build ;
+    cmake -D CMAKE_C_COMPILER=${C_COMPILER} -D CMAKE_CXX_COMPILER=${CXX_COMPILER} -D SABA_GLFW_ROOT=${GLFW_ROOT} .. ;
     make -j2

@@ -20,7 +20,7 @@ find_path (GLFW_INCLUDE_DIR
 )
 
 if (WIN32)
-    if (MSVC11)
+    if (MSVC11 OR (${MSVC_VERSION} EQUAL 1700))
         find_library (GLFW_LIBRARIES
             NAMES
                 glfw3
@@ -30,7 +30,7 @@ if (WIN32)
             DOCS
                 "The GLFW library"
         )
-    elseif (MSVC12)
+    elseif (MSVC12 OR (${MSVC_VERSION} EQUAL 1800))
         find_library (GLFW_LIBRARIES
             NAMES
                 glfw3
@@ -40,7 +40,7 @@ if (WIN32)
             DOCS
                 "The GLFW library"
         )
-    elseif (MSVC14)
+    elseif (MSVC14 OR (${MSVC_VERSION} EQUAL 1900))
         find_library (GLFW_LIBRARIES
             NAMES
                 glfw3
@@ -106,6 +106,60 @@ else ()
             "-framework CoreVideo"
             "-framework IOKit"
         )
+    else ()
+        find_package(Threads REQUIRED)
+        
+        find_package(X11 REQUIRED)
+
+        # Set up library and include paths
+        list(APPEND GLFW_INCLUDE_DIR "${X11_X11_INCLUDE_PATH}")
+        list(APPEND GLFW_LIBRARIES "${X11_X11_LIB}" "${CMAKE_THREAD_LIBS_INIT}" "${CMAKE_DL_LIBS}")
+
+        # Check for XRandR (modern resolution switching and gamma control)
+        if (NOT X11_Xrandr_FOUND)
+            message(FATAL_ERROR "The RandR library and headers were not found")
+        endif()
+
+        list(APPEND GLFW_INCLUDE_DIR "${X11_Xrandr_INCLUDE_PATH}")
+        list(APPEND GLFW_LIBRARIES "${X11_Xrandr_LIB}")
+
+        # Check for Xinerama (legacy multi-monitor support)
+        if (NOT X11_Xinerama_FOUND)
+            message(FATAL_ERROR "The Xinerama library and headers were not found")
+        endif()
+
+        list(APPEND GLFW_INCLUDE_DIR "${X11_Xinerama_INCLUDE_PATH}")
+        list(APPEND GLFW_LIBRARIES "${X11_Xinerama_LIB}")
+
+        # Check for Xkb (X keyboard extension)
+        if (NOT X11_Xkb_FOUND)
+            message(FATAL_ERROR "The X keyboard extension headers were not found")
+        endif()
+
+        list(APPEND GLFW_INCLUDE_DIR "${X11_Xkb_INCLUDE_PATH}")
+
+        # Check for Xcursor
+        if (NOT X11_Xcursor_FOUND)
+            message(FATAL_ERROR "The Xcursor libraries and headers were not found")
+        endif()
+
+        list(APPEND GLFW_INCLUDE_DIR "${X11_Xcursor_INCLUDE_PATH}")
+        list(APPEND GLFW_LIBRARIES "${X11_Xcursor_LIB}")
+
+        # Check for Xrandr
+        if(NOT X11_Xrandr_FOUND)
+            message(FATAL_ERROR "Xrandr library not found - required for GLFW")
+        endif()
+
+        list(APPEND GLFW_LIBRARIES "${X11_Xrandr_LIB}")
+
+        # Check for xf86vmode
+        if(NOT X11_xf86vmode_FOUND)
+            message(FATAL_ERROR "xf86vmode library not found - required for GLFW")
+        endif()
+
+        list(APPEND GLFW_LIBRARIES "${X11_Xxf86vm_LIB}")
+
     endif ()
 endif()
 
