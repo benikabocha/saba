@@ -64,9 +64,9 @@ before_install:
   - |
     if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then
       brew update
-      brew install glfw
+      brew install glfw bullet
     fi
-    
+
   - |
     if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then
       export GLFW_ROOT="${TRAVIS_BUILD_DIR}/deps/glfw"
