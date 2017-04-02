@@ -36,6 +36,7 @@ matrix:
             - ubuntu-toolchain-r-test
             - llvm-toolchain-precise-3.9
           packages:
+            - g++-6
             - clang-3.9
             - cmake
             - cmake-data
