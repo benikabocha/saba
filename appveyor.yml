@@ -1,0 +1,65 @@
+version: 0.0.1.{build}
+image:
+- Visual Studio 2017
+- Visual Studio 2015
+environment:
+  GLFW_URL: https://github.com/glfw/glfw.git
+  GLFW_ROOT: c:\projects\dep\glfw
+  GLFW_TAG: 3.2.1
+  BULLET_URL: https://github.com/bulletphysics/bullet3.git
+  BULLET_ROOT: c:\projects\dep\bullet
+  BULLET_TAG: 2.86.1
+install:
+- ps: >-
+    $GEN=""
+
+    if ($env:APPVEYOR_BUILD_WORKER_IMAGE -eq "Visual Studio 2015") { $GEN="Visual Studio 14 2015 Win64"}
+
+    if ($env:APPVEYOR_BUILD_WORKER_IMAGE -eq "Visual Studio 2017") { $GEN="Visual Studio 14 2017 Win64"}
+
+
+    if (-Not (Test-Path $env:GLFW_ROOT)) {
+        git clone --depth 1 -b $env:GLFW_TAG $env:GLFW_URL
+        cd glfw
+        mkdir build
+        cd build
+        cmake -G $GEN -D GLFW_INSTALL=ON -D GLFW_BUILD_EXAMPLES=OFF -D GLFW_BUILD_DOCS=OFF -D GLFW_BUILD_TESTS=OFF -D CMAKE_INSTALL_PREFIX=$env:GLFW_ROOT ..
+        cmake --build . --config Release --target ALL_BUILD
+        cmake --build . --config Release --target INSTALL
+        cd $env:APPVEYOR_BUILD_FOLDER
+    }
+
+
+    if (-Not (Test-Path $env:BULLET_ROOT)) {
+        git clone --depth 1 -b $env:BULLET_TAG $env:BULLET_URL
+        cd bullet3
+        mkdir build
+        cd build
+        cmake -G $GEN -D INSTALL_LIBS=ON -D USE_MSVC_RUNTIME_LIBRARY_DLL=ON -D BUILD_CPU_DEMOS=OFF -D BUILD_OPENGL3_DEMOS=OFF -D BUILD_BULLET2_DEMOS=OFF -D BUILD_UNIT_TESTS=OFF -D CMAKE_INSTALL_PREFIX=$env:BULLET_ROOT ..
+        cmake --build . --config Release --target ALL_BUILD
+        cmake --build . --config Release --target INSTALL
+        cd $env:APPVEYOR_BUILD_FOLDER
+    }
+cache:
+- c:\projects\dep\glfw
+- c:\projects\dep\bullet
+build_script:
+- ps: >-
+    $GEN=""
+
+    if ($env:APPVEYOR_BUILD_WORKER_IMAGE -eq "Visual Studio 2015") { $GEN="Visual Studio 14 2015 Win64"}
+
+    if ($env:APPVEYOR_BUILD_WORKER_IMAGE -eq "Visual Studio 2017") { $GEN="Visual Studio 14 2017 Win64"}
+
+
+    mkdir build
+
+    cd build
+
+    cmake -G $GEN -D SABA_INSTALL=ON -D SABA_BULLET_ROOT=$env:BULLET_ROOT -D SABA_GLFW_ROOT=$env:GLFW_ROOT -D CMAKE_INSTALL_PREFIX=../output ..
+
+    cmake --build . --config Release --target ALL_BUILD
+
+    cmake --build . --config Release --target INSTALL
+artifacts:
+- path: .\output
