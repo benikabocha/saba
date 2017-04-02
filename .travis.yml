@@ -66,6 +66,7 @@ before_install:
       brew update
       brew install glfw
     fi
+    
   - |
     if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then
       export GLFW_ROOT="${TRAVIS_BUILD_DIR}/deps/glfw"
