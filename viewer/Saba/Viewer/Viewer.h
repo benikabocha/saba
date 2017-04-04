@@ -25,6 +25,8 @@
 
 #include <sol.hpp>
 
+#include <map>
+#include <string>
 #include <memory>
 
 namespace saba
@@ -157,6 +159,20 @@ namespace saba
 			std::string		m_menuName;
 		};
 
+		using CustomCommandPtr = std::unique_ptr<CustomCommand>;
+
+		struct CustomCommandMenuItem
+		{
+			std::string										m_name;
+			std::map<std::string, CustomCommandMenuItem>	m_items;
+			CustomCommand*									m_command;
+
+			CustomCommandMenuItem& operator[] (const std::string& name)
+			{
+				return m_items[name];
+			}
+		};
+
 	private:
 		bool	m_msaaEnable;
 		int		m_msaaCount;
@@ -192,8 +208,9 @@ namespace saba
 		//
 		std::vector<ImWchar>	m_gryphRanges;
 
-		std::unique_ptr<sol::state>	m_lua;
-		std::vector<CustomCommand>	m_customCommands;
+		std::unique_ptr<sol::state>		m_lua;
+		std::vector<CustomCommandPtr>	m_customCommands;
+		CustomCommandMenuItem			m_customCommandMenuItemRoot;
 
 		// InfoUI
 		bool	m_enableInfoUI;

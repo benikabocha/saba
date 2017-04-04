@@ -336,16 +336,39 @@ namespace saba
 					}
 					if (ImGui::BeginMenu("CustomCommand"))
 					{
-						for (auto& customCmd : m_customCommands)
+						if (ImGui::MenuItem("RefreshCustomCommand"))
 						{
-							if (ImGui::MenuItem(customCmd.m_menuName.c_str()))
-							{
-								ViewerCommand cmd;
-								cmd.SetCommand(customCmd.m_name);
-								ExecuteCommand(cmd);
-							}
+							ViewerCommand cmd;
+							cmd.SetCommand("refreshCustomCommand");
+							ExecuteCommand(cmd);
 						}
-						ImGui::EndMenu();
+						ImGui::Separator();
+
+						auto addCustomMenu = [this](auto addCustomMenu, CustomCommandMenuItem* parentMenuItem) -> void
+						{
+							for (auto& menuItemPair : (*parentMenuItem).m_items)
+							{
+								if (menuItemPair.second.m_command == nullptr)
+								{
+									if (ImGui::BeginMenu(menuItemPair.first.c_str()))
+									{
+										addCustomMenu(addCustomMenu, &menuItemPair.second);
+									}
+								}
+								else
+								{
+									if (ImGui::MenuItem(menuItemPair.first.c_str()))
+									{
+										ViewerCommand cmd;
+										cmd.SetCommand(menuItemPair.second.m_command->m_name);
+										ExecuteCommand(cmd);
+									}
+								}
+							}
+							ImGui::EndMenu();
+						};
+
+						addCustomMenu(addCustomMenu, &m_customCommandMenuItemRoot);
 					}
 					ImGui::EndMainMenuBar();
 				}
@@ -814,6 +837,7 @@ namespace saba
 			if (cmdLuaFile.ReadAll(&cmdText))
 			{
 				m_customCommands.clear();
+				m_customCommandMenuItemRoot.m_items.clear();
 				m_lua = std::make_unique<sol::state>();
 				m_lua->open_libraries(sol::lib::base, sol::lib::package);
 
@@ -846,7 +870,7 @@ namespace saba
 						bool findCutomCmd = m_customCommands.end() != std::find_if(
 							m_customCommands.begin(),
 							m_customCommands.end(),
-							[&cmdName](const CustomCommand& customCmd) { return customCmd.m_name == cmdName; }
+							[&cmdName](const CustomCommandPtr& customCmd) { return customCmd->m_name == cmdName; }
 						);
 						if (findCutomCmd)
 						{
@@ -855,10 +879,33 @@ namespace saba
 						}
 
 						// Register custom command.
-						CustomCommand cmd;
-						cmd.m_name = cmdName;
-						cmd.m_commandFunc = func;
-						cmd.m_menuName = menuName;
+						std::unique_ptr<CustomCommand> cmd = std::make_unique<CustomCommand>();
+						cmd->m_name = cmdName;
+						cmd->m_commandFunc = func;
+						cmd->m_menuName = menuName;
+						if (!cmdName.empty())
+						{
+							size_t offset = 0;
+							auto* curMenuItem = &m_customCommandMenuItemRoot;
+							while (offset < menuName.size())
+							{
+								auto findIdx = menuName.find('/', offset);
+								std::string itemName = menuName.substr(offset, findIdx - offset);
+								if (!itemName.empty())
+								{
+									// Add sub menu entry.
+									(*curMenuItem)[itemName].m_name = itemName;
+									(*curMenuItem)[itemName].m_command = nullptr;
+									curMenuItem = &((*curMenuItem)[itemName]);
+								}
+								if (findIdx == std::string::npos)
+								{
+									break;
+								}
+								offset = findIdx + 1;
+							}
+							curMenuItem->m_command = cmd.get();
+						}
 						m_customCommands.emplace_back(std::move(cmd));
 					}
 					else
@@ -939,7 +986,7 @@ namespace saba
 			auto findIt = std::find_if(
 				m_customCommands.begin(),
 				m_customCommands.end(),
-				[&cmd](const CustomCommand& customCmd) { return cmd.GetCommand() == customCmd.m_name; }
+				[&cmd](const CustomCommandPtr& customCmd) { return cmd.GetCommand() == customCmd->m_name; }
 			);
 			if (findIt != m_customCommands.end())
 			{
@@ -949,7 +996,7 @@ namespace saba
 				{
 					argsTable.add(arg);
 				}
-				sol::function_result ret = (*findIt).m_commandFunc(argsTable);
+				sol::function_result ret = (*findIt)->m_commandFunc(argsTable);
 				return ret.valid();
 			}
 		}
