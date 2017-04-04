@@ -335,15 +335,15 @@ function OpenAnim(files, isPlay)
 end
 
 -- Register Model Load Command
-RegisterCommand("", OpenModel({"Model1_Path"}), "Menu1")
-RegisterCommand("", OpenModel({"Model2_Path"}), "Menu2")
+RegisterCommand("", OpenModel({"Model1_Path"}), "01_Model/Menu1")
+RegisterCommand("", OpenModel({"Model2_Path"}), "01_Model/Menu2")
 
 -- Register Animation Load Command
 anims = {
     "ModelAnim_Path",
     "CameraAnim_Path",
 }
-RegisterCommand("", OpenAnim(anims, true), "Anim1")
+RegisterCommand("", OpenAnim(anims, true), "02_Anim/Anim1")
 
 ```
 
@@ -362,8 +362,9 @@ RegisterCommand(commandName, commandFunc, menuName)
 -- menuName : メニュー名
 -- カスタムコマンドをメニューに追加する際の名前です。
 -- 空の場合はメニューに追加されません
+-- `/` で階層を追加することができます。
 ```
-
+### ExecuteCommand
 ```lua
 ExecuteCommand(command, args)
 -- コマンドを実行します。
