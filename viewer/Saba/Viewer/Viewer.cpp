@@ -361,7 +361,7 @@ namespace saba
 									{
 										ViewerCommand cmd;
 										cmd.SetCommand(menuItemPair.second.m_command->m_name);
-										ExecuteCommand(cmd);
+										this->ExecuteCommand(cmd);
 									}
 								}
 							}
