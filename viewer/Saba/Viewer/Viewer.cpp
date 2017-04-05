@@ -978,7 +978,17 @@ namespace saba
 			);
 			if (findIt != m_commands.end())
 			{
-				return (*findIt).m_commandFunc(cmd.GetArgs());
+				SABA_INFO("CMD {} Execute", cmd.GetCommand());
+				if ((*findIt).m_commandFunc(cmd.GetArgs()))
+				{
+					SABA_INFO("CMD {} Succeeded.", cmd.GetCommand());
+					return true;
+				}
+				else
+				{
+					SABA_INFO("CMD {} Failed.", cmd.GetCommand());
+					return false;
+				}
 			}
 		}
 
@@ -1008,7 +1018,6 @@ namespace saba
 
 	bool Viewer::CmdOpen(const std::vector<std::string>& args)
 	{
-		SABA_INFO("Cmd Open Execute.");
 		if (args.empty())
 		{
 			SABA_INFO("Cmd Open Args Empty.");
@@ -1054,15 +1063,11 @@ namespace saba
 
 		InitializeAnimation();
 
-		SABA_INFO("Cmd Open Succeeded.");
-
 		return true;
 	}
 
 	bool Viewer::CmdClear(const std::vector<std::string>& args)
 	{
-		SABA_INFO("Cmd Clear Execute.");
-
 		if (args.empty())
 		{
 			// 引数が空の場合は選択中のモデルを消す
@@ -1096,15 +1101,11 @@ namespace saba
 
 		InitializeAnimation();
 
-		SABA_INFO("Cmd Clear Succeeded.");
-
 		return true;
 	}
 
 	bool Viewer::CmdPlay(const std::vector<std::string>& args)
 	{
-		SABA_INFO("Cmd Play Execute.");
-
 		for (auto& modelDrawer : m_modelDrawers)
 		{
 			modelDrawer->Play();
@@ -1112,15 +1113,11 @@ namespace saba
 
 		m_context.SetPlayMode(ViewerContext::PlayMode::Play);
 
-		SABA_INFO("Cmd Play Succeeded.");
-
 		return true;
 	}
 
 	bool Viewer::CmdStop(const std::vector<std::string>& args)
 	{
-		SABA_INFO("Cmd Stop Execute.");
-
 		for (auto& modelDrawer : m_modelDrawers)
 		{
 			modelDrawer->Stop();
@@ -1128,15 +1125,11 @@ namespace saba
 
 		m_context.SetPlayMode(ViewerContext::PlayMode::Stop);
 
-		SABA_INFO("Cmd Stop Succeeded.");
-
 		return true;
 	}
 
 	bool Viewer::CmdSelect(const std::vector<std::string>& args)
 	{
-		SABA_INFO("Cmd Select Execute.");
-
 		if (args.empty())
 		{
 			SABA_INFO("Cmd Select : Model name is empty");
@@ -1150,8 +1143,6 @@ namespace saba
 			return false;
 		}
 		m_selectedModelDrawer = findModelDrawer;
-
-		SABA_INFO("Cmd Select Succeeded.");
 		return true;
 	}
 
@@ -1209,8 +1200,6 @@ namespace saba
 
 	bool Viewer::CmdTranslate(const std::vector<std::string>& args)
 	{
-		SABA_INFO("Cmd Select Execute.");
-
 		if (m_selectedModelDrawer == nullptr)
 		{
 			SABA_INFO("Cmd Translate : Selected model is null.");
@@ -1226,15 +1215,11 @@ namespace saba
 
 		m_selectedModelDrawer->SetTranslate(translate);
 
-		SABA_INFO("Cmd Translate Succeeded.");
-
 		return true;
 	}
 
 	bool Viewer::CmdRotate(const std::vector<std::string>& args)
 	{
-		SABA_INFO("Cmd Rotate Execute.");
-
 		if (m_selectedModelDrawer == nullptr)
 		{
 			SABA_INFO("Cmd Rotate : Selected model is null.");
@@ -1250,15 +1235,11 @@ namespace saba
 
 		m_selectedModelDrawer->SetRotate(glm::radians(rotate));
 
-		SABA_INFO("Cmd Rotate Succeeded.");
-
 		return true;
 	}
 
 	bool Viewer::CmdScale(const std::vector<std::string>& args)
 	{
-		SABA_INFO("Cmd Scale Execute.");
-
 		if (m_selectedModelDrawer == nullptr)
 		{
 			SABA_INFO("Cmd Scale : Selected model is null.");
@@ -1274,26 +1255,18 @@ namespace saba
 
 		m_selectedModelDrawer->SetScale(scale);
 
-		SABA_INFO("Cmd Scale Succeeded.");
-
 		return false;
 	}
 
 	bool Viewer::CmdRefreshCustomCommand(const std::vector<std::string>& args)
 	{
-		SABA_INFO("Cmd RefreshCustomCommand Execute.");
-
 		RefreshCustomCommand();
-
-		SABA_INFO("Cmd RefreshCustomCommand Succeeded.");
 
 		return true;
 	}
 
 	bool Viewer::CmdEnableUI(const std::vector<std::string>& args)
 	{
-		SABA_INFO("Cmd enableUI Execute.");
-
 		if (args.empty())
 		{
 			m_context.EnableUI(true);
@@ -1311,8 +1284,6 @@ namespace saba
 				return false;
 			}
 		}
-
-		SABA_INFO("Cmd enableUI Succeeded.");
 
 		return true;
 	}
