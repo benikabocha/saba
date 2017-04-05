@@ -824,6 +824,7 @@ namespace saba
 		m_commands.emplace_back(Command{ "rotate", [this](const Args& args) { return CmdRotate(args); } });
 		m_commands.emplace_back(Command{ "scale", [this](const Args& args) { return CmdScale(args); } });
 		m_commands.emplace_back(Command{ "refreshCustomCommand", [this](const Args& args) { return CmdRefreshCustomCommand(args); } });
+		m_commands.emplace_back(Command{ "enableUI", [this](const Args& args) { return CmdEnableUI(args); } });
 	}
 
 	void Viewer::RefreshCustomCommand()
@@ -1285,6 +1286,33 @@ namespace saba
 		RefreshCustomCommand();
 
 		SABA_INFO("Cmd RefreshCustomCommand Succeeded.");
+
+		return true;
+	}
+
+	bool Viewer::CmdEnableUI(const std::vector<std::string>& args)
+	{
+		SABA_INFO("Cmd enableUI Execute.");
+
+		if (args.empty())
+		{
+			m_context.EnableUI(true);
+		}
+		else
+		{
+			std::string enable = args[0];
+			if (enable == "false")
+			{
+				m_context.EnableUI(false);
+			}
+			else
+			{
+				SABA_INFO("Unknown arg [{}]", args[0]);
+				return false;
+			}
+		}
+
+		SABA_INFO("Cmd enableUI Succeeded.");
 
 		return true;
 	}

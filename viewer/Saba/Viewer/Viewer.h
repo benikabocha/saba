@@ -114,6 +114,7 @@ namespace saba
 		bool CmdRotate(const std::vector<std::string>& args);
 		bool CmdScale(const std::vector<std::string>& args);
 		bool CmdRefreshCustomCommand(const std::vector<std::string>& args);
+		bool CmdEnableUI(const std::vector<std::string>& args);
 
 		bool LoadOBJFile(const std::string& filename);
 		bool LoadPMDFile(const std::string& filename);
