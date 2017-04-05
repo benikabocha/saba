@@ -115,11 +115,16 @@ namespace saba
 		bool CmdScale(const std::vector<std::string>& args);
 		bool CmdRefreshCustomCommand(const std::vector<std::string>& args);
 		bool CmdEnableUI(const std::vector<std::string>& args);
+		bool CmdClearAnimation(const std::vector<std::string>& args);
+		bool CmdClearSceneAnimation(const std::vector<std::string>& args);
 
 		bool LoadOBJFile(const std::string& filename);
 		bool LoadPMDFile(const std::string& filename);
 		bool LoadPMXFile(const std::string& filename);
 		bool LoadVMDFile(const std::string& filename);
+
+		bool ClearAnimation(ModelDrawer* modelDrawer);
+		bool ClearSceneAnimation();
 
 		bool AdjustSceneScale();
 		std::string GetNewModelName();

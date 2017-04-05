@@ -50,6 +50,7 @@ namespace saba
 		void Destroy();
 
 		bool LoadAnimation(const VMDFile& vmd);
+		void ClearAnimation();
 
 		void SetAnimationTime(double time);
 		double GetAnimationTime() const;

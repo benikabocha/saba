@@ -825,6 +825,8 @@ namespace saba
 		m_commands.emplace_back(Command{ "scale", [this](const Args& args) { return CmdScale(args); } });
 		m_commands.emplace_back(Command{ "refreshCustomCommand", [this](const Args& args) { return CmdRefreshCustomCommand(args); } });
 		m_commands.emplace_back(Command{ "enableUI", [this](const Args& args) { return CmdEnableUI(args); } });
+		m_commands.emplace_back(Command{ "clearAnimation", [this](const Args& args) { return CmdClearAnimation(args); } });
+		m_commands.emplace_back(Command{ "clearSceneAnimation", [this](const Args& args) { return CmdClearSceneAnimation(args); } });
 	}
 
 	void Viewer::RefreshCustomCommand()
@@ -1288,6 +1290,32 @@ namespace saba
 		return true;
 	}
 
+	bool Viewer::CmdClearAnimation(const std::vector<std::string>& args)
+	{
+		if (args.empty())
+		{
+			return ClearAnimation(m_selectedModelDrawer.get());
+		}
+		else
+		{
+			if (args[0] == "-all")
+			{
+				for (auto& modelDrawer : m_modelDrawers)
+				{
+					ClearAnimation(modelDrawer.get());
+				}
+			}
+		}
+		return true;
+	}
+
+	bool Viewer::CmdClearSceneAnimation(const std::vector<std::string>& args)
+	{
+		ClearSceneAnimation();
+		AdjustSceneScale();
+		return true;
+	}
+
 	bool Viewer::LoadOBJFile(const std::string & filename)
 	{
 		OBJModel objModel;
@@ -1438,6 +1466,29 @@ namespace saba
 		}
 
 		return mmdModel->LoadAnimation(vmd);
+	}
+
+	bool Viewer::ClearAnimation(ModelDrawer * modelDrawer)
+	{
+		GLMMDModel* mmdModel = nullptr;
+		if (modelDrawer != nullptr && modelDrawer->GetType() == ModelDrawerType::MMDModelDrawer)
+		{
+			auto mmdModelDrawer = reinterpret_cast<GLMMDModelDrawer*>(modelDrawer);
+			mmdModel = mmdModelDrawer->GetModel();
+		}
+
+		if (mmdModel != nullptr)
+		{
+			mmdModel->ClearAnimation();
+		}
+
+		return true;
+	}
+
+	bool Viewer::ClearSceneAnimation()
+	{
+		m_cameraOverrider.reset();
+		return true;
 	}
 
 	bool Viewer::AdjustSceneScale()

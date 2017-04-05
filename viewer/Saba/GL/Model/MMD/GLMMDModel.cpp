@@ -199,6 +199,12 @@ namespace saba
 		return true;
 	}
 
+	void GLMMDModel::ClearAnimation()
+	{
+		m_vmdAnim.reset();
+		m_animTime = 0;
+	}
+
 	void GLMMDModel::SetAnimationTime(double time)
 	{
 		m_animTime = time;
