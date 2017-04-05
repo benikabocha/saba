@@ -304,6 +304,26 @@ saba_viewer で使用できるコマンドです。
 カスタムコマンドをリフレッシュします。
 再起動せずにカスタムコマンドを更新できます。
 
+#### enableUI
+
+`enableUI [false]`
+
+UIの表示、非表示を設定します。
+<F1> キーで表示を切り替えることもできます。
+
+#### clearAnimation
+
+`clearAnimation [-all]`
+
+選択モデルのアニメーションをクリアします。
+-all を指定すると、全モデルのアニメーションをクリアします。
+
+#### clearSceneAnimation
+
+`clearSceneAnimation`
+
+カメラアニメーション等のシーンにかかわるアニメーションをクリアします。
+
 ## カスタムコマンド
 
 Lua でカスタムコマンドを作成することができます。
@@ -325,6 +345,8 @@ end
 
 function OpenAnim(files, isPlay)
     return function ()
+        ExecuteCommand("clearAnimation", "-all")
+        ExecuteCommand("clearSceneAnimation")
         for i, filename in ipairs(files) do
             ExecuteCommand("open", filename)
         end
