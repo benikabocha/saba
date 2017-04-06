@@ -203,6 +203,15 @@ namespace saba
 	{
 		m_vmdAnim.reset();
 		m_animTime = 0;
+		auto morphMan = m_mmdModel->GetMorphManager();
+		size_t morphCount = morphMan->GetMorphCount();
+		for (size_t i = 0; i < morphCount; i++)
+		{
+			auto morph = morphMan->GetMorph(i);
+			morph->SetWeight(0);
+		}
+
+		m_mmdModel->InitializeAnimation();
 	}
 
 	void GLMMDModel::SetAnimationTime(double time)
