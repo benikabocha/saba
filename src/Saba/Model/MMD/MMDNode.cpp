@@ -58,13 +58,13 @@ namespace saba
 		}
 	}
 
-	void MMDNode::BeginUpateTransform()
+	void MMDNode::BeginUpdateTransform()
 	{
 		LoadInitialTRS();
 		OnBeginUpdateTransform();
 	}
 
-	void MMDNode::EndUpateTransform()
+	void MMDNode::EndUpdateTransform()
 	{
 		OnEndUpdateTransfrom();
 	}

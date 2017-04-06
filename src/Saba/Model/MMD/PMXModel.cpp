@@ -102,7 +102,7 @@ namespace saba
 	{
 		for (auto& node : (*m_nodeMan.GetNodes()))
 		{
-			node->BeginUpateTransform();
+			node->BeginUpdateTransform();
 		}
 		size_t vtxCount = m_morphPositions.size();
 		for (size_t vtxIdx = 0; vtxIdx < vtxCount; vtxIdx++)
@@ -116,7 +116,7 @@ namespace saba
 	{
 		for (auto& node : (*m_nodeMan.GetNodes()))
 		{
-			node->EndUpateTransform();
+			node->EndUpdateTransform();
 		}
 	}
 

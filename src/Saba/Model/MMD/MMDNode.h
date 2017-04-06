@@ -20,8 +20,8 @@ namespace saba
 
 		void AddChild(MMDNode* child);
 		// アニメーションの前後て呼ぶ
-		void BeginUpateTransform();
-		void EndUpateTransform();
+		void BeginUpdateTransform();
+		void EndUpdateTransform();
 
 		void UpdateLocalTransform();
 		void UpdateGlobalTransform();

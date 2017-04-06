@@ -103,7 +103,7 @@ namespace saba
 	{
 		for (auto& node : (*m_nodeMan.GetNodes()))
 		{
-			node->BeginUpateTransform();
+			node->BeginUpdateTransform();
 		}
 	}
 
@@ -111,7 +111,7 @@ namespace saba
 	{
 		for (auto& node : (*m_nodeMan.GetNodes()))
 		{
-			node->EndUpateTransform();
+			node->EndUpdateTransform();
 		}
 	}
 
