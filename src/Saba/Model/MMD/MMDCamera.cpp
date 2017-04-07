@@ -30,8 +30,8 @@ namespace saba
 		rot = glm::rotate(rot, cam.m_rotate.x, glm::vec3(1, 0, 0));
 		view = rot * view;
 
-		m_center = cam.m_interest;
 		m_eye = glm::vec3(view[3]) + cam.m_interest;
+		m_center = glm::mat3(view) * glm::vec3(0, 0, -1) + m_eye;
 		m_up = glm::mat3(view) * glm::vec3(0, 1, 0);
 	}
 }

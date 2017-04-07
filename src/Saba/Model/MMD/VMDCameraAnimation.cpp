@@ -65,14 +65,13 @@ namespace saba
 					float fov_x = key0.m_fovBezier.FindBezierX(time);
 
 					float ix_y = key0.m_ixBezier.EvalY(ix_x);
-					float iy_y = key0.m_ixBezier.EvalY(iy_x);
-					float iz_y = key0.m_ixBezier.EvalY(iz_x);
+					float iy_y = key0.m_iyBezier.EvalY(iy_x);
+					float iz_y = key0.m_izBezier.EvalY(iz_x);
 					float rotate_y = key0.m_rotateBezier.EvalY(rotate_x);
 					float distance_y = key0.m_distanceBezier.EvalY(distance_x);
 					float fov_y = key0.m_fovBezier.EvalY(fov_x);
 
-					glm::vec3 di = key1.m_interest - key0.m_interest;
-					m_camera.m_interest = di * glm::vec3(ix_y, iy_y, iz_y) + key0.m_interest;
+					m_camera.m_interest = glm::mix(key0.m_interest, key1.m_interest, glm::vec3(ix_y, iy_y, iz_y));
 					m_camera.m_rotate = glm::mix(key0.m_rotate, key1.m_rotate, rotate_y);
 					m_camera.m_distance = glm::mix(key0.m_distance, key1.m_distance, distance_y);
 					m_camera.m_fov = glm::mix(key0.m_fov, key1.m_fov, fov_y);
@@ -90,6 +89,7 @@ namespace saba
 				}
 			}
 		}
+
 	}
 
 	void VMDCameraController::SortKeys()
