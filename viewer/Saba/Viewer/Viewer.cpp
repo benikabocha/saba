@@ -268,7 +268,7 @@ namespace saba
 				}
 			}
 
-			if (m_mouse.m_scrollY != 0)
+			if (m_mouse.m_scrollY != 0 && (!ImGui::GetIO().WantCaptureMouse))
 			{
 				m_context.m_camera.Dolly((float)m_mouse.m_scrollY * 0.1f);
 			}
