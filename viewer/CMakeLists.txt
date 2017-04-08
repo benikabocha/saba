@@ -40,6 +40,7 @@ set (
 set (
     VIEWER_SOURCE
     Saba/Viewer/Camera.cpp
+    Saba/Viewer/Light.cpp
     Saba/Viewer/Grid.cpp
     Saba/Viewer/ModelDrawer.cpp
     Saba/Viewer/Viewer.cpp
@@ -51,6 +52,7 @@ set (
 set (
     VIEWER_HEADER
     Saba/Viewer/Camera.h
+    Saba/Viewer/Light.h
     Saba/Viewer/Grid.h
     Saba/Viewer/ModelDrawer.h
     Saba/Viewer/Viewer.h

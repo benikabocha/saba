@@ -244,8 +244,8 @@ namespace saba
 				glBindTexture(GL_TEXTURE_2D, 0);
 			}
 
-			glm::vec3 lightColor = glm::vec3(0.6f);
-			glm::vec3 lightDir = glm::normalize(glm::vec3(-0.5f, -1.0f, -0.5f));
+			glm::vec3 lightColor = ctxt->GetLight()->GetLightColor();
+			glm::vec3 lightDir = ctxt->GetLight()->GetLightDirection();
 			glm::mat3 viewMat = glm::mat3(ctxt->GetCamera()->GetViewMatrix());
 			lightDir = viewMat * lightDir;
 			SetUniform(shader->m_uLightDir, lightDir);

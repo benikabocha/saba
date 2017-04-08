@@ -7,9 +7,12 @@
 #define SABA_VIEWER_VIEWERCONTEXT_H_
 
 #include "Camera.h"
+#include "Light.h"
 
 #include <string>
 #include "../GL/GLSLUtil.h"
+
+#include <glm/vec3.hpp>
 
 namespace saba
 {
@@ -34,6 +37,7 @@ namespace saba
 		const std::string& GetShaderDir() const { return m_shaderDir; }
 
 		const Camera* GetCamera() const { return &m_camera; }
+		const Light* GetLight() const { return &m_light; }
 
 		bool IsUIEnabled() const { return m_uiEnable; }
 		bool IsCameraOverride() const { return m_cameraOverride; }
@@ -59,6 +63,7 @@ namespace saba
 		void SetPlayMode(PlayMode playMode) { m_playMode = playMode; }
 
 		void SetCamera(const Camera& cam) { m_camera = cam; }
+		void SetLight(const Light& light) { m_light = light; }
 
 	private:
 		std::string	m_workDir;
@@ -66,6 +71,7 @@ namespace saba
 		std::string	m_shaderDir;
 
 		Camera	m_camera;
+		Light	m_light;
 
 		bool	m_uiEnable;
 		bool	m_cameraOverride;

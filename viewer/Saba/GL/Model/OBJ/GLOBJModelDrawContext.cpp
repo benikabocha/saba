@@ -27,6 +27,8 @@ namespace saba
 		m_uDiffuse = glGetUniformLocation(m_prog, "u_Diffuse");
 		m_uSpecular = glGetUniformLocation(m_prog, "u_Specular");
 		m_uSpecularPower = glGetUniformLocation(m_prog, "u_SpecularPower");
+		m_uLightDir = glGetUniformLocation(m_prog, "u_LightDir");
+		m_uLightColor = glGetUniformLocation(m_prog, "u_LightColor");
 		m_uTransparency = glGetUniformLocation(m_prog, "u_Transparency");
 		m_uAmbinetTex = glGetUniformLocation(m_prog, "u_AmbientTex");
 		m_uDiffuseTex = glGetUniformLocation(m_prog, "u_DiffuseTex");

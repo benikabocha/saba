@@ -12,6 +12,8 @@ uniform vec3	u_Diffuse;
 uniform vec3	u_Specular;
 uniform float	u_SpecularPower;
 uniform float	u_Transparency;
+uniform vec3	u_LightDir;
+uniform vec3	u_LightColor;
 
 #ifdef	USE_AMBIENT_TEX
 uniform sampler2D	u_AmbientTex;
@@ -43,7 +45,7 @@ vec3 BlendVec3(vec3 color, vec3 tex)
 
 void main()
 {
-	vec3 lightDir = vec3(0.0, 0.0, -1.0);
+	vec3 lightDir = normalize(u_LightDir);
 	vec3 nor = normalize(vs_Nor);
 
 	// Ambient
@@ -62,6 +64,7 @@ void main()
 
 	float ln = dot(-lightDir, nor);
 	diffuse *= max(0.0, ln);
+	diffuse *= u_LightColor;
 
 	// Specular
 	vec3 specular = u_Specular;
@@ -74,6 +77,7 @@ void main()
 		vec3 rn = reflect(-lightDir, nor);
 		float cosAngle = max(0.0, dot(normalize(vs_Pos), rn));
 		specular *= pow(cosAngle, u_SpecularPower);
+		specular *= u_LightColor;
 	}
 
 	fs_Color.rgb = ambient + diffuse + specular;

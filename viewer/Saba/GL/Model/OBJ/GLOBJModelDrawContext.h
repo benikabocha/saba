@@ -34,6 +34,8 @@ namespace saba
 		GLint	m_uSpecular;
 		GLint	m_uSpecularPower;
 		GLint	m_uTransparency;
+		GLint	m_uLightDir;
+		GLint	m_uLightColor;
 		GLint	m_uAmbinetTex;
 		GLint	m_uDiffuseTex;
 		GLint	m_uSpecularTex;

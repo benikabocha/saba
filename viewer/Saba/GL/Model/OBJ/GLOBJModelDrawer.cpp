@@ -150,6 +150,13 @@ namespace saba
 			SetUniform(objShader->m_uSpecularPower, objMat.m_specularPower);
 			SetUniform(objShader->m_uTransparency, objMat.m_transparency);
 
+			glm::vec3 lightColor = ctxt->GetLight()->GetLightColor();
+			glm::vec3 lightDir = ctxt->GetLight()->GetLightDirection();
+			glm::mat3 viewMat = glm::mat3(ctxt->GetCamera()->GetViewMatrix());
+			lightDir = viewMat * lightDir;
+			SetUniform(objShader->m_uLightDir, lightDir);
+			SetUniform(objShader->m_uLightColor, lightColor);
+
 			if (objMat.m_ambientTex != 0)
 			{
 				glActiveTexture(GL_TEXTURE0 + 0);
