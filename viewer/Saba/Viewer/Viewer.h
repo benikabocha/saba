@@ -102,6 +102,8 @@ namespace saba
 		void DrawModelListCrtl();
 		void DrawTransformCtrl();
 		void DrawAnimCtrl();
+		void DrawLightCtrl();
+		void DrawLightGuide();
 		void DrawModelCtrl();
 		void UpdateAnimation();
 		void InitializeAnimation();
@@ -208,6 +210,7 @@ namespace saba
 		CameraMode	m_cameraMode;
 		Grid		m_grid;
 		MouseLockMode	m_mouseLockMode;
+		float		m_sceneUnit;
 
 		double		m_prevTime;
 
@@ -242,6 +245,13 @@ namespace saba
 
 		// Control UI
 		bool		m_enableCtrlUI;
+
+		// Light Ctrl
+		bool		m_enableLightManip;
+		bool		m_enableLightGuide;
+		ImGuizmo::OPERATION	m_lightManipOp;
+		glm::vec3	m_lightManipPos;
+		glm::mat4	m_lgihtManipMat;
 
 		// Camera Override
 		bool	m_cameraOverride;

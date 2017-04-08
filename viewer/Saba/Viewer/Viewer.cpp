@@ -28,6 +28,8 @@
 #include <imgui_impl_glfw_gl3.h>
 #include <ImGuizmo.h>
 
+#include <glm/gtc/matrix_transform.hpp>
+
 #include <array>
 #include <deque>
 #include <sstream>
@@ -90,6 +92,7 @@ namespace saba
 		, m_uColor2(-2)
 		, m_cameraMode(CameraMode::None)
 		, m_mouseLockMode(MouseLockMode::None)
+		, m_sceneUnit(1)
 		, m_prevTime(0)
 		, m_modelNameID(1)
 		, m_enableInfoUI(true)
@@ -101,6 +104,9 @@ namespace saba
 		, m_animCtrlEditFPS(30.0f)
 		, m_animCtrlFPSMode(FPSMode::FPS30)
 		, m_enableCtrlUI(true)
+		, m_enableLightManip(false)
+		, m_enableLightGuide(false)
+		, m_lightManipOp(ImGuizmo::ROTATE)
 		, m_cameraOverride(true)
 		, m_clipElapsed(true)
 	{
@@ -298,7 +304,13 @@ namespace saba
 					}
 					if (ImGui::BeginMenu("Edit"))
 					{
-						ImGui::MenuItem("Manipulater", nullptr, &m_enableManip);
+						if (ImGui::MenuItem("Manipulater", nullptr, &m_enableManip))
+						{
+							if (m_enableManip)
+							{
+								m_enableLightManip = false;
+							}
+						}
 						ImGui::EndMenu();
 					}
 					if (ImGui::BeginMenu("Viewer"))
@@ -529,6 +541,11 @@ namespace saba
 			DrawManip();
 		}
 		DrawCtrlUI();
+
+		ImGui::SetNextWindowPos(ImVec2(0, 0));
+		ImGui::Begin("BG", nullptr, ImGui::GetIO().DisplaySize, 0, ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoInputs | ImGuiWindowFlags_NoFocusOnAppearing | ImGuiWindowFlags_NoBringToFrontOnFocus);
+		DrawLightGuide();
+		ImGui::End();
 	}
 
 	void Viewer::DrawInfoUI()
@@ -683,6 +700,10 @@ namespace saba
 		{
 			DrawAnimCtrl();
 		}
+		if (ImGui::CollapsingHeader("Light"))
+		{
+			DrawLightCtrl();
+		}
 		if (ImGui::CollapsingHeader("Model"))
 		{
 			if (ImGui::TreeNode("Model List"))
@@ -722,7 +743,13 @@ namespace saba
 
 	void Viewer::DrawTransformCtrl()
 	{
-		ImGui::Checkbox("Manipulator", &m_enableManip);
+		if (ImGui::Checkbox("Manipulator", &m_enableManip))
+		{
+			if (m_enableManip)
+			{
+				m_enableLightManip = false;
+			}
+		}
 
 		if (ImGui::RadioButton("Translate", m_currentManipOp == ImGuizmo::TRANSLATE))
 		{
@@ -788,6 +815,112 @@ namespace saba
 		if (ImGui::Button("Prev Frame"))
 		{
 			m_context.SetPlayMode(ViewerContext::PlayMode::PrevFrame);
+		}
+	}
+
+	namespace
+	{
+		ImVec2 WorldToScreen(const glm::vec3& pos, const glm::mat4& m)
+		{
+			ImGuiIO& io = ImGui::GetIO();
+
+			auto screenPos = m * glm::vec4(pos, 1.0f);
+			screenPos *= 0.5f / screenPos.w;
+			screenPos += glm::vec4(0.5f, 0.5f, 0.0f, 0.0f);
+			screenPos.y = 1.0f - screenPos.y;
+			screenPos.x *= io.DisplaySize.x;
+			screenPos.y *= io.DisplaySize.y;
+			return ImVec2(screenPos.x, screenPos.y);
+		}
+	}
+
+	void Viewer::DrawLightCtrl()
+	{
+		glm::vec3 lightDir = m_context.GetLight()->GetLightDirection();
+		glm::vec3 lightColor = m_context.GetLight()->GetLightColor();
+		if (ImGui::InputFloat3("Direction", &lightDir[0]))
+		{
+			glm::quat rot(glm::vec3(0, 0, -1), glm::normalize(lightDir));
+			m_lgihtManipMat = glm::translate(glm::mat4(), m_lightManipPos) * glm::mat4_cast(rot);
+		}
+		ImGui::ColorEdit3("Color", &lightColor[0]);
+		if (ImGui::Checkbox("Use Manip", &m_enableLightManip))
+		{
+			if (m_enableLightManip)
+			{
+				// 別のマニピュレーターが動いていたら OFF
+				m_enableManip = false;
+
+				glm::quat rot(glm::vec3(0, 0, -1), glm::normalize(lightDir));
+				m_lgihtManipMat = glm::translate(glm::mat4(), m_lightManipPos) * glm::mat4_cast(rot);
+			}
+			else
+			{
+				m_enableLightGuide = false;
+			}
+		}
+		if (ImGui::Checkbox("Light Guide", &m_enableLightGuide))
+		{
+			glm::quat rot(glm::vec3(0, 0, -1), glm::normalize(lightDir));
+			m_lgihtManipMat = glm::translate(glm::mat4(), m_lightManipPos) * glm::mat4_cast(rot);
+		}
+
+		if (m_enableLightManip)
+		{
+			m_enableLightGuide = true;
+
+			if (ImGui::RadioButton("Translate", m_lightManipOp == ImGuizmo::TRANSLATE))
+			{
+				m_lightManipOp = ImGuizmo::TRANSLATE;
+			}
+			if (ImGui::RadioButton("Rotate", m_lightManipOp == ImGuizmo::ROTATE))
+			{
+				m_lightManipOp = ImGuizmo::ROTATE;
+			}
+			const auto& view = m_context.GetCamera()->GetViewMatrix();
+			const auto& proj = m_context.GetCamera()->GetProjectionMatrix();
+
+			ImGuizmo::Manipulate(
+				&view[0][0],
+				&proj[0][0],
+				m_lightManipOp,
+				ImGuizmo::LOCAL,
+				&m_lgihtManipMat[0][0]
+			);
+
+			glm::vec3 t, r, s;
+			ImGuizmo::DecomposeMatrixToComponents(&m_lgihtManipMat[0][0], &t[0], &r[0], &s[0]);
+
+			lightDir = glm::mat3(m_lgihtManipMat) * glm::vec3(0, 0, -1);
+			m_lightManipPos = t;
+		}
+
+		Light light;
+		light.SetLightDirection(lightDir);
+		light.SetLightColor(lightColor);
+		m_context.SetLight(light);
+	}
+
+	void Viewer::DrawLightGuide()
+	{
+		if (m_enableLightGuide)
+		{
+			glm::vec3 lightDir = m_context.GetLight()->GetLightDirection();
+			const auto& view = m_context.GetCamera()->GetViewMatrix();
+			const auto& proj = m_context.GetCamera()->GetProjectionMatrix();
+
+			auto drawList = ImGui::GetWindowDrawList();
+			auto wvp = proj * view * m_lgihtManipMat;
+			auto startPos = WorldToScreen(glm::vec3(0), wvp);
+			auto endPos = WorldToScreen(glm::vec3(0, 0, -m_sceneUnit), wvp);
+			auto axEndoPos = WorldToScreen(glm::vec3(m_sceneUnit * 0.1f, 0, 0), wvp);
+			auto ayEndoPos = WorldToScreen(glm::vec3(0, m_sceneUnit * 0.1f, 0), wvp);
+			auto azEndoPos = WorldToScreen(glm::vec3(0, 0, m_sceneUnit * 0.1f), wvp);
+
+			drawList->AddLine(startPos, endPos, ImColor(1.0f, 0.9f, 0.1f));
+			drawList->AddLine(startPos, axEndoPos, ImColor(1.0f, 0.0f, 0.0f));
+			drawList->AddLine(startPos, ayEndoPos, ImColor(0.0f, 1.0f, 0.0f));
+			drawList->AddLine(startPos, azEndoPos, ImColor(0.0f, 0.0f, 1.8f));
 		}
 	}
 
@@ -1563,7 +1696,12 @@ namespace saba
 			return false;
 		}
 
-		SABA_INFO("radisu [{}] grid [{}]", radius, gridSize);
+		m_sceneUnit = gridSize;
+
+		SABA_INFO("bbox [{}, {}, {}] - [{}, {}, {}] radisu [{}] grid [{}]",
+			bboxMin.x, bboxMin.y, bboxMin.z,
+			bboxMax.x, bboxMax.y, bboxMax.z,
+			radius, gridSize);
 
 		return true;
 	}
