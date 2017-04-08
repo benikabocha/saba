@@ -47,7 +47,8 @@ void main()
 	vec3 eyeDir = normalize(vs_Pos);
 	vec3 lightDir = normalize(-u_LightDir);
 	vec3 nor = normalize(vs_Nor);
-    float ln = max(dot(nor, lightDir), 0.0);
+	float ln = dot(nor, lightDir);
+	ln = clamp(ln + 0.5, 0.0, 1.0);
 	vec3 color = vec3(0.0, 0.0, 0.0);
 	float alpha = u_Alpha;
 	vec3 diffuseColor = u_Diffuse * u_LightColor;
@@ -87,7 +88,7 @@ void main()
 
 	if (u_ToonTexMode != 0)
 	{
-		vec3 toonColor = texture(u_ToonTex, vec2(0.0, ln)).rgb;
+		vec3 toonColor = texture(u_ToonTex, vec2(0.0, 1.0 - ln)).rgb;
 		toonColor = ComputeTexMulFactor(toonColor, u_ToonTexMulFactor);
 		toonColor = ComputeTexAddFactor(toonColor, u_ToonTexAddFactor);
 		color *= toonColor;
