@@ -97,9 +97,12 @@ namespace saba
 		void DrawInfoUI();
 		void DrawLogUI();
 		void DrawCommandUI();
-		void DrawModelListUI();
 		void DrawManip();
-		void DrawAnimCtrlUI();
+		void DrawCtrlUI();
+		void DrawModelListCrtl();
+		void DrawTransformCtrl();
+		void DrawAnimCtrl();
+		void DrawModelCtrl();
 		void UpdateAnimation();
 		void InitializeAnimation();
 		void RegisterCommand();
@@ -228,18 +231,17 @@ namespace saba
 		// CommandUI
 		bool	m_enableCommandUI;
 
-		// ModelListUI
-		bool	m_enableModelListUI;
-
 		// Manipulator
 		bool				m_enableManip;
 		ImGuizmo::OPERATION	m_currentManipOp;
 		ImGuizmo::MODE		m_currentManipMode;
 
-		// AnimCtrlUI
-		bool		m_enableAnimCtrlUI;
+		// AnimCtrl
 		float		m_animCtrlEditFPS;
 		FPSMode		m_animCtrlFPSMode;
+
+		// Control UI
+		bool		m_enableCtrlUI;
 
 		// Camera Override
 		bool	m_cameraOverride;

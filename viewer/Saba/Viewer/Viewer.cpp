@@ -95,13 +95,12 @@ namespace saba
 		, m_enableInfoUI(true)
 		, m_enableLogUI(true)
 		, m_enableCommandUI(true)
-		, m_enableModelListUI(true)
 		, m_enableManip(false)
 		, m_currentManipOp(ImGuizmo::TRANSLATE)
-		, m_currentManipMode(ImGuizmo::WORLD)
-		, m_enableAnimCtrlUI(true)
+		, m_currentManipMode(ImGuizmo::LOCAL)
 		, m_animCtrlEditFPS(30.0f)
 		, m_animCtrlFPSMode(FPSMode::FPS30)
+		, m_enableCtrlUI(true)
 		, m_cameraOverride(true)
 		, m_clipElapsed(true)
 	{
@@ -294,8 +293,7 @@ namespace saba
 						ImGui::MenuItem("Info", nullptr, &m_enableInfoUI);
 						ImGui::MenuItem("Log", nullptr, &m_enableLogUI);
 						ImGui::MenuItem("Command", nullptr, &m_enableCommandUI);
-						ImGui::MenuItem("Model List", nullptr, &m_enableModelListUI);
-						ImGui::MenuItem("Animation Control", nullptr, &m_enableAnimCtrlUI);
+						ImGui::MenuItem("Control", nullptr, &m_enableCtrlUI);
 						ImGui::EndMenu();
 					}
 					if (ImGui::BeginMenu("Edit"))
@@ -508,9 +506,6 @@ namespace saba
 
 		for (auto& modelDrawer : m_modelDrawers)
 		{
-			// DrawUI
-			modelDrawer->DrawUI(&m_context);
-
 			// Update
 			modelDrawer->Update(&m_context);
 
@@ -529,9 +524,11 @@ namespace saba
 		DrawInfoUI();
 		DrawLogUI();
 		DrawCommandUI();
-		DrawModelListUI();
-		DrawAnimCtrlUI();
-		DrawManip();
+		if (m_enableManip)
+		{
+			DrawManip();
+		}
+		DrawCtrlUI();
 	}
 
 	void Viewer::DrawInfoUI()
@@ -635,20 +632,81 @@ namespace saba
 		ImGui::End();
 	}
 
-	void Viewer::DrawModelListUI()
+	void Viewer::DrawManip()
 	{
-		if (!m_enableModelListUI)
+		if (m_selectedModelDrawer != nullptr)
+		{
+			const auto& view = m_context.GetCamera()->GetViewMatrix();
+			const auto& proj = m_context.GetCamera()->GetProjectionMatrix();
+			auto world = m_selectedModelDrawer->GetTransform();
+
+			ImGuizmo::Manipulate(
+				&view[0][0],
+				&proj[0][0],
+				m_currentManipOp,
+				m_currentManipMode,
+				&world[0][0]
+			);
+
+			glm::vec3 t, r, s;
+			ImGuizmo::DecomposeMatrixToComponents(&world[0][0], &t[0], &r[0], &s[0]);
+			switch (m_currentManipOp)
+			{
+			case ImGuizmo::TRANSLATE:
+				m_selectedModelDrawer->SetTranslate(t);
+				break;
+			case ImGuizmo::ROTATE:
+				m_selectedModelDrawer->SetRotate(glm::radians(r));
+				break;
+			case ImGuizmo::SCALE:
+				m_selectedModelDrawer->SetScale(s);
+				break;
+			}
+		}
+	}
+
+	void Viewer::DrawCtrlUI()
+	{
+		if (!m_enableCtrlUI)
 		{
 			return;
 		}
 
-		float width = 200;
-		float height = 100;
+		float width = 300;
+		float height = 250;
 
 		ImGui::SetNextWindowSize(ImVec2(width, height), ImGuiSetCond_Once);
-		ImGui::SetNextWindowPos(ImVec2((float)m_context.GetWindowWidth() - width, 20), ImGuiSetCond_Once);
-		ImGui::Begin("Model List", &m_enableModelListUI);
-		ImGui::BeginChild("models");
+		ImGui::SetNextWindowPos(ImVec2(0, 100 + 20), ImGuiSetCond_Once);
+		ImGui::Begin("Control", &m_enableCtrlUI);
+
+		if (ImGui::CollapsingHeader("Animation"))
+		{
+			DrawAnimCtrl();
+		}
+		if (ImGui::CollapsingHeader("Model"))
+		{
+			if (ImGui::TreeNode("Model List"))
+			{
+				DrawModelListCrtl();
+				ImGui::TreePop();
+			}
+			if (ImGui::TreeNode("Transform"))
+			{
+				DrawTransformCtrl();
+				ImGui::TreePop();
+			}
+			if (m_selectedModelDrawer != nullptr)
+			{
+				DrawModelCtrl();
+			}
+		}
+
+		ImGui::End();
+	}
+
+	void Viewer::DrawModelListCrtl()
+	{
+		ImGui::BeginChild("models", ImVec2(0, 80), true);
 
 		for (const auto& modelDrawer : m_modelDrawers)
 		{
@@ -660,26 +718,11 @@ namespace saba
 		}
 
 		ImGui::EndChild();
-		ImGui::End();
 	}
 
-	void Viewer::DrawManip()
+	void Viewer::DrawTransformCtrl()
 	{
-		if (!m_enableManip)
-		{
-			return;
-		}
-		if (m_selectedModelDrawer == nullptr)
-		{
-			return;
-		}
-
-		float width = 200;
-		float height = 150;
-
-		ImGui::SetNextWindowSize(ImVec2(width, height), ImGuiSetCond_Once);
-		ImGui::SetNextWindowPos(ImVec2((float)m_context.GetWindowWidth() - width, 120), ImGuiSetCond_Once);
-		ImGui::Begin("Model Maniplurator", &m_enableManip);
+		ImGui::Checkbox("Manipulator", &m_enableManip);
 
 		if (ImGui::RadioButton("Translate", m_currentManipOp == ImGuizmo::TRANSLATE))
 		{
@@ -696,50 +739,27 @@ namespace saba
 			m_currentManipOp = ImGuizmo::SCALE;
 		}
 
-		glm::vec3 t, r, s;
-		t = m_selectedModelDrawer->GetTranslate();
-		r = glm::degrees(m_selectedModelDrawer->GetRotate());
-		s = m_selectedModelDrawer->GetScale();
+		glm::vec3 t, r, s(1.0f);
+		if (m_selectedModelDrawer != nullptr)
+		{
+			t = m_selectedModelDrawer->GetTranslate();
+			r = glm::degrees(m_selectedModelDrawer->GetRotate());
+			s = m_selectedModelDrawer->GetScale();
+		}
 
 		ImGui::InputFloat3("T", &t[0], 3);
 		ImGui::InputFloat3("R", &r[0], 3);
 		ImGui::InputFloat3("S", &s[0], 3);
-		m_selectedModelDrawer->SetTranslate(t);
-		m_selectedModelDrawer->SetRotate(glm::radians(r));
-		m_selectedModelDrawer->SetScale(s);
-
-		ImGui::End();
-
-		const auto& view = m_context.GetCamera()->GetViewMatrix();
-		const auto& proj = m_context.GetCamera()->GetProjectionMatrix();
-		auto world = m_selectedModelDrawer->GetTransform();
-
-		ImGuizmo::Manipulate(
-			&view[0][0],
-			&proj[0][0],
-			m_currentManipOp,
-			m_currentManipMode,
-			&world[0][0]
-		);
-
-		ImGuizmo::DecomposeMatrixToComponents(&world[0][0], &t[0], &r[0], &s[0]);
-		m_selectedModelDrawer->SetTranslate(t);
-		m_selectedModelDrawer->SetRotate(glm::radians(r));
-		m_selectedModelDrawer->SetScale(s);
+		if (m_selectedModelDrawer != nullptr)
+		{
+			m_selectedModelDrawer->SetTranslate(t);
+			m_selectedModelDrawer->SetRotate(glm::radians(r));
+			m_selectedModelDrawer->SetScale(s);
+		}
 	}
 
-	void Viewer::DrawAnimCtrlUI()
+	void Viewer::DrawAnimCtrl()
 	{
-		if (!m_enableAnimCtrlUI)
-		{
-			return;
-		}
-		float width = 200;
-		float height = 150;
-
-		ImGui::SetNextWindowSize(ImVec2(width, height), ImGuiSetCond_Once);
-		ImGui::SetNextWindowPos(ImVec2(0, 100 + 20), ImGuiSetCond_Once);
-		ImGui::Begin("Animation Control", &m_enableAnimCtrlUI);
 		float animFrame = float(m_context.GetAnimationTime() * m_animCtrlEditFPS);
 		if (ImGui::InputFloat("Frame", &animFrame))
 		{
@@ -769,8 +789,14 @@ namespace saba
 		{
 			m_context.SetPlayMode(ViewerContext::PlayMode::PrevFrame);
 		}
+	}
 
-		ImGui::End();
+	void Viewer::DrawModelCtrl()
+	{
+		if (m_selectedModelDrawer != nullptr)
+		{
+			m_selectedModelDrawer->DrawUI(&m_context);
+		}
 	}
 
 	void Viewer::UpdateAnimation()

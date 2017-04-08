@@ -84,17 +84,7 @@ namespace saba
 
 	void GLMMDModelDrawer::DrawUI(ViewerContext * ctxt)
 	{
-		float width = 200;
-		float height = 400;
-
-		ImGui::SetNextWindowSize(ImVec2(width, height), ImGuiSetCond_FirstUseEver);
-		ImGui::SetNextWindowPos(
-			ImVec2(20, (float)ctxt->GetWindowHeight() - height - 20),
-			ImGuiSetCond_FirstUseEver
-		);
-
-		ImGui::Begin("MMDDrawCtrl");
-		if (ImGui::CollapsingHeader("Morph"))
+		if (ImGui::TreeNode("Morph"))
 		{
 			auto model = m_mmdModel->GetMMDModel();
 			auto morphMan = model->GetMorphManager();
@@ -110,8 +100,8 @@ namespace saba
 					m_mmdModel->UpdateAnimation(animTime, false);
 				}
 			}
+			ImGui::TreePop();
 		}
-		ImGui::End();
 	}
 
 	void GLMMDModelDrawer::Play()
