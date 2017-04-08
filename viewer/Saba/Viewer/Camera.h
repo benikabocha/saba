@@ -32,6 +32,13 @@ namespace saba
 		const glm::mat4& GetViewMatrix() const;
 		const glm::mat4& GetProjectionMatrix() const;
 
+		glm::vec3 GetEyePostion() const;
+		glm::vec3 GetUp() const;
+		glm::vec3 GetForward() const;
+		float GetFovY() const;
+		float GetNearClip() const;
+		float GetFarClip() const;
+
 	private:
 		// View
 		glm::vec3	m_target;

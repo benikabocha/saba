@@ -700,6 +700,10 @@ namespace saba
 		{
 			DrawAnimCtrl();
 		}
+		if (ImGui::CollapsingHeader("Camera"))
+		{
+			DrawCameraCtrl();
+		}
 		if (ImGui::CollapsingHeader("Light"))
 		{
 			DrawLightCtrl();
@@ -815,6 +819,33 @@ namespace saba
 		if (ImGui::Button("Prev Frame"))
 		{
 			m_context.SetPlayMode(ViewerContext::PlayMode::PrevFrame);
+		}
+	}
+
+	void Viewer::DrawCameraCtrl()
+	{
+		auto cam = &m_context.m_camera;
+		auto eyePos = cam->GetEyePostion();
+		auto up = cam->GetUp();
+		auto forward = cam->GetForward();
+		auto fov = glm::degrees(cam->GetFovY());
+		auto nearClip = cam->GetNearClip();
+		auto farClip = cam->GetFarClip();
+
+		ImGui::InputFloat3("Position", &eyePos[0], -1, ImGuiInputTextFlags_ReadOnly);
+		ImGui::InputFloat3("Up", &up[0], -1, ImGuiInputTextFlags_ReadOnly);
+		ImGui::InputFloat3("Forward", &forward[0], -1, ImGuiInputTextFlags_ReadOnly);
+		if (ImGui::SliderFloat("Fov", &fov, 0.1f, 180.0f))
+		{
+			cam->SetFovY(glm::radians(fov));
+		}
+		if (ImGui::InputFloat("Near Clip", &nearClip))
+		{
+			cam->SetClip(nearClip, farClip);
+		}
+		if (ImGui::InputFloat("Far Clip", &farClip))
+		{
+			cam->SetClip(nearClip, farClip);
 		}
 	}
 

@@ -102,6 +102,7 @@ namespace saba
 		void DrawModelListCrtl();
 		void DrawTransformCtrl();
 		void DrawAnimCtrl();
+		void DrawCameraCtrl();
 		void DrawLightCtrl();
 		void DrawLightGuide();
 		void DrawModelCtrl();

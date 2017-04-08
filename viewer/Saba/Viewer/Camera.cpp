@@ -163,5 +163,35 @@ namespace saba
 	{
 		return m_projectionMatrix;
 	}
+
+	glm::vec3 Camera::GetEyePostion() const
+	{
+		return m_eye;
+	}
+
+	glm::vec3 Camera::GetUp() const
+	{
+		return glm::normalize(m_up);
+	}
+
+	glm::vec3 Camera::GetForward() const
+	{
+		return glm::normalize(m_target - m_eye);
+	}
+
+	float Camera::GetFovY() const
+	{
+		return m_fovYRad;
+	}
+
+	float Camera::GetNearClip() const
+	{
+		return m_nearClip;
+	}
+
+	float Camera::GetFarClip() const
+	{
+		return m_farClip;
+	}
 }
 
