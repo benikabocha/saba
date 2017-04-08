@@ -145,7 +145,7 @@ namespace saba
 		std::shared_ptr<MMDModel>			m_model;
 		std::vector<NodeControllerPtr>		m_nodeControllers;
 		std::vector<IKControllerPtr>		m_ikControllers;
-		std::vector<MorphControllerPtr>		m_blendShapeControllers;
+		std::vector<MorphControllerPtr>		m_morphControllers;
 	};
 
 }

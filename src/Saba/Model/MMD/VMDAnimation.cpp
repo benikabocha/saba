@@ -287,12 +287,12 @@ namespace saba
 
 		// Morph Controller
 		std::map<std::string, MorphControllerPtr> morphCtrlMap;
-		for (auto& bsCtrl : m_blendShapeControllers)
+		for (auto& bsCtrl : m_morphControllers)
 		{
 			std::string name = bsCtrl->GetMorph()->GetName();
 			morphCtrlMap.emplace(std::make_pair(name, std::move(bsCtrl)));
 		}
-		m_blendShapeControllers.clear();
+		m_morphControllers.clear();
 		for (const auto& morph : vmd.m_morphs)
 		{
 			std::string bsName = morph.m_blendShapeName.ToUtf8String();
@@ -325,11 +325,11 @@ namespace saba
 				bsCtrl->AddKey(key);
 			}
 		}
-		m_blendShapeControllers.reserve(morphCtrlMap.size());
+		m_morphControllers.reserve(morphCtrlMap.size());
 		for (auto& pair : morphCtrlMap)
 		{
 			pair.second->SortKeys();
-			m_blendShapeControllers.emplace_back(std::move(pair.second));
+			m_morphControllers.emplace_back(std::move(pair.second));
 		}
 		morphCtrlMap.clear();
 
@@ -341,7 +341,7 @@ namespace saba
 		m_model.reset();
 		m_nodeControllers.clear();
 		m_ikControllers.clear();
-		m_blendShapeControllers.clear();
+		m_morphControllers.clear();
 	}
 
 	void VMDAnimation::Evaluate(float t)
@@ -356,9 +356,9 @@ namespace saba
 			ikCtrl->Evaluate(t);
 		}
 
-		for (auto& bsCtrl : m_blendShapeControllers)
+		for (auto& morphCtrl : m_morphControllers)
 		{
-			bsCtrl->Evaluate(t);
+			morphCtrl->Evaluate(t);
 		}
 	}
 
