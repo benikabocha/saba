@@ -85,7 +85,7 @@ namespace saba
 			rb->BeginUpdate();
 		}
 
-		physics->Update(0.0f);
+		physics->Update(1.0f / 60.0f);
 
 		for (auto& rb : (*rigidbodys))
 		{
