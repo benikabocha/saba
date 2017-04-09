@@ -287,42 +287,42 @@ namespace saba
 
 		// Morph Controller
 		std::map<std::string, MorphControllerPtr> morphCtrlMap;
-		for (auto& bsCtrl : m_morphControllers)
+		for (auto& morphCtrl : m_morphControllers)
 		{
-			std::string name = bsCtrl->GetMorph()->GetName();
-			morphCtrlMap.emplace(std::make_pair(name, std::move(bsCtrl)));
+			std::string name = morphCtrl->GetMorph()->GetName();
+			morphCtrlMap.emplace(std::make_pair(name, std::move(morphCtrl)));
 		}
 		m_morphControllers.clear();
 		for (const auto& morph : vmd.m_morphs)
 		{
-			std::string bsName = morph.m_blendShapeName.ToUtf8String();
-			auto findIt = morphCtrlMap.find(bsName);
-			VMDMorphController* bsCtrl = nullptr;
+			std::string morphName = morph.m_blendShapeName.ToUtf8String();
+			auto findIt = morphCtrlMap.find(morphName);
+			VMDMorphController* morphCtrl = nullptr;
 			if (findIt == std::end(morphCtrlMap))
 			{
-				auto* mmdBS = m_model->GetMorphManager()->GetMorph(bsName);
-				if (mmdBS != nullptr)
+				auto* mmdMorph = m_model->GetMorphManager()->GetMorph(morphName);
+				if (mmdMorph != nullptr)
 				{
 					auto val = std::make_pair(
-						bsName,
+						morphName,
 						std::make_unique<VMDMorphController>()
 					);
-					bsCtrl = val.second.get();
-					bsCtrl->SetBlendKeyShape(mmdBS);
+					morphCtrl = val.second.get();
+					morphCtrl->SetBlendKeyShape(mmdMorph);
 					morphCtrlMap.emplace(std::move(val));
 				}
 			}
 			else
 			{
-				bsCtrl = (*findIt).second.get();
+				morphCtrl = (*findIt).second.get();
 			}
 
-			if (bsCtrl != nullptr)
+			if (morphCtrl != nullptr)
 			{
 				VMDMorphAnimationKey key;
 				key.m_time = int32_t(morph.m_frame);
 				key.m_weight = morph.m_weight;
-				bsCtrl->AddKey(key);
+				morphCtrl->AddKey(key);
 			}
 		}
 		m_morphControllers.reserve(morphCtrlMap.size());
