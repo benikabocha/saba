@@ -84,6 +84,15 @@ namespace saba
 
 	void GLMMDModelDrawer::DrawUI(ViewerContext * ctxt)
 	{
+		if (ImGui::TreeNode("Physics"))
+		{
+			bool enabledPhysics = m_mmdModel->IsEnabledPhysics();
+			if (ImGui::Checkbox("Enable", &enabledPhysics))
+			{
+				m_mmdModel->EnablePhysics(enabledPhysics);
+			}
+			ImGui::TreePop();
+		}
 		if (ImGui::TreeNode("Morph"))
 		{
 			auto model = m_mmdModel->GetMMDModel();

@@ -21,6 +21,7 @@ namespace saba
 		m_updateAnimTime = 0;
 		m_updatePhysicsTime = 0;
 		m_updateTime = 0;
+		m_enablePhysics = true;
 	}
 
 	GLMMDModel::~GLMMDModel()
@@ -260,7 +261,7 @@ namespace saba
 			return;
 		}
 
-		if (m_vmdAnim != 0)
+		if (m_enablePhysics)
 		{
 			double startTime = GetTime();
 			m_mmdModel->UpdatePhysics((float)elapsed);

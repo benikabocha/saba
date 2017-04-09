@@ -78,6 +78,9 @@ namespace saba
 
 		VMDAnimation* GetVMDAnimation() const { return m_vmdAnim.get(); }
 
+		void EnablePhysics(bool enable) { m_enablePhysics = enable; }
+		bool IsEnabledPhysics() const { return m_enablePhysics; }
+
 	private:
 		std::shared_ptr<MMDModel>		m_mmdModel;
 
@@ -102,6 +105,8 @@ namespace saba
 		double						m_updateAnimTime;
 		double						m_updatePhysicsTime;
 		double						m_updateTime;
+
+		bool	m_enablePhysics;
 	};
 }
 
