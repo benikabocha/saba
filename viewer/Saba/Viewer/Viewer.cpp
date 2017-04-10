@@ -1228,6 +1228,7 @@ namespace saba
 		}
 		else if (ext == "pmd")
 		{
+			InitializeAnimation();
 			if (!LoadPMDFile(filepath))
 			{
 				return false;
@@ -1235,6 +1236,7 @@ namespace saba
 		}
 		else if (ext == "vmd")
 		{
+			InitializeAnimation();
 			if (!LoadVMDFile(filepath))
 			{
 				return false;
@@ -1242,6 +1244,7 @@ namespace saba
 		}
 		else if (ext == "pmx")
 		{
+			InitializeAnimation();
 			if (!LoadPMXFile(filepath))
 			{
 				return false;
@@ -1253,7 +1256,6 @@ namespace saba
 			return false;
 		}
 
-		InitializeAnimation();
 
 		return true;
 	}

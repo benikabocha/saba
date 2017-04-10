@@ -89,6 +89,21 @@ namespace saba
 		const glm::quat& GetInitialRotate() const { return m_initRotate; }
 		const glm::vec3& GetInitialScale() const { return m_initScale; }
 
+		void SaveBaseAnimation()
+		{
+			m_baseAnimTranslate = m_animTranslate;
+			m_baseAnimRotate = m_animRotate;
+		}
+
+		void ClearBaseAnimation()
+		{
+			m_baseAnimTranslate = glm::vec3(0);
+			m_baseAnimRotate = glm::quat(1, 0, 0, 0);
+		}
+
+		const glm::vec3& GetBaseAnimationTranslate() const { return m_baseAnimTranslate; };
+		const glm::quat& GetBaseAnimationRotate() const { return m_baseAnimRotate; }
+
 	protected:
 		virtual void OnBeginUpdateTransform();
 		virtual void OnEndUpdateTransfrom();
@@ -110,6 +125,9 @@ namespace saba
 
 		glm::vec3	m_animTranslate;
 		glm::quat	m_animRotate;
+
+		glm::vec3	m_baseAnimTranslate;
+		glm::quat	m_baseAnimRotate;
 
 		glm::quat	m_ikRotate;
 

@@ -61,4 +61,52 @@ namespace saba
 
 		return ret;
 	}
+
+	void MMDModel::SaveBaseAnimation()
+	{
+		auto nodeMan = GetNodeManager();
+		for (size_t i = 0; i < nodeMan->GetNodeCount(); i++)
+		{
+			auto node = nodeMan->GetMMDNode(i);
+			node->SaveBaseAnimation();
+		}
+
+		auto morphMan = GetMorphManager();
+		for (size_t i = 0; i < morphMan->GetMorphCount(); i++)
+		{
+			auto morph = morphMan->GetMorph(i);
+			morph->SaveBaseAnimation();
+		}
+
+		auto ikMan = GetIKManager();
+		for (size_t i = 0; i < ikMan->GetIKSolverCount(); i++)
+		{
+			auto ikSolver = ikMan->GetMMDIKSolver(i);
+			ikSolver->SaveBaseAnimation();
+		}
+	}
+
+	void MMDModel::ClearBaseAnimation()
+	{
+		auto nodeMan = GetNodeManager();
+		for (size_t i = 0; i < nodeMan->GetNodeCount(); i++)
+		{
+			auto node = nodeMan->GetMMDNode(i);
+			node->ClearBaseAnimation();
+		}
+
+		auto morphMan = GetMorphManager();
+		for (size_t i = 0; i < morphMan->GetMorphCount(); i++)
+		{
+			auto morph = morphMan->GetMorph(i);
+			morph->ClearBaseAnimation();
+		}
+
+		auto ikMan = GetIKManager();
+		for (size_t i = 0; i < ikMan->GetIKSolverCount(); i++)
+		{
+			auto ikSolver = ikMan->GetMMDIKSolver(i);
+			ikSolver->ClearBaseAnimation();
+		}
+	}
 }

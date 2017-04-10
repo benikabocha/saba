@@ -192,10 +192,29 @@ namespace saba
 			return false;
 		}
 
-		m_animTime = 0.0f;
+		/*
+		すぐにアニメーションを反映すると、Physics が破たんする場合がある。
+		例：足がスカートを突き破る等
+		アニメーションを反映する際、初期状態から数フレームかけて、
+		目的のポーズへ遷移させる。
+		*/
+		m_mmdModel->SaveBaseAnimation();
 
-		m_vmdAnim->Evaluate((float)m_animTime);
-		m_mmdModel->InitializeAnimation();
+		// Physicsを反映する
+		const int frames = 30;
+		for (int i = 0; i < frames; i++)
+		{
+			m_mmdModel->BeginAnimation();
+
+			double frame = m_animTime * 30.0;
+			m_vmdAnim->Evaluate((float)frame, float(1 + i) / float(frames));
+
+			m_mmdModel->UpdateAnimation();
+
+			m_mmdModel->EndAnimation();
+
+			m_mmdModel->UpdatePhysics(1.0f / 30.0f);
+		}
 
 		return true;
 	}
@@ -206,11 +225,6 @@ namespace saba
 		m_animTime = 0;
 		auto morphMan = m_mmdModel->GetMorphManager();
 		size_t morphCount = morphMan->GetMorphCount();
-		for (size_t i = 0; i < morphCount; i++)
-		{
-			auto morph = morphMan->GetMorph(i);
-			morph->SetWeight(0);
-		}
 
 		m_mmdModel->InitializeAnimation();
 	}

@@ -48,9 +48,16 @@ namespace saba
 
 	void PMDModel::InitializeAnimation()
 	{
+		ClearBaseAnimation();
+
 		for (auto& node : (*m_nodeMan.GetNodes()))
 		{
 			node->UpdateLocalTransform();
+		}
+
+		for (auto& morph : (*m_morphMan.GetMorphs()))
+		{
+			morph->SetWeight(0);
 		}
 
 		for (auto& node : (*m_nodeMan.GetNodes()))
@@ -63,6 +70,7 @@ namespace saba
 
 		for (auto& solver : (*m_ikSolverMan.GetIKSolvers()))
 		{
+			solver->Enable(true);
 			solver->Solve();
 		}
 

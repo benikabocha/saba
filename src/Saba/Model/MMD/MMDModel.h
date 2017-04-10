@@ -150,6 +150,10 @@ namespace saba
 		// ノードを初期化する
 		virtual void InitializeAnimation() = 0;
 
+		// ベースアニメーション(アニメーション読み込み時、Physics反映用)
+		void SaveBaseAnimation();
+		void ClearBaseAnimation();
+
 		// アニメーションの前後で呼ぶ (VMDアニメーションの前後)
 		virtual void BeginAnimation() = 0;
 		virtual void EndAnimation() = 0;

@@ -9,6 +9,7 @@
 #include "MMDNode.h"
 
 #include <vector>
+#include <string>
 #include <glm/vec3.hpp>
 
 namespace saba
@@ -49,6 +50,10 @@ namespace saba
 
 		void Solve();
 
+		void SaveBaseAnimation() { m_baseAnimEnable = m_enable; }
+		void ClearBaseAnimation() { m_baseAnimEnable = true; }
+		bool GetBaseAnimationEnabled() const { return m_baseAnimEnable; }
+
 	private:
 		struct IKChain
 		{
@@ -69,6 +74,7 @@ namespace saba
 		uint32_t	m_iterateCount;
 		float		m_limitAngle;
 		bool		m_enable;
+		bool		m_baseAnimEnable;
 
 	};
 }

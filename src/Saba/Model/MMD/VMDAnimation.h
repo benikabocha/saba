@@ -65,7 +65,7 @@ namespace saba
 		VMDNodeController();
 
 		void SetNode(MMDNode* node);
-		void Evaluate(float t);
+		void Evaluate(float t, float weight = 1.0f);
 		
 		void AddKey(const KeyType& key)
 		{
@@ -88,7 +88,7 @@ namespace saba
 		VMDMorphController();
 
 		void SetBlendKeyShape(MMDMorph* morph);
-		void Evaluate(float t);
+		void Evaluate(float t, float weight = 1.0f);
 
 		void AddKey(const KeyType& key)
 		{
@@ -111,7 +111,7 @@ namespace saba
 		VMDIKController();
 
 		void SetIKSolver(MMDIkSolver* ikSolver);
-		void Evaluate(float t);
+		void Evaluate(float t, float weight = 1.0f);
 
 		void AddKey(const KeyType& key)
 		{
@@ -135,7 +135,7 @@ namespace saba
 		bool Add(const VMDFile& vmd);
 		void Destroy();
 
-		void Evaluate(float t);
+		void Evaluate(float t, float weight = 1.0f);
 
 	private:
 		using NodeControllerPtr = std::unique_ptr<VMDNodeController>;

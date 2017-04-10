@@ -109,7 +109,7 @@ namespace saba
 		m_node = node;
 	}
 
-	void VMDNodeController::Evaluate(float t)
+	void VMDNodeController::Evaluate(float t, float weight)
 	{
 		SABA_ASSERT(m_node != nullptr);
 		if (m_node == nullptr)
@@ -162,8 +162,18 @@ namespace saba
 			}
 		}
 
-		m_node->SetAnimationRotate(q);
-		m_node->SetAnimationTranslate(vt);
+		if (weight == 1.0f)
+		{
+			m_node->SetAnimationRotate(q);
+			m_node->SetAnimationTranslate(vt);
+		}
+		else
+		{
+			auto baseQ = m_node->GetBaseAnimationRotate();
+			auto baseT = m_node->GetBaseAnimationTranslate();
+			m_node->SetAnimationRotate(glm::slerp(baseQ, q, weight));
+			m_node->SetAnimationTranslate(glm::mix(baseT, vt, weight));
+		}
 	}
 
 	void VMDNodeController::SortKeys()
@@ -344,21 +354,21 @@ namespace saba
 		m_morphControllers.clear();
 	}
 
-	void VMDAnimation::Evaluate(float t)
+	void VMDAnimation::Evaluate(float t, float weight)
 	{
 		for (auto& nodeCtrl : m_nodeControllers)
 		{
-			nodeCtrl->Evaluate(t);
+			nodeCtrl->Evaluate(t, weight);
 		}
 
 		for (auto& ikCtrl : m_ikControllers)
 		{
-			ikCtrl->Evaluate(t);
+			ikCtrl->Evaluate(t, weight);
 		}
 
 		for (auto& morphCtrl : m_morphControllers)
 		{
-			morphCtrl->Evaluate(t);
+			morphCtrl->Evaluate(t, weight);
 		}
 	}
 
@@ -389,7 +399,7 @@ namespace saba
 		m_ikSolver = ikSolver;
 	}
 
-	void VMDIKController::Evaluate(float t)
+	void VMDIKController::Evaluate(float t, float weight)
 	{
 		if (m_ikSolver == nullptr)
 		{
@@ -412,7 +422,22 @@ namespace saba
 			const auto& key = *(it - 1);
 			enable = key.m_enable;
 		}
-		m_ikSolver->Enable(enable);
+
+		if (weight == 1.0f)
+		{
+			m_ikSolver->Enable(enable);
+		}
+		else
+		{
+			if (weight < 1.0f)
+			{
+				m_ikSolver->Enable(m_ikSolver->GetBaseAnimationEnabled());
+			}
+			else
+			{
+				m_ikSolver->Enable(enable);
+			}
+		}
 	}
 
 	void VMDIKController::SortKeys()
@@ -434,7 +459,7 @@ namespace saba
 		m_morph = morph;
 	}
 
-	void VMDMorphController::Evaluate(float t)
+	void VMDMorphController::Evaluate(float t, float animWeight)
 	{
 		if (m_morph == nullptr)
 		{
@@ -475,7 +500,14 @@ namespace saba
 			weight = (key1.m_weight - key0.m_weight) * time + key0.m_weight;
 		}
 
-		m_morph->SetWeight(weight);
+		if (animWeight == 1.0f)
+		{
+			m_morph->SetWeight(weight);
+		}
+		else
+		{
+			m_morph->SetWeight(glm::mix(m_morph->GetBaseAnimationWeight(), weight, animWeight));
+		}
 	}
 
 	void VMDMorphController::SortKeys()

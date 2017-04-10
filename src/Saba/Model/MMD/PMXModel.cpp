@@ -25,11 +25,23 @@ namespace saba
 {
 	void PMXModel::InitializeAnimation()
 	{
+		ClearBaseAnimation();
+
 		BeginAnimation();
 
 		for (auto& node : (*m_nodeMan.GetNodes()))
 		{
 			node->UpdateLocalTransform();
+		}
+
+		for (auto& morph : (*m_morphMan.GetMorphs()))
+		{
+			morph->SetWeight(0);
+		}
+
+		for (auto& ikSolver : (*m_ikSolverMan.GetIKSolvers()))
+		{
+			ikSolver->Enable(true);
 		}
 
 		for (const auto& node : (*m_nodeMan.GetNodes()))
