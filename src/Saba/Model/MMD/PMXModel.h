@@ -17,6 +17,7 @@
 #include <vector>
 #include <string>
 #include <algorithm>
+#include <future>
 
 namespace saba
 {
@@ -111,6 +112,9 @@ namespace saba
 
 		const glm::vec3& GetBBoxMin() const { return m_bboxMin; }
 		const glm::vec3& GetBBoxMax() const { return m_bboxMax; }
+
+		// Load前に設定しておくと、頂点の非同期更新を行える
+		void SetAsyncUpdate(uint32_t asyncCount);
 
 	private:
 		enum class SkinningType
@@ -220,6 +224,12 @@ namespace saba
 
 		void MorphBone(const BoneMorphData& morphData, float weight);
 
+		struct VertexUpdatePartition
+		{
+			size_t	m_vertexOffset;
+			size_t	m_vertexCount;
+		};
+
 	private:
 		std::vector<glm::vec3>	m_positions;
 		std::vector<glm::vec3>	m_normals;
@@ -260,6 +270,10 @@ namespace saba
 		MMDIKManagerT<MMDIkSolver>	m_ikSolverMan;
 		MMDMorphManagerT<PMXMorph>	m_morphMan;
 		MMDPhysicsManager			m_physicsMan;
+
+		uint32_t							m_asyncUpdateCount;
+		std::vector<std::future<void>>		m_updateFutures;
+		std::vector<VertexUpdatePartition>	m_updatePartitions;
 	};
 }
 

@@ -20,6 +20,7 @@
 #include <algorithm>
 #include <sstream>
 #include <iomanip>
+#include <thread>
 
 namespace saba
 {
@@ -232,57 +233,178 @@ namespace saba
 			m_transforms[i] = nodes[i]->GetGlobalTransform() * nodes[i]->GetInverseInitTransform();
 		}
 
-		for (size_t i = 0; i < numVertices; i++)
+		auto UpdateVertex = [](
+			glm::vec3*			outUpdatePosition,
+			glm::vec3*			outUpdateNormal,
+			glm::vec2*			outUpdateUV,
+			const glm::vec3*	inPosition,
+			const glm::vec3*	inNormal,
+			const glm::vec2*	inUV,
+			const glm::vec3*	inMorphPos,
+			const glm::vec4*	inMorphUV,
+			const VertexBoneInfo*	inVertexInfo,
+			const glm::mat4*	inTransforms,
+			size_t				vertexOffset,
+			size_t				vertexCount
+			)
 		{
-			glm::mat4 m;
-			switch (vtxInfo->m_skinningType)
-			{
-			case SkinningType::Weight1:
-			{
-				const auto& m0 = m_transforms[vtxInfo->m_boneIndex.x];
-				m = m0;
-				break;
-			}
-			case SkinningType::Weight2:
-			{
-				auto w0 = vtxInfo->m_boneWeight.x;
-				auto w1 = vtxInfo->m_boneWeight.y;
-				const auto& m0 = m_transforms[vtxInfo->m_boneIndex.x];
-				const auto& m1 = m_transforms[vtxInfo->m_boneIndex.y];
-				m = m0 * w0 + m1 * w1;
-				break;
-			}
-			case SkinningType::Weight4:
-			{
-				auto w0 = vtxInfo->m_boneWeight.x;
-				auto w1 = vtxInfo->m_boneWeight.y;
-				auto w2 = vtxInfo->m_boneWeight.z;
-				auto w3 = vtxInfo->m_boneWeight.w;
-				const auto& m0 = m_transforms[vtxInfo->m_boneIndex.x];
-				const auto& m1 = m_transforms[vtxInfo->m_boneIndex.y];
-				const auto& m2 = m_transforms[vtxInfo->m_boneIndex.z];
-				const auto& m3 = m_transforms[vtxInfo->m_boneIndex.w];
-				m = m0 * w0 + m1 * w1 + m2 * w2 + m3 * w3;
-				break;
-			}
-			default:
-				break;
-			}
+			const auto* position = inPosition + vertexOffset;
+			const auto* normal = inNormal + vertexOffset;
+			const auto* uv = inUV + vertexOffset;
+			const auto* morphPos = inMorphPos + vertexOffset;
+			const auto* morphUV = inMorphUV + vertexOffset;
+			const auto* vtxInfo = inVertexInfo + vertexOffset;
+			auto* updatePosition = outUpdatePosition + vertexOffset;
+			auto* updateNormal = outUpdateNormal + vertexOffset;
+			auto* updateUV = outUpdateUV + vertexOffset;
 
-			*updatePosition = glm::vec3(m * glm::vec4(*position + *morphPos, 1));
-			*updateNormal = glm::normalize(glm::mat3(m) * *normal);
-			*updateUV = *uv + glm::vec2((*morphUV).x, (*morphUV).y);
+			for (size_t i = 0; i < vertexCount; i++)
+			{
+				glm::mat4 m;
+				switch (vtxInfo->m_skinningType)
+				{
+				case SkinningType::Weight1:
+				{
+					const auto& m0 = inTransforms[vtxInfo->m_boneIndex.x];
+					m = m0;
+					break;
+				}
+				case SkinningType::Weight2:
+				{
+					auto w0 = vtxInfo->m_boneWeight.x;
+					auto w1 = vtxInfo->m_boneWeight.y;
+					const auto& m0 = inTransforms[vtxInfo->m_boneIndex.x];
+					const auto& m1 = inTransforms[vtxInfo->m_boneIndex.y];
+					m = m0 * w0 + m1 * w1;
+					break;
+				}
+				case SkinningType::Weight4:
+				{
+					auto w0 = vtxInfo->m_boneWeight.x;
+					auto w1 = vtxInfo->m_boneWeight.y;
+					auto w2 = vtxInfo->m_boneWeight.z;
+					auto w3 = vtxInfo->m_boneWeight.w;
+					const auto& m0 = inTransforms[vtxInfo->m_boneIndex.x];
+					const auto& m1 = inTransforms[vtxInfo->m_boneIndex.y];
+					const auto& m2 = inTransforms[vtxInfo->m_boneIndex.z];
+					const auto& m3 = inTransforms[vtxInfo->m_boneIndex.w];
+					m = m0 * w0 + m1 * w1 + m2 * w2 + m3 * w3;
+					break;
+				}
+				default:
+					break;
+				}
 
-			vtxInfo++;
-			position++;
-			normal++;
-			uv++;
-			updatePosition++;
-			updateNormal++;
-			updateUV++;
-			morphPos++;
-			morphUV++;
+				*updatePosition = glm::vec3(m * glm::vec4(*position + *morphPos, 1));
+				*updateNormal = glm::normalize(glm::mat3(m) * *normal);
+				*updateUV = *uv + glm::vec2((*morphUV).x, (*morphUV).y);
+
+				vtxInfo++;
+				position++;
+				normal++;
+				uv++;
+				updatePosition++;
+				updateNormal++;
+				updateUV++;
+				morphPos++;
+				morphUV++;
+			}
+		};
+
+		size_t futureCount = m_updateFutures.size();
+		for (size_t i = 0; i < futureCount; i++)
+		{
+			m_updateFutures[i] = std::async(
+				std::launch::async,
+				UpdateVertex,
+				updatePosition,
+				updateNormal,
+				updateUV,
+				position,
+				normal,
+				uv,
+				morphPos,
+				morphUV,
+				vtxInfo,
+				m_transforms.data(),
+				m_updatePartitions[i].m_vertexOffset,
+				m_updatePartitions[i].m_vertexCount
+			);
 		}
+		{
+			// 最後のパートはこのスレッドで行う
+			size_t partCount = m_updatePartitions.size();
+			UpdateVertex(
+				updatePosition,
+				updateNormal,
+				updateUV,
+				position,
+				normal,
+				uv,
+				morphPos,
+				morphUV,
+				vtxInfo,
+				m_transforms.data(),
+				m_updatePartitions[partCount - 1].m_vertexOffset,
+				m_updatePartitions[partCount - 1].m_vertexCount
+			);
+		}
+		for (size_t i = 0; i < futureCount; i++)
+		{
+			m_updateFutures[i].wait();
+		}
+
+		//for (size_t i = 0; i < numVertices; i++)
+		//{
+		//	glm::mat4 m;
+		//	switch (vtxInfo->m_skinningType)
+		//	{
+		//	case SkinningType::Weight1:
+		//	{
+		//		const auto& m0 = m_transforms[vtxInfo->m_boneIndex.x];
+		//		m = m0;
+		//		break;
+		//	}
+		//	case SkinningType::Weight2:
+		//	{
+		//		auto w0 = vtxInfo->m_boneWeight.x;
+		//		auto w1 = vtxInfo->m_boneWeight.y;
+		//		const auto& m0 = m_transforms[vtxInfo->m_boneIndex.x];
+		//		const auto& m1 = m_transforms[vtxInfo->m_boneIndex.y];
+		//		m = m0 * w0 + m1 * w1;
+		//		break;
+		//	}
+		//	case SkinningType::Weight4:
+		//	{
+		//		auto w0 = vtxInfo->m_boneWeight.x;
+		//		auto w1 = vtxInfo->m_boneWeight.y;
+		//		auto w2 = vtxInfo->m_boneWeight.z;
+		//		auto w3 = vtxInfo->m_boneWeight.w;
+		//		const auto& m0 = m_transforms[vtxInfo->m_boneIndex.x];
+		//		const auto& m1 = m_transforms[vtxInfo->m_boneIndex.y];
+		//		const auto& m2 = m_transforms[vtxInfo->m_boneIndex.z];
+		//		const auto& m3 = m_transforms[vtxInfo->m_boneIndex.w];
+		//		m = m0 * w0 + m1 * w1 + m2 * w2 + m3 * w3;
+		//		break;
+		//	}
+		//	default:
+		//		break;
+		//	}
+
+		//	*updatePosition = glm::vec3(m * glm::vec4(*position + *morphPos, 1));
+		//	*updateNormal = glm::normalize(glm::mat3(m) * *normal);
+		//	*updateUV = *uv + glm::vec2((*morphUV).x, (*morphUV).y);
+
+		//	vtxInfo++;
+		//	position++;
+		//	normal++;
+		//	uv++;
+		//	updatePosition++;
+		//	updateNormal++;
+		//	updateUV++;
+		//	morphPos++;
+		//	morphUV++;
+		//}
 	}
 
 	bool PMXModel::Load(const std::string& filepath, const std::string& mmdDataDir)
@@ -737,6 +859,37 @@ namespace saba
 			m_physicsMan.GetMMDPhysics()->AddJoint(joint);
 		}
 
+		size_t asyncCount = m_asyncUpdateCount;
+		if (asyncCount == 0)
+		{
+			asyncCount = std::thread::hardware_concurrency();
+		}
+		if (m_positions.size() < asyncCount)
+		{
+			asyncCount = 1;
+		}
+		SABA_INFO("Select PMX Async Update Count : {}", asyncCount);
+		m_updateFutures.clear();
+		if (asyncCount > 1)
+		{
+			m_updateFutures.resize(asyncCount - 1);
+		}
+		m_updatePartitions.resize(m_updateFutures.size() + 1);
+		size_t partVertexOffset = 0;
+		size_t partVertexCount = m_positions.size() / m_updatePartitions.size();
+		for (size_t i = 0; i < m_updatePartitions.size(); i++)
+		{
+			VertexUpdatePartition part;
+			part.m_vertexOffset = partVertexOffset;
+			part.m_vertexCount = partVertexCount;
+			if (i == 0)
+			{
+				part.m_vertexCount += m_positions.size() % m_updatePartitions.size();
+			}
+			m_updatePartitions[i] = part;
+			partVertexOffset += part.m_vertexCount;
+		}
+
 		return true;
 	}
 
@@ -753,6 +906,19 @@ namespace saba
 		m_indices.clear();
 
 		m_nodeMan.GetNodes()->clear();
+	}
+
+	void PMXModel::SetAsyncUpdate(uint32_t asyncCount)
+	{
+		if (asyncCount <= 16)
+		{
+			m_asyncUpdateCount = asyncCount;
+		}
+		else
+		{
+			SABA_WARN("PMXModel::SetAsyncUpdate asyncCount > 16");
+			m_asyncUpdateCount = 0;
+		}
 	}
 
 	void PMXModel::Morph(PMXMorph* morph, float weight)

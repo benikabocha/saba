@@ -83,6 +83,11 @@ namespace saba
 	{
 	}
 
+	Viewer::PMXConfig::PMXConfig()
+		: m_asyncCount(0)
+	{
+	}
+
 	Viewer::Viewer()
 		: m_msaaEnable(false)
 		, m_msaaCount(4)
@@ -1017,6 +1022,7 @@ namespace saba
 		m_commands.emplace_back(Command{ "enableUI", [this](const Args& args) { return CmdEnableUI(args); } });
 		m_commands.emplace_back(Command{ "clearAnimation", [this](const Args& args) { return CmdClearAnimation(args); } });
 		m_commands.emplace_back(Command{ "clearSceneAnimation", [this](const Args& args) { return CmdClearSceneAnimation(args); } });
+		m_commands.emplace_back(Command{ "configPMXSetting", [this](const Args& args) { return CmdConfigPMXSetting(args); } });
 	}
 
 	void Viewer::RefreshCustomCommand()
@@ -1508,6 +1514,47 @@ namespace saba
 		return true;
 	}
 
+	bool Viewer::CmdConfigPMXSetting(const std::vector<std::string>& args)
+	{
+		if (args.empty())
+		{
+			SABA_INFO("asyncCount : {}", m_pmxConfig.m_asyncCount);
+		}
+		auto argIt = args.begin();
+		for (; argIt != args.end(); ++argIt)
+		{
+			if ((*argIt) == "-async")
+			{
+				++argIt;
+				if (argIt == args.end())
+				{
+					return false;
+				}
+				try
+				{
+					auto asyncCount = std::stoul(*argIt);
+					if (asyncCount > 16)
+					{
+						SABA_WARN("async : 0 - 16");
+						return false;
+					}
+					m_pmxConfig.m_asyncCount = uint32_t(asyncCount);
+				}
+				catch (std::exception e)
+				{
+					SABA_WARN("exception : {}", e.what());
+					return false;
+				}
+			}
+			else
+			{
+				SABA_WARN("unknown arg : {}", *argIt);
+				return false;
+			}
+		}
+		return true;
+	}
+
 	bool Viewer::LoadOBJFile(const std::string & filename)
 	{
 		OBJModel objModel;
@@ -1593,6 +1640,7 @@ namespace saba
 			m_context.GetResourceDir(),
 			"mmd"
 		);
+		pmxModel->SetAsyncUpdate(m_pmxConfig.m_asyncCount);
 		if (!pmxModel->Load(filename, mmdDataDir))
 		{
 			SABA_WARN("PMD Load Fail.");
