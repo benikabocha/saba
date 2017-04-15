@@ -523,20 +523,24 @@ namespace saba
 
 		for (const auto& pmdJoint : pmd.m_joints)
 		{
-			auto joint = m_physicsMan.AddJoint();
-			MMDNode* node = nullptr;
-			auto rigidBodys = m_physicsMan.GetRigidBodys();
-			bool ret = joint->CreateJoint(
-				pmdJoint,
-				(*rigidBodys)[pmdJoint.m_rigidBodyA].get(),
-				(*rigidBodys)[pmdJoint.m_rigidBodyB].get()
-			);
-			if (!ret)
+			if (pmdJoint.m_rigidBodyA != -1 &&
+				pmdJoint.m_rigidBodyB != -1)
 			{
-				SABA_ERROR("Create Joint Fail.\n");
-				return false;
+				auto joint = m_physicsMan.AddJoint();
+				MMDNode* node = nullptr;
+				auto rigidBodys = m_physicsMan.GetRigidBodys();
+				bool ret = joint->CreateJoint(
+					pmdJoint,
+					(*rigidBodys)[pmdJoint.m_rigidBodyA].get(),
+					(*rigidBodys)[pmdJoint.m_rigidBodyB].get()
+				);
+				if (!ret)
+				{
+					SABA_ERROR("Create Joint Fail.\n");
+					return false;
+				}
+				m_physicsMan.GetMMDPhysics()->AddJoint(joint);
 			}
-			m_physicsMan.GetMMDPhysics()->AddJoint(joint);
 		}
 
 		ResetPhysics();
