@@ -26,6 +26,7 @@ class btDefaultCollisionConfiguration;
 class btCollisionDispatcher;
 class btSequentialImpulseConstraintSolver;
 class btMotionState;
+struct btOverlapFilterCallback;
 
 namespace saba
 {
@@ -132,6 +133,7 @@ namespace saba
 		std::unique_ptr<btCollisionShape>					m_groundShape;
 		std::unique_ptr<btMotionState>						m_groundMS;
 		std::unique_ptr<btRigidBody>						m_groundRB;
+		std::unique_ptr<btOverlapFilterCallback>			m_filterCB;
 	};
 
 }

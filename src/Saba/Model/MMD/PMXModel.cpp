@@ -78,37 +78,7 @@ namespace saba
 
 		EndAnimation();
 
-		MMDPhysicsManager* physicsMan = GetPhysicsManager();
-		auto physics = physicsMan->GetMMDPhysics();
-
-		if (physics == nullptr)
-		{
-			return;
-		}
-
-		auto rigidbodys = physicsMan->GetRigidBodys();
-		auto joints = physicsMan->GetJoints();
-		for (auto& rb : (*rigidbodys))
-		{
-			rb->SetActivation(false);
-		}
-
-		for (auto& rb : (*rigidbodys))
-		{
-			rb->BeginUpdate();
-		}
-
-		physics->Update(1.0f / 60.0f);
-
-		for (auto& rb : (*rigidbodys))
-		{
-			rb->EndUpdate();
-		}
-
-		for (auto& rb : (*rigidbodys))
-		{
-			rb->Reset(physics);
-		}
+		ResetPhysics();
 	}
 
 	void PMXModel::BeginAnimation()
@@ -180,6 +150,41 @@ namespace saba
 			{
 				node->UpdateGlobalTransform();
 			}
+		}
+	}
+
+	void PMXModel::ResetPhysics()
+	{
+		MMDPhysicsManager* physicsMan = GetPhysicsManager();
+		auto physics = physicsMan->GetMMDPhysics();
+
+		if (physics == nullptr)
+		{
+			return;
+		}
+
+		auto rigidbodys = physicsMan->GetRigidBodys();
+		auto joints = physicsMan->GetJoints();
+		for (auto& rb : (*rigidbodys))
+		{
+			rb->SetActivation(false);
+		}
+
+		for (auto& rb : (*rigidbodys))
+		{
+			rb->BeginUpdate();
+		}
+
+		physics->Update(1.0f / 60.0f);
+
+		for (auto& rb : (*rigidbodys))
+		{
+			rb->EndUpdate();
+		}
+
+		for (auto& rb : (*rigidbodys))
+		{
+			rb->Reset(physics);
 		}
 	}
 
@@ -843,20 +848,24 @@ namespace saba
 
 		for (const auto& pmxJoint : pmx.m_joints)
 		{
-			auto joint = m_physicsMan.AddJoint();
-			MMDNode* node = nullptr;
-			auto rigidBodys = m_physicsMan.GetRigidBodys();
-			bool ret = joint->CreateJoint(
-				pmxJoint,
-				(*rigidBodys)[pmxJoint.m_rigidbodyAIndex].get(),
-				(*rigidBodys)[pmxJoint.m_rigidbodyBIndex].get()
-			);
-			if (!ret)
+			if (pmxJoint.m_rigidbodyAIndex != -1 &&
+				pmxJoint.m_rigidbodyBIndex != -1)
 			{
-				SABA_ERROR("Create Joint Fail.\n");
-				return false;
+				auto joint = m_physicsMan.AddJoint();
+				MMDNode* node = nullptr;
+				auto rigidBodys = m_physicsMan.GetRigidBodys();
+				bool ret = joint->CreateJoint(
+					pmxJoint,
+					(*rigidBodys)[pmxJoint.m_rigidbodyAIndex].get(),
+					(*rigidBodys)[pmxJoint.m_rigidbodyBIndex].get()
+				);
+				if (!ret)
+				{
+					SABA_ERROR("Create Joint Fail.\n");
+					return false;
+				}
+				m_physicsMan.GetMMDPhysics()->AddJoint(joint);
 			}
-			m_physicsMan.GetMMDPhysics()->AddJoint(joint);
 		}
 
 		size_t asyncCount = m_asyncUpdateCount;
@@ -889,6 +898,8 @@ namespace saba
 			m_updatePartitions[i] = part;
 			partVertexOffset += part.m_vertexCount;
 		}
+
+		ResetPhysics();
 
 		return true;
 	}

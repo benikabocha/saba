@@ -160,6 +160,7 @@ namespace saba
 		// ノードを更新する
 		virtual void UpdateAnimation() = 0;
 		// Physicsを更新する
+		virtual void ResetPhysics() = 0;
 		virtual void UpdatePhysics(float elapsed) = 0;
 		// 頂点を更新する
 		virtual void Update() = 0;

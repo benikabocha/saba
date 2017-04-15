@@ -124,11 +124,6 @@ namespace saba
 	void GLMMDModelDrawer::InitializeAnimation(ViewerContext* ctxt)
 	{
 		m_mmdModel->EvaluateAnimation(ctxt->GetAnimationTime());
-		auto model = m_mmdModel->GetMMDModel();
-		if (model != nullptr)
-		{
-			model->InitializeAnimation();
-		}
 	}
 
 	void GLMMDModelDrawer::Update(ViewerContext * ctxt)

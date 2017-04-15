@@ -74,37 +74,7 @@ namespace saba
 			solver->Solve();
 		}
 
-		MMDPhysicsManager* physicsMan = GetPhysicsManager();
-		auto physics = physicsMan->GetMMDPhysics();
-
-		if (physics == nullptr)
-		{
-			return;
-		}
-
-		auto rigidbodys = physicsMan->GetRigidBodys();
-		auto joints = physicsMan->GetJoints();
-		for (auto& rb : (*rigidbodys))
-		{
-			rb->SetActivation(false);
-		}
-
-		for (auto& rb : (*rigidbodys))
-		{
-			rb->BeginUpdate();
-		}
-
-		physics->Update(1.0f / 60.0f);
-
-		for (auto& rb : (*rigidbodys))
-		{
-			rb->EndUpdate();
-		}
-
-		for (auto& rb : (*rigidbodys))
-		{
-			rb->Reset(physics);
-		}
+		ResetPhysics();
 	}
 
 	void PMDModel::BeginAnimation()
@@ -141,6 +111,41 @@ namespace saba
 		for (auto& solver : (*m_ikSolverMan.GetIKSolvers()))
 		{
 			solver->Solve();
+		}
+	}
+
+	void PMDModel::ResetPhysics()
+	{
+		MMDPhysicsManager* physicsMan = GetPhysicsManager();
+		auto physics = physicsMan->GetMMDPhysics();
+
+		if (physics == nullptr)
+		{
+			return;
+		}
+
+		auto rigidbodys = physicsMan->GetRigidBodys();
+		auto joints = physicsMan->GetJoints();
+		for (auto& rb : (*rigidbodys))
+		{
+			rb->SetActivation(false);
+		}
+
+		for (auto& rb : (*rigidbodys))
+		{
+			rb->BeginUpdate();
+		}
+
+		physics->Update(1.0f / 60.0f);
+
+		for (auto& rb : (*rigidbodys))
+		{
+			rb->EndUpdate();
+		}
+
+		for (auto& rb : (*rigidbodys))
+		{
+			rb->Reset(physics);
 		}
 	}
 
@@ -518,21 +523,27 @@ namespace saba
 
 		for (const auto& pmdJoint : pmd.m_joints)
 		{
-			auto joint = m_physicsMan.AddJoint();
-			MMDNode* node = nullptr;
-			auto rigidBodys = m_physicsMan.GetRigidBodys();
-			bool ret = joint->CreateJoint(
-				pmdJoint,
-				(*rigidBodys)[pmdJoint.m_rigidBodyA].get(),
-				(*rigidBodys)[pmdJoint.m_rigidBodyB].get()
-			);
-			if (!ret)
+			if (pmdJoint.m_rigidBodyA != -1 &&
+				pmdJoint.m_rigidBodyB != -1)
 			{
-				SABA_ERROR("Create Joint Fail.\n");
-				return false;
+				auto joint = m_physicsMan.AddJoint();
+				MMDNode* node = nullptr;
+				auto rigidBodys = m_physicsMan.GetRigidBodys();
+				bool ret = joint->CreateJoint(
+					pmdJoint,
+					(*rigidBodys)[pmdJoint.m_rigidBodyA].get(),
+					(*rigidBodys)[pmdJoint.m_rigidBodyB].get()
+				);
+				if (!ret)
+				{
+					SABA_ERROR("Create Joint Fail.\n");
+					return false;
+				}
+				m_physicsMan.GetMMDPhysics()->AddJoint(joint);
 			}
-			m_physicsMan.GetMMDPhysics()->AddJoint(joint);
 		}
+
+		ResetPhysics();
 
 		return true;
 	}
