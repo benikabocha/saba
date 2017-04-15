@@ -53,6 +53,7 @@ namespace saba
 		uint16_t GetGroupMask() const;
 
 		void SetActivation(bool activation);
+		void ResetTransform();
 		void Reset(MMDPhysics* physics);
 
 		void BeginUpdate();

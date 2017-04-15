@@ -671,20 +671,21 @@ namespace saba
 		}
 	}
 
-	void MMDRigidBody::Reset(MMDPhysics* MMDPhysics)
+	void MMDRigidBody::ResetTransform()
 	{
-		auto cache = MMDPhysics->GetDynamicsWorld()->getPairCache();
-		if (cache != nullptr)
-		{
-			auto dispatcher = MMDPhysics->GetDynamicsWorld()->getDispatcher();
-			cache->cleanProxyFromPairs(m_rigidBody->getBroadphaseHandle(), dispatcher);
-		}
 		if (m_activeMotionState != nullptr)
 		{
-			//btTransform transform;
-			//m_kinematicMotionState->getWorldTransform(transform);
-			//m_activeMotionState->setWorldTransform(transform);
 			m_activeMotionState->Reset();
+		}
+	}
+
+	void MMDRigidBody::Reset(MMDPhysics* physics)
+	{
+		auto cache = physics->GetDynamicsWorld()->getPairCache();
+		if (cache != nullptr)
+		{
+			auto dispatcher = physics->GetDynamicsWorld()->getDispatcher();
+			cache->cleanProxyFromPairs(m_rigidBody->getBroadphaseHandle(), dispatcher);
 		}
 		m_rigidBody->setAngularVelocity(btVector3(0, 0, 0));
 		m_rigidBody->setLinearVelocity(btVector3(0, 0, 0));

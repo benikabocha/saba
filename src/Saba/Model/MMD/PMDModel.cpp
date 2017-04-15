@@ -129,6 +129,7 @@ namespace saba
 		for (auto& rb : (*rigidbodys))
 		{
 			rb->SetActivation(false);
+			rb->ResetTransform();
 		}
 
 		for (auto& rb : (*rigidbodys))
