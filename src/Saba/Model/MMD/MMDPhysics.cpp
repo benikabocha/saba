@@ -32,15 +32,28 @@ namespace saba
 		}
 	}
 
+	struct MMDFilterCallback : public btOverlapFilterCallback
+	{
+		bool needBroadphaseCollision(btBroadphaseProxy* proxy0, btBroadphaseProxy* proxy1) const override
+		{
+			auto findIt = std::find_if(
+				m_nonFilterProxy.begin(),
+				m_nonFilterProxy.end(),
+				[proxy0, proxy1](const auto& x) {return x == proxy0 || x == proxy1; }
+			);
+			if (findIt != m_nonFilterProxy.end())
+			{
+				return true;
+			}
+			bool collides = (proxy0->m_collisionFilterGroup & proxy1->m_collisionFilterMask) != 0;
+			collides = collides && (proxy1->m_collisionFilterGroup & proxy0->m_collisionFilterMask);
+			return collides;
+		}
+
+		std::vector<btBroadphaseProxy*> m_nonFilterProxy;
+	};
+
 	MMDPhysics::MMDPhysics()
-		: m_broadphase(nullptr)
-		, m_collisionConfig(nullptr)
-		, m_dispatcher(nullptr)
-		, m_solver(nullptr)
-		, m_world(nullptr)
-		, m_groundShape(nullptr)
-		, m_groundMS(nullptr)
-		, m_groundRB(nullptr)
 	{
 	}
 
@@ -77,6 +90,11 @@ namespace saba
 		m_groundRB = std::make_unique<btRigidBody>(groundInfo);
 
 		m_world->addRigidBody(m_groundRB.get());
+
+		auto filterCB = std::make_unique<MMDFilterCallback>();
+		filterCB->m_nonFilterProxy.push_back(m_groundRB->getBroadphaseProxy());
+		m_world->getPairCache()->setOverlapFilterCallback(filterCB.get());
+		m_filterCB = std::move(filterCB);
 
 		return true;
 	}
@@ -188,18 +206,57 @@ namespace saba
 		{
 			m_invOffset = glm::inverse(offset);
 			m_nodeGlobal = m_node->GetGlobalTransform();
+			Reset();
 		}
 
 		void getWorldTransform(btTransform& worldTransform) const override
 		{
-			glm::mat4 ret = InvZ(m_nodeGlobal * m_offset);
-			worldTransform.setFromOpenGLMatrix(&ret[0][0]);
+			//glm::mat4 ret = InvZ(m_nodeGlobal * m_offset);
+			//worldTransform.setFromOpenGLMatrix(&ret[0][0]);
+			worldTransform = m_transform;
 		}
 
 		void setWorldTransform(const btTransform& worldTransform) override
 		{
+			//glm::mat4 world;
+			//worldTransform.getOpenGLMatrix(&world[0][0]);
+			//m_nodeGlobal = InvZ(world) * m_invOffset;
+
+			//MMDNode* parent = m_node->GetParent();
+			//glm::mat4 local;
+			//if (parent != nullptr)
+			//{
+			//	local = glm::inverse(parent->GetGlobalTransform()) * m_nodeGlobal;
+			//}
+			//else
+			//{
+			//	local = m_nodeGlobal;
+			//}
+
+			//if (m_override)
+			//{
+			//	m_node->SetLocalTransform(local);
+			//	m_node->UpdateGlobalTransform();
+			//}
+			m_transform = worldTransform;
+		}
+
+		void Reset() override
+		{
+			m_nodeGlobal = m_node->GetGlobalTransform();
+
+			glm::mat4 global = InvZ(m_node->GetGlobalTransform() * m_offset);
+			m_transform.setFromOpenGLMatrix(&global[0][0]);
+		}
+
+		void BeginUpdate() override
+		{
+		}
+
+		void EndUpdate() override
+		{
 			glm::mat4 world;
-			worldTransform.getOpenGLMatrix(&world[0][0]);
+			m_transform.getOpenGLMatrix(&world[0][0]);
 			m_nodeGlobal = InvZ(world) * m_invOffset;
 
 			MMDNode* parent = m_node->GetParent();
@@ -220,24 +277,12 @@ namespace saba
 			}
 		}
 
-		void Reset() override
-		{
-			m_nodeGlobal = m_node->GetGlobalTransform();
-		}
-
-		void BeginUpdate() override
-		{
-		}
-
-		void EndUpdate() override
-		{
-		}
-
 	private:
 		MMDNode*	m_node;
 		glm::mat4	m_nodeGlobal;
 		glm::mat4	m_offset;
 		glm::mat4	m_invOffset;
+		btTransform	m_transform;
 		bool		m_override;
 	};
 
@@ -252,62 +297,90 @@ namespace saba
 			m_invOffset = glm::inverse(offset);
 			m_nodeLocal = m_node->GetLocalTransform();
 			m_nodeGlobal = m_node->GetGlobalTransform();
+			Reset();
 		}
 
 		void getWorldTransform(btTransform& worldTransform) const override
 		{
-			glm::mat4 ret = InvZ(m_nodeGlobal * m_offset);
-			worldTransform.setFromOpenGLMatrix(&ret[0][0]);
+			//glm::mat4 ret = InvZ(m_nodeGlobal * m_offset);
+			//worldTransform.setFromOpenGLMatrix(&ret[0][0]);
+			worldTransform = m_transform;
 		}
 
 		void setWorldTransform(const btTransform& worldTransform) override
 		{
-			glm::mat4 world;
-			worldTransform.getOpenGLMatrix(&world[0][0]);
-			world = InvZ(world);
-			glm::mat4 nodeOffsetGlobal = m_node->GetGlobalTransform() * m_offset;
-			world[3] = nodeOffsetGlobal[3];
-			m_nodeGlobal = world * m_invOffset;
+			//glm::mat4 world;
+			//worldTransform.getOpenGLMatrix(&world[0][0]);
+			//world = InvZ(world);
+			//glm::mat4 nodeOffsetGlobal = m_node->GetGlobalTransform() * m_offset;
+			//world[3] = nodeOffsetGlobal[3];
+			//m_nodeGlobal = world * m_invOffset;
 
-			MMDNode* parent = m_node->GetParent();
-			if (parent != nullptr)
-			{
-				glm::mat4 local = glm::inverse(parent->GetGlobalTransform()) * m_nodeGlobal;
-				m_nodeLocal = local;
-			}
-			else
-			{
-				m_nodeLocal = m_nodeGlobal;
-			}
+			//MMDNode* parent = m_node->GetParent();
+			//if (parent != nullptr)
+			//{
+			//	glm::mat4 local = glm::inverse(parent->GetGlobalTransform()) * m_nodeGlobal;
+			//	m_nodeLocal = local;
+			//}
+			//else
+			//{
+			//	m_nodeLocal = m_nodeGlobal;
+			//}
 
-			if (m_override)
-			{
-				m_node->SetLocalTransform(m_nodeLocal);
-				m_node->UpdateGlobalTransform();
-			}
+			//if (m_override)
+			//{
+			//	m_node->SetLocalTransform(m_nodeLocal);
+			//	m_node->UpdateGlobalTransform();
+			//}
+			m_transform = worldTransform;
 		}
 
 		void Reset() override
 		{
 			m_nodeLocal = m_node->GetLocalTransform();
 			m_nodeGlobal = m_node->GetGlobalTransform();
+
+			glm::mat4 global = InvZ(m_node->GetGlobalTransform() * m_offset);
+			m_transform.setFromOpenGLMatrix(&global[0][0]);
 		}
 
 		void BeginUpdate() override
 		{
-			MMDNode* parent = m_node->GetParent();
-			if (parent != nullptr)
-			{
-				m_nodeGlobal = parent->GetGlobalTransform() * m_nodeLocal;
-			}
-			else
-			{
-				m_nodeGlobal = m_nodeLocal;
-			}
+			//MMDNode* parent = m_node->GetParent();
+			//if (parent != nullptr)
+			//{
+			//	m_nodeGlobal = parent->GetGlobalTransform() * m_nodeLocal;
+			//}
+			//else
+			//{
+			//	m_nodeGlobal = m_nodeLocal;
+			//}
 		}
 
 		void EndUpdate() override
 		{
+			glm::mat4 world;
+			m_transform.getOpenGLMatrix(&world[0][0]);
+			m_nodeGlobal = InvZ(world) * m_invOffset;
+			glm::mat4 global = m_node->GetGlobalTransform();
+			m_nodeGlobal[3] = global[3];
+
+			MMDNode* parent = m_node->GetParent();
+			glm::mat4 local;
+			if (parent != nullptr)
+			{
+				local = glm::inverse(parent->GetGlobalTransform()) * m_nodeGlobal;
+			}
+			else
+			{
+				local = m_nodeGlobal;
+			}
+
+			if (m_override)
+			{
+				m_node->SetLocalTransform(local);
+				m_node->UpdateGlobalTransform();
+			}
 		}
 
 	private:
@@ -316,6 +389,7 @@ namespace saba
 		glm::mat4	m_nodeGlobal;
 		glm::mat4	m_offset;
 		glm::mat4	m_invOffset;
+		btTransform	m_transform;
 		bool		m_override;
 
 	};
@@ -417,7 +491,7 @@ namespace saba
 		auto rx = glm::rotate(glm::mat4(), pmdRigidBody.m_rot.x, glm::vec3(1, 0, 0));
 		auto ry = glm::rotate(glm::mat4(), pmdRigidBody.m_rot.y, glm::vec3(0, 1, 0));
 		auto rz = glm::rotate(glm::mat4(), pmdRigidBody.m_rot.z, glm::vec3(0, 0, 1));
-		glm::mat4 rotMat = rz * ry * rx;
+		glm::mat4 rotMat = ry * rx * rz;
 		glm::mat4 translateMat = glm::translate(glm::mat4(), pmdRigidBody.m_pos);
 
 		glm::mat4 rbMat = translateMat * rotMat;
@@ -545,7 +619,7 @@ namespace saba
 		auto rx = glm::rotate(glm::mat4(), pmxRigidBody.m_rotate.x, glm::vec3(1, 0, 0));
 		auto ry = glm::rotate(glm::mat4(), pmxRigidBody.m_rotate.y, glm::vec3(0, 1, 0));
 		auto rz = glm::rotate(glm::mat4(), pmxRigidBody.m_rotate.z, glm::vec3(0, 0, 1));
-		glm::mat4 rotMat = rz * ry * rx;
+		glm::mat4 rotMat = ry * rx * rz;
 		glm::mat4 translateMat = glm::translate(glm::mat4(), pmxRigidBody.m_translate);
 
 		glm::mat4 rbMat = InvZ(translateMat * rotMat);
@@ -707,24 +781,24 @@ namespace saba
 			m_kinematicMotionState->EndUpdate();
 		}
 
-		if (m_node != nullptr && m_rigidBodyType != RigidBodyType::Kinematic)
-		{
-			glm::mat4 rbMat = GetTransform();
-			glm::mat4 globalMat = rbMat * m_invOffsetMat;
+		//if (m_node != nullptr && m_rigidBodyType != RigidBodyType::Kinematic)
+		//{
+		//	glm::mat4 rbMat = GetTransform();
+		//	glm::mat4 globalMat = rbMat * m_invOffsetMat;
 
-			glm::mat4 localMat;
-			MMDNode* parent = m_node->GetParent();
-			if (parent != nullptr)
-			{
-				localMat = glm::inverse(parent->GetGlobalTransform()) * globalMat;
-			}
-			else
-			{
-				localMat = globalMat;
-			}
-			m_node->SetLocalTransform(localMat);
-			m_node->SetGlobalTransform(globalMat);
-		}
+		//	glm::mat4 localMat;
+		//	MMDNode* parent = m_node->GetParent();
+		//	if (parent != nullptr)
+		//	{
+		//		localMat = glm::inverse(parent->GetGlobalTransform()) * globalMat;
+		//	}
+		//	else
+		//	{
+		//		localMat = globalMat;
+		//	}
+		//	m_node->SetLocalTransform(localMat);
+		//	m_node->SetGlobalTransform(globalMat);
+		//}
 	}
 
 	glm::mat4 MMDRigidBody::GetTransform()
