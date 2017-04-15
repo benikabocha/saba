@@ -78,37 +78,7 @@ namespace saba
 
 		EndAnimation();
 
-		MMDPhysicsManager* physicsMan = GetPhysicsManager();
-		auto physics = physicsMan->GetMMDPhysics();
-
-		if (physics == nullptr)
-		{
-			return;
-		}
-
-		auto rigidbodys = physicsMan->GetRigidBodys();
-		auto joints = physicsMan->GetJoints();
-		for (auto& rb : (*rigidbodys))
-		{
-			rb->SetActivation(false);
-		}
-
-		for (auto& rb : (*rigidbodys))
-		{
-			rb->BeginUpdate();
-		}
-
-		physics->Update(1.0f / 60.0f);
-
-		for (auto& rb : (*rigidbodys))
-		{
-			rb->EndUpdate();
-		}
-
-		for (auto& rb : (*rigidbodys))
-		{
-			rb->Reset(physics);
-		}
+		ResetPhysics();
 	}
 
 	void PMXModel::BeginAnimation()
@@ -180,6 +150,41 @@ namespace saba
 			{
 				node->UpdateGlobalTransform();
 			}
+		}
+	}
+
+	void PMXModel::ResetPhysics()
+	{
+		MMDPhysicsManager* physicsMan = GetPhysicsManager();
+		auto physics = physicsMan->GetMMDPhysics();
+
+		if (physics == nullptr)
+		{
+			return;
+		}
+
+		auto rigidbodys = physicsMan->GetRigidBodys();
+		auto joints = physicsMan->GetJoints();
+		for (auto& rb : (*rigidbodys))
+		{
+			rb->SetActivation(false);
+		}
+
+		for (auto& rb : (*rigidbodys))
+		{
+			rb->BeginUpdate();
+		}
+
+		physics->Update(1.0f / 60.0f);
+
+		for (auto& rb : (*rigidbodys))
+		{
+			rb->EndUpdate();
+		}
+
+		for (auto& rb : (*rigidbodys))
+		{
+			rb->Reset(physics);
 		}
 	}
 
@@ -889,6 +894,8 @@ namespace saba
 			m_updatePartitions[i] = part;
 			partVertexOffset += part.m_vertexCount;
 		}
+
+		ResetPhysics();
 
 		return true;
 	}

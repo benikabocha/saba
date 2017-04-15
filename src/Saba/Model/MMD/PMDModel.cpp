@@ -74,37 +74,7 @@ namespace saba
 			solver->Solve();
 		}
 
-		MMDPhysicsManager* physicsMan = GetPhysicsManager();
-		auto physics = physicsMan->GetMMDPhysics();
-
-		if (physics == nullptr)
-		{
-			return;
-		}
-
-		auto rigidbodys = physicsMan->GetRigidBodys();
-		auto joints = physicsMan->GetJoints();
-		for (auto& rb : (*rigidbodys))
-		{
-			rb->SetActivation(false);
-		}
-
-		for (auto& rb : (*rigidbodys))
-		{
-			rb->BeginUpdate();
-		}
-
-		physics->Update(1.0f / 60.0f);
-
-		for (auto& rb : (*rigidbodys))
-		{
-			rb->EndUpdate();
-		}
-
-		for (auto& rb : (*rigidbodys))
-		{
-			rb->Reset(physics);
-		}
+		ResetPhysics();
 	}
 
 	void PMDModel::BeginAnimation()
@@ -141,6 +111,41 @@ namespace saba
 		for (auto& solver : (*m_ikSolverMan.GetIKSolvers()))
 		{
 			solver->Solve();
+		}
+	}
+
+	void PMDModel::ResetPhysics()
+	{
+		MMDPhysicsManager* physicsMan = GetPhysicsManager();
+		auto physics = physicsMan->GetMMDPhysics();
+
+		if (physics == nullptr)
+		{
+			return;
+		}
+
+		auto rigidbodys = physicsMan->GetRigidBodys();
+		auto joints = physicsMan->GetJoints();
+		for (auto& rb : (*rigidbodys))
+		{
+			rb->SetActivation(false);
+		}
+
+		for (auto& rb : (*rigidbodys))
+		{
+			rb->BeginUpdate();
+		}
+
+		physics->Update(1.0f / 60.0f);
+
+		for (auto& rb : (*rigidbodys))
+		{
+			rb->EndUpdate();
+		}
+
+		for (auto& rb : (*rigidbodys))
+		{
+			rb->Reset(physics);
 		}
 	}
 
@@ -533,6 +538,8 @@ namespace saba
 			}
 			m_physicsMan.GetMMDPhysics()->AddJoint(joint);
 		}
+
+		ResetPhysics();
 
 		return true;
 	}
