@@ -137,6 +137,9 @@ namespace saba
 
 		void Evaluate(float t, float weight = 1.0f);
 
+		// Physics を同期させる
+		void SyncPhysics(float t, int frameCount = 30);
+
 	private:
 		using NodeControllerPtr = std::unique_ptr<VMDNodeController>;
 		using IKControllerPtr = std::unique_ptr<VMDIKController>;

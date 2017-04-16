@@ -108,7 +108,7 @@ namespace saba
 		m_materialShaders.clear();
 	}
 
-	void GLOBJModelDrawer::InitializeAnimation(ViewerContext * ctxt)
+	void GLOBJModelDrawer::ResetAnimation(ViewerContext * ctxt)
 	{
 	}
 

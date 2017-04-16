@@ -825,6 +825,14 @@ namespace saba
 		{
 			m_context.SetPlayMode(ViewerContext::PlayMode::PrevFrame);
 		}
+		if (ImGui::Button("Reset Anim"))
+		{
+			ResetAnimation();
+		}
+		if (ImGui::Button("Init Anim"))
+		{
+			InitializeAnimation();
+		}
 	}
 
 	void Viewer::DrawCameraCtrl()
@@ -999,11 +1007,16 @@ namespace saba
 
 	void Viewer::InitializeAnimation()
 	{
-		m_context.SetPlayMode(ViewerContext::PlayMode::None);
 		m_context.SetAnimationTime(0);
+		ResetAnimation();
+	}
+
+	void Viewer::ResetAnimation()
+	{
+		m_context.SetPlayMode(ViewerContext::PlayMode::None);
 		for (auto& modelDrawer : m_modelDrawers)
 		{
-			modelDrawer->InitializeAnimation(&m_context);
+			modelDrawer->ResetAnimation(&m_context);
 		}
 	}
 

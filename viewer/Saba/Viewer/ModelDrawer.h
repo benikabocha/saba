@@ -30,7 +30,7 @@ namespace saba
 		virtual void Play() = 0;
 		virtual void Stop() = 0;
 
-		virtual void InitializeAnimation(ViewerContext* ctxt) = 0;
+		virtual void ResetAnimation(ViewerContext* ctxt) = 0;
 		virtual void DrawUI(ViewerContext* ctxt) = 0;
 		virtual void Update(ViewerContext* ctxt) = 0;
 		virtual void Draw(ViewerContext* ctxt) = 0;

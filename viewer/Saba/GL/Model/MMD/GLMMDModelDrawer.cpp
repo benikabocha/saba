@@ -121,9 +121,9 @@ namespace saba
 	{
 	}
 
-	void GLMMDModelDrawer::InitializeAnimation(ViewerContext* ctxt)
+	void GLMMDModelDrawer::ResetAnimation(ViewerContext * ctxt)
 	{
-		m_mmdModel->EvaluateAnimation(ctxt->GetAnimationTime());
+		m_mmdModel->ResetAnimation();
 	}
 
 	void GLMMDModelDrawer::Update(ViewerContext * ctxt)

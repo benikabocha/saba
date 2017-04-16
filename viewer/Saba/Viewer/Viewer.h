@@ -108,6 +108,7 @@ namespace saba
 		void DrawModelCtrl();
 		void UpdateAnimation();
 		void InitializeAnimation();
+		void ResetAnimation();
 		void RegisterCommand();
 		void RefreshCustomCommand();
 

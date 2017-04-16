@@ -50,6 +50,14 @@ namespace saba
 		void Destroy();
 
 		bool LoadAnimation(const VMDFile& vmd);
+
+		/*
+		現在のアニメーションの初期化と Physics の初期化を行う。
+		時間は変更されない。
+		*/
+		void ResetAnimation();
+
+		// アニメーションをクリアする
 		void ClearAnimation();
 
 		void SetAnimationTime(double time);

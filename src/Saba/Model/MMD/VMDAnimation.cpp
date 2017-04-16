@@ -372,6 +372,31 @@ namespace saba
 		}
 	}
 
+	void VMDAnimation::SyncPhysics(float t, int frameCount)
+	{
+		/*
+		すぐにアニメーションを反映すると、Physics が破たんする場合がある。
+		例：足がスカートを突き破る等
+		アニメーションを反映する際、初期状態から数フレームかけて、
+		目的のポーズへ遷移させる。
+		*/
+		m_model->SaveBaseAnimation();
+
+		// Physicsを反映する
+		for (int i = 0; i < frameCount; i++)
+		{
+			m_model->BeginAnimation();
+;
+			Evaluate((float)t, float(1 + i) / float(frameCount));
+
+			m_model->UpdateAnimation();
+
+			m_model->EndAnimation();
+
+			m_model->UpdatePhysics(1.0f / 30.0f);
+		}
+	}
+
 	void VMDNodeAnimationKey::Set(const VMDMotion & motion)
 	{
 		m_time = int32_t(motion.m_frame);
