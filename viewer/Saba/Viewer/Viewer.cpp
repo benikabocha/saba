@@ -1205,8 +1205,16 @@ namespace saba
 				{
 					argsTable.add(arg);
 				}
-				sol::function_result ret = (*findIt)->m_commandFunc(argsTable);
-				return ret.valid();
+				try
+				{
+					sol::function_result ret = (*findIt)->m_commandFunc(argsTable);
+					return ret.valid();
+				}
+				catch (sol::error e)
+				{
+					SABA_WARN("lua error\n{}", e.what());
+					return false;
+				}
 			}
 		}
 
