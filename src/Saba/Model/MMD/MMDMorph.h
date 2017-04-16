@@ -22,6 +22,7 @@ namespace saba
 		float GetWeight() const { return m_weight; }
 
 		void SaveBaseAnimation() { m_saveAnimWeight = m_weight; }
+		void LoadBaseAnimation() { m_weight = m_saveAnimWeight; }
 		void ClearBaseAnimation() { m_saveAnimWeight = 0; }
 		float GetBaseAnimationWeight() const { return m_saveAnimWeight; }
 

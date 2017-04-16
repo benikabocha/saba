@@ -193,7 +193,7 @@ namespace saba
 		}
 
 		// Physicsを同期する
-		m_vmdAnim->SyncPhysics(m_animTime * 30.0f, 30);
+		m_vmdAnim->SyncPhysics(float(m_animTime * 30.0), 30);
 
 		return true;
 	}
@@ -237,11 +237,21 @@ namespace saba
 	void GLMMDModel::UpdateAnimation(double animTime, bool evaluateAnim)
 	{
 		double startTime = GetTime();
+
+		if (!evaluateAnim)
+		{
+			m_mmdModel->SaveBaseAnimation();
+		}
+
 		m_mmdModel->BeginAnimation();
 
 		if (evaluateAnim)
 		{
 			EvaluateAnimation(animTime);
+		}
+		else
+		{
+			m_mmdModel->LoadBaseAnimation();
 		}
 
 		m_mmdModel->UpdateAnimation();

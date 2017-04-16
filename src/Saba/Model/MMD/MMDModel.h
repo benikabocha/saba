@@ -152,6 +152,7 @@ namespace saba
 
 		// ベースアニメーション(アニメーション読み込み時、Physics反映用)
 		void SaveBaseAnimation();
+		void LoadBaseAnimation();
 		void ClearBaseAnimation();
 
 		// アニメーションの前後で呼ぶ (VMDアニメーションの前後)

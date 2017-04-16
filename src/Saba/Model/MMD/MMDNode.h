@@ -95,6 +95,12 @@ namespace saba
 			m_baseAnimRotate = m_animRotate;
 		}
 
+		void LoadBaseAnimation()
+		{
+			m_animTranslate = m_baseAnimTranslate;
+			m_animRotate = m_baseAnimRotate;
+		}
+
 		void ClearBaseAnimation()
 		{
 			m_baseAnimTranslate = glm::vec3(0);

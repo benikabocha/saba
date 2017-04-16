@@ -86,6 +86,30 @@ namespace saba
 		}
 	}
 
+	void MMDModel::LoadBaseAnimation()
+	{
+		auto nodeMan = GetNodeManager();
+		for (size_t i = 0; i < nodeMan->GetNodeCount(); i++)
+		{
+			auto node = nodeMan->GetMMDNode(i);
+			node->LoadBaseAnimation();
+		}
+
+		auto morphMan = GetMorphManager();
+		for (size_t i = 0; i < morphMan->GetMorphCount(); i++)
+		{
+			auto morph = morphMan->GetMorph(i);
+			morph->LoadBaseAnimation();
+		}
+
+		auto ikMan = GetIKManager();
+		for (size_t i = 0; i < ikMan->GetIKSolverCount(); i++)
+		{
+			auto ikSolver = ikMan->GetMMDIKSolver(i);
+			ikSolver->LoadBaseAnimation();
+		}
+	}
+
 	void MMDModel::ClearBaseAnimation()
 	{
 		auto nodeMan = GetNodeManager();
