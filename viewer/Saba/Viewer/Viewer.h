@@ -28,6 +28,7 @@
 #include <map>
 #include <string>
 #include <memory>
+#include <deque>
 
 namespace saba
 {
@@ -236,8 +237,16 @@ namespace saba
 		// PMXConfig
 		PMXConfig	m_pmxConfig;
 
+		// Performance
+		std::deque<float>	m_perfFramerateLap;
+		std::deque<double>	m_perfMMDUpdateAnimTimeLap;
+		std::deque<double>	m_perfMMDUpdatePhysicsTimeLap;
+		std::deque<double>	m_perfMMDUpdateModelTimeLap;
+		std::deque<double>	m_perfMMDUpdateGLBufferTimeLap;
+
 		// InfoUI
 		bool	m_enableInfoUI;
+		bool	m_enableMoreInfoUI;
 
 		// LogUI
 		std::shared_ptr<ImGUILogSink>	m_imguiLogSink;

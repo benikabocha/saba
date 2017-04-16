@@ -21,6 +21,10 @@ namespace saba
 		m_updateAnimTime = 0;
 		m_updatePhysicsTime = 0;
 		m_updateTime = 0;
+		m_perfInfo.m_updateAnimTime = 0;
+		m_perfInfo.m_updatePhysicsTime = 0;
+		m_perfInfo.m_updateModelTime = 0;
+		m_perfInfo.m_updateGLBufferTime = 0;
 		m_enablePhysics = true;
 	}
 
@@ -297,14 +301,23 @@ namespace saba
 			m_materials[mi].m_toonTextureMulFactor = mmdMat.m_toonTextureMulFactor;
 			m_materials[mi].m_toonTextureAddFactor = mmdMat.m_toonTextureAddFactor;
 		}
+		double endTime = GetTime();
+		double updateModelTime = endTime - startTime;
 
+		startTime = GetTime();
 		size_t vtxCount = m_mmdModel->GetVertexCount();
 		UpdateVBO(m_posVBO, m_mmdModel->GetUpdatePositions(), vtxCount);
 		UpdateVBO(m_norVBO, m_mmdModel->GetUpdateNormals(), vtxCount);
 		UpdateVBO(m_uvVBO, m_mmdModel->GetUpdateUVs(), vtxCount);
-		double endTime = GetTime();
+		endTime = GetTime();
+		double updateGLBufferTime = endTime - startTime;
 
-		m_updateTime = endTime - startTime + m_updateAnimTime + m_updatePhysicsTime;
+		m_perfInfo.m_updateAnimTime = m_updateAnimTime;
+		m_perfInfo.m_updatePhysicsTime = m_updatePhysicsTime;
+		m_perfInfo.m_updateModelTime = updateModelTime;
+		m_perfInfo.m_updateGLBufferTime = updateGLBufferTime;
+
+		m_updateTime = updateGLBufferTime + updateModelTime + m_updateAnimTime + m_updatePhysicsTime;
 		m_updateAnimTime = 0;
 		m_updatePhysicsTime = 0;
 	}

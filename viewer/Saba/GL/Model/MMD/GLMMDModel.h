@@ -82,6 +82,14 @@ namespace saba
 		const std::vector<GLMMDMaterial>& GetMaterials() const { return m_materials; }
 		const std::vector<MMDSubMesh>& GetSubMeshes() const { return m_subMeshes; }
 
+		struct PerfInfo
+		{
+			double	m_updateAnimTime;
+			double	m_updatePhysicsTime;
+			double	m_updateModelTime;
+			double	m_updateGLBufferTime;
+		};
+		const PerfInfo GetPerfInfo() { return m_perfInfo; }
 		double GetUpdateTime() const { return m_updateTime; }
 
 		VMDAnimation* GetVMDAnimation() const { return m_vmdAnim.get(); }
@@ -113,6 +121,7 @@ namespace saba
 		double						m_updateAnimTime;
 		double						m_updatePhysicsTime;
 		double						m_updateTime;
+		PerfInfo					m_perfInfo;
 
 		bool	m_enablePhysics;
 	};

@@ -101,6 +101,7 @@ namespace saba
 		, m_prevTime(0)
 		, m_modelNameID(1)
 		, m_enableInfoUI(true)
+		, m_enableMoreInfoUI(false)
 		, m_enableLogUI(true)
 		, m_enableCommandUI(true)
 		, m_enableManip(false)
@@ -302,6 +303,7 @@ namespace saba
 					if (ImGui::BeginMenu("Window"))
 					{
 						ImGui::MenuItem("Info", nullptr, &m_enableInfoUI);
+						ImGui::MenuItem("More Info", nullptr, &m_enableMoreInfoUI);
 						ImGui::MenuItem("Log", nullptr, &m_enableLogUI);
 						ImGui::MenuItem("Command", nullptr, &m_enableCommandUI);
 						ImGui::MenuItem("Control", nullptr, &m_enableCtrlUI);
@@ -553,9 +555,61 @@ namespace saba
 		ImGui::End();
 	}
 
+	namespace
+	{
+		template <typename T>
+		void PushPerfLap(std::deque<T>& lap, const T& val)
+		{
+			if (lap.size() >= 100)
+			{
+				lap.pop_front();
+			}
+			lap.push_back(val);
+		}
+
+		template <typename T>
+		T GetPerfLapMax(const std::deque<T>& lap)
+		{
+			auto it = std::max_element(lap.begin(), lap.end());
+			if (it == lap.end())
+			{
+				return 0;
+			}
+			return (*it);
+		}
+
+		template <typename T>
+		T GetPerfLapMin(const std::deque<T>& lap)
+		{
+			auto it = std::min_element(lap.begin(), lap.end());
+			if (it == lap.end())
+			{
+				return 0;
+			}
+			return (*it);
+		}
+
+		template <typename T>
+		T GetPerfLapAve(const std::deque<T>& lap)
+		{
+			T count = T(0);
+			T sum = T(0);
+			for (const auto& val : lap)
+			{
+				sum += val;
+				count += T(1);
+			}
+			if (count == T(0))
+			{
+				return T(0);
+			}
+			return sum / count;
+		}
+	} // namespace
+
 	void Viewer::DrawInfoUI()
 	{
-		if (!m_enableCommandUI)
+		if (!m_enableInfoUI)
 		{
 			return;
 		}
@@ -568,6 +622,14 @@ namespace saba
 		ImGui::Text("Info");
 		ImGui::Separator();
 		ImGui::Text("Time %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
+		PushPerfLap(m_perfFramerateLap, ImGui::GetIO().Framerate);
+		float aveFps = GetPerfLapAve(m_perfFramerateLap);
+		float minFps = GetPerfLapMin(m_perfFramerateLap);
+		m_perfFramerateLap.size();
+		if (m_enableMoreInfoUI)
+		{
+			ImGui::Text("FPS ave:%.2f min:%.2f max time:%.2f[ms]", aveFps, minFps, 1000.0f / minFps);
+		}
 
 		if (m_selectedModelDrawer != nullptr && m_selectedModelDrawer->GetType() == ModelDrawerType::MMDModelDrawer)
 		{
@@ -576,6 +638,36 @@ namespace saba
 			if (mmdModel != nullptr)
 			{
 				ImGui::Text("MMD Model Update Time %.3f ms", mmdModel->GetUpdateTime() * 1000.0);
+				const auto& perfInfo = mmdModel->GetPerfInfo();
+
+				PushPerfLap(m_perfMMDUpdateAnimTimeLap, perfInfo.m_updateAnimTime);
+				PushPerfLap(m_perfMMDUpdatePhysicsTimeLap, perfInfo.m_updatePhysicsTime);
+				PushPerfLap(m_perfMMDUpdateModelTimeLap, perfInfo.m_updateModelTime);
+				PushPerfLap(m_perfMMDUpdateGLBufferTimeLap, perfInfo.m_updateGLBufferTime);
+
+				if (m_enableMoreInfoUI)
+				{
+					ImGui::Text("Anim   ave:%.2f max:%.2f now:%.2f [ms]",
+						float(GetPerfLapAve(m_perfMMDUpdateAnimTimeLap) * 1000.0),
+						float(GetPerfLapMax(m_perfMMDUpdateAnimTimeLap) * 1000.0),
+						float(perfInfo.m_updateAnimTime * 1000.0)
+					);
+					ImGui::Text("Phyics ave:%.2f max:%.2f now:%.2f [ms]",
+						float(GetPerfLapAve(m_perfMMDUpdatePhysicsTimeLap) * 1000.0),
+						float(GetPerfLapMax(m_perfMMDUpdatePhysicsTimeLap) * 1000.0),
+						float(perfInfo.m_updatePhysicsTime * 1000.0)
+					);
+					ImGui::Text("Model  ave:%.2f max:%.2f now:%.2f [ms]",
+						float(GetPerfLapAve(m_perfMMDUpdateModelTimeLap) * 1000.0),
+						float(GetPerfLapMax(m_perfMMDUpdateModelTimeLap) * 1000.0),
+						float(perfInfo.m_updateModelTime * 1000.0)
+					);
+					ImGui::Text("Buffer ave:%.2f max:%.2f now:%.2f [ms]",
+						float(GetPerfLapAve(m_perfMMDUpdateGLBufferTimeLap) * 1000.0),
+						float(GetPerfLapMax(m_perfMMDUpdateGLBufferTimeLap) * 1000.0),
+						float(perfInfo.m_updateGLBufferTime * 1000.0)
+					);
+				}
 			}
 		}
 		ImGui::End();
