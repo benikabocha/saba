@@ -16,10 +16,15 @@
 
 namespace saba
 {
+	DefaultSink::DefaultSink()
+	{
+		m_defaultLogger = spdlog::stdout_color_mt("default");
+	}
+
 	void DefaultSink::log(const spdlog::details::log_msg & msg)
 	{
 #if _WIN32
-		auto utf8Message = msg.formatted.str();
+		auto utf8Message = msg.raw.str();
 		auto wMessage = ToWString(utf8Message);
 		int chCount = WideCharToMultiByte(
 			CP_OEMCP,
@@ -42,13 +47,14 @@ namespace saba
 			0,
 			FALSE
 		);
-		std::cout << oemMessage;
+		m_defaultLogger->log(msg.level, oemMessage);
 #else // _WIN32
-		std::cout << msg.formatted.str();
+		m_defaultLogger->log(msg.level, msg.raw.c_str());
 #endif // _WIN32
 	}
 
 	void DefaultSink::flush()
 	{
+		m_defaultLogger->flush();
 	}
 }

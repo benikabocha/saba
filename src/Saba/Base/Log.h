@@ -18,8 +18,11 @@ namespace saba
 	class DefaultSink : public spdlog::sinks::sink
 	{
 	public:
+		DefaultSink();
 		void log(const spdlog::details::log_msg& msg) override;
 		void flush() override;
+	private:
+		std::shared_ptr<spdlog::logger>	m_defaultLogger;
 	};
 
 	class Logger

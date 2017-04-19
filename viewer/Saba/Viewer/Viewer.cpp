@@ -58,7 +58,7 @@ namespace saba
 				m_buffer.pop_front();
 			}
 
-			m_buffer.push_back(msg.formatted.str());
+			m_buffer.emplace_back(LogMessage{msg.level, msg.formatted.str()});
 			m_added = true;
 		}
 
@@ -66,14 +66,19 @@ namespace saba
 		{
 		}
 
-		const std::deque<std::string>& GetBuffer() const { return m_buffer; }
+		struct LogMessage
+		{
+			spdlog::level::level_enum	m_level;
+			std::string					m_message;
+		};
+		const std::deque<LogMessage>& GetBuffer() const { return m_buffer; }
 
 		bool IsAdded() const { return m_added; }
 		void ClearAddedFlag() { m_added = false; }
 
 	private:
 		size_t					m_maxBufferSize;
-		std::deque<std::string> m_buffer;
+		std::deque<LogMessage>	m_buffer;
 		bool					m_added;
 	};
 
@@ -693,7 +698,37 @@ namespace saba
 
 		for (const auto& log : m_imguiLogSink->GetBuffer())
 		{
-			ImGui::TextUnformatted(log.c_str());
+			ImVec4 col = ImColor(255, 255, 255, 255);
+			switch (log.m_level)
+			{
+			case spdlog::level::trace:
+				col = ImColor(73, 248, 255, 255);
+				break;
+			case spdlog::level::debug:
+				col = ImColor(184, 255, 160, 255);
+				break;
+			case spdlog::level::info:
+				col = ImColor(255, 255, 255, 255);
+				break;
+			case spdlog::level::warn:
+				col = ImColor(255, 238, 7, 255);
+				break;
+			case spdlog::level::err:
+				col = ImColor(255, 0, 67, 255);
+				break;
+			case spdlog::level::critical:
+				col = ImColor(198, 35, 67, 255);
+				break;
+			case spdlog::level::off:
+				col = ImColor(128, 128, 128, 255);
+				break;
+			default:
+				col = ImColor(255, 255, 255, 255);
+				break;
+			}
+			ImGui::PushStyleColor(ImGuiCol_Text, col);
+			ImGui::TextUnformatted(log.m_message.c_str());
+			ImGui::PopStyleColor();
 		}
 		// スクロールする場合、最後の行が見えなくなるため、ダミーの行を追加
 		ImGui::TextUnformatted("");
