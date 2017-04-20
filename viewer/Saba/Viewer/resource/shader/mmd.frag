@@ -67,6 +67,10 @@ void main()
 			alpha *= texColor.a;
 		}
     }
+	if (alpha == 0.0)
+	{
+		discard;
+	}
 
 	if (u_SphereTexMode != 0)
 	{
