@@ -29,7 +29,7 @@ bool MMD2Obj(const std::vector<std::string>& args)
 		return false;
 	}
 
-	// 引数解析
+	// Analyze commad line.
 	const std::string& modelPath = args[1];
 	std::vector<std::string> vmdPaths;
 	double	animTime = 0.0;
@@ -69,9 +69,9 @@ bool MMD2Obj(const std::vector<std::string>& args)
 		}
 	}
 
-	// モデルの読み込み
+	// Load model.
 	std::shared_ptr<saba::MMDModel> mmdModel;
-	std::string mmdDataPath = "";	// MMDデータ (標準Toonテクスチャ) のパスを指定する
+	std::string mmdDataPath = "";	// Set MMD data path(default toon texture path).
 	std::string ext = saba::PathUtil::GetExt(modelPath);
 	if (ext == "pmd")
 	{
@@ -99,7 +99,7 @@ bool MMD2Obj(const std::vector<std::string>& args)
 		return false;
 	}
 
-	// アニメーションの読み込み
+	// Load animation.
 	auto vmdAnim = std::make_unique<saba::VMDAnimation>();
 	if (!vmdAnim->Create(mmdModel))
 	{
@@ -121,29 +121,29 @@ bool MMD2Obj(const std::vector<std::string>& args)
 		}
 	}
 
-	// アニメーション
-	vmdAnim->Evaluate((float)animTime * 30.0f);
-	mmdModel->InitializeAnimation();
-
-	// ノードのアニメーションを実行
-	mmdModel->BeginAnimation();
-	mmdModel->UpdateAnimation();
-	mmdModel->EndAnimation();
-
-	// Physics の状態を反映させるため、10程度秒進める
-	double physicsTime = 10;
-	double physicsFps = 60;
-	double physicsElapsed = 1.0 / physicsFps;
-	int updateCount = (int)(physicsTime / physicsElapsed + 1.0);
-	for (int i = 0; i < updateCount; i++)
+	// Initialize pose.
 	{
-		mmdModel->UpdatePhysics((float)physicsElapsed);
+		// Sync physics animation.
+		mmdModel->InitializeAnimation();
+		vmdAnim->SyncPhysics((float)animTime * 30.0f);
 	}
 
-	// 頂点を更新
-	mmdModel->Update();
+	// Update animation(animation loop).
+	{
+		// Update bone animation.
+		mmdModel->BeginAnimation();
+		vmdAnim->Evaluate((float)animTime * 30.0f);
+		mmdModel->UpdateAnimation();
+		mmdModel->EndAnimation();
 
-	// OBJ へ書き出し
+		// Update physics animation.
+		mmdModel->UpdatePhysics(1.0f / 60.0f);
+
+		// Update vertex.
+		mmdModel->Update();
+	}
+
+	// Output OBJ file.
 	std::ofstream objFile;
 	objFile.open("output.obj");
 	if (!objFile.is_open())
@@ -154,7 +154,7 @@ bool MMD2Obj(const std::vector<std::string>& args)
 	objFile << "# mmmd2obj\n";
 	objFile << "mtllib output.mtl\n";
 
-	// 頂点を書き出し
+	// Write positions.
 	size_t vtxCount = mmdModel->GetVertexCount();
 	const glm::vec3* positions = mmdModel->GetUpdatePositions();
 	for (size_t i = 0; i < vtxCount; i++)
@@ -172,7 +172,7 @@ bool MMD2Obj(const std::vector<std::string>& args)
 		objFile << "vt " << uvs[i].x << " " << uvs[i].y << "\n";
 	}
 
-	// 頂点インデックスをコピー
+	// Copy vertex indices.
 	std::vector<size_t> indices(mmdModel->GetIndexCount());
 	if (mmdModel->GetIndexElementSize() == 1)
 	{
@@ -203,7 +203,7 @@ bool MMD2Obj(const std::vector<std::string>& args)
 		return false;
 	}
 
-	// 面を書き出し
+	// Write faces.
 	size_t subMeshCount = mmdModel->GetSubMeshCount();
 	const saba::MMDSubMesh* subMeshes = mmdModel->GetSubMeshes();
 	for (size_t i = 0; i < subMeshCount; i++)
@@ -225,7 +225,7 @@ bool MMD2Obj(const std::vector<std::string>& args)
 	}
 	objFile.close();
 
-	// マテリアルの書き出し
+	// Write materials.
 	std::ofstream mtlFile;
 	mtlFile.open("output.mtl");
 	if (!mtlFile.is_open())

@@ -386,7 +386,7 @@ namespace saba
 		for (int i = 0; i < frameCount; i++)
 		{
 			m_model->BeginAnimation();
-;
+
 			Evaluate((float)t, float(1 + i) / float(frameCount));
 
 			m_model->UpdateAnimation();
