@@ -3,46 +3,49 @@
 [![Build Status](https://travis-ci.org/benikabocha/saba.svg?branch=master)](https://travis-ci.org/benikabocha/saba)
 [![Build status](https://ci.appveyor.com/api/projects/status/kjk8chdx0du65m3n?svg=true)](https://ci.appveyor.com/project/benikabocha/saba)
 
-* MMD を再生できるライブラリ
-* 簡易 OpenGL Viewer
+[日本語(japanese)](./README.jp.md)
+
+* Simple [MMD](http://www.geocities.jp/higuchuu4/) (PMD/PMX/VMD) play and load library
+* Simple OpenGL Viewer (MMD/OBJ)
 
 ![saba_viewer](./images/saba_viewer_01.png)
 
 © 2017 Pronama LLC
 
-## 対応環境
+## Environment
 
-* Window
+* Windows
 * Linux
 * Mac
 
-## 対応ファイル
+## File types
 
 * OBJ
 * PMD
 * PMX
 * VMD
 
-## ビルド方法
+## How to build
 
-ビルドには CMake を使用します。
-事前にインストールしてください。
+Please install CMake before the build.
 
-### 必要なライブラリ
+### Required libraries
 
-external ディレクトリに必要なライブラリはまとまっていますが、以下のライブラリは事前に用意してください。
+Please prepare the following libraries.
 
 * OpenGL
 * [Bullet Physics](http://bulletphysics.org/wordpress/)
 * [GLFW](http://www.glfw.org/)
 
-### Bullet Physics の準備 (Windows)
+### 1. Setup Bullet Physics
 
-Bullet Physics をビルドする際、以下の設定を参考にしてください。
+#### Setup Bullet Physics (on Windows)
+
+Build Bullet Physics as follows.
 
 ```
 cmake -G "Visual Studio 14 2015 Win64" ^
-    -D CMAKE_INSTALL_PREFIX=<bullet のインストールディレクトリ> ^
+    -D CMAKE_INSTALL_PREFIX=<Your Bullet Physics install directory> ^
     -D INSTALL_LIBS=ON ^
     -D USE_MSVC_RUNTIME_LIBRARY_DLL=On ^
     -D BUILD_CPU_DEMOS=Off ^
@@ -57,40 +60,79 @@ cmake --build . --config Release --target ALL_BUILD
 cmake --build . --config Release --target INSTALL
 ```
 
-`-G "Visual Studio 14 2015 Win64"` の部分は、環境により適宜変更してください。
+Please change `-G "Visual Studio 14 2015 Win64"` according to your environment.
 
-### Bullet Physics の準備 (Mac / Linux)
+#### Build Bullet Physics (on Mac)
 
-Mac であれば `brew` 、Linux であれば `apt-get` 、 `yum` 等でインストールしてください。
+```
+brew install bullet
+```
 
-### ソースコードのクローン
+#### Setup Bullet Physics (on Linux)
 
-いくつかのライブラリは submodule となっています。
-事前にサブモジュールの更新を行ってください。
+Ubuntu:
+
+```
+apt-get install libbullet-dev
+```
+
+Arch linux:
+
+```
+pacman -S bullet
+```
+
+### 2. Setup GLFW
+
+#### Setup GLFW (on Windows)
+
+[Download](http://www.glfw.org/download.html)
+
+#### Build GLFW (on Mac)
+
+```
+brew install glfw
+```
+
+#### Setup GLFW (on Linux)
+
+Ubuntu:
+
+```
+apt-get install libglfw3-dev
+```
+
+Arch linux:
+
+```
+pacman -S glfw
+```
+
+### 3. Clone Saba
 
 ```
 git clone https://github.com/benikabocha/saba.git
 cd saba
 ```
 
-### CMake の実行
+### 4. Run CMake and build
 
-#### Window
+#### Run CMake and build (on Windows)
 
 ```
 mkdir build
 cd build
 cmake -G "Visual Studio 14 2015 Win64" ^
-    -D SABA_BULLET_ROOT=<bullet のインストールディレクトリ> ^
-    -D SABA_GLFW_ROOT=<GLFW のインストールディレクトリ> ^
+    -D SABA_BULLET_ROOT=<Your Bullet Physics install directory> ^
+    -D SABA_GLFW_ROOT=<your GLFW install directory> ^
     ..
 ```
 
-作成された *.sln ファイルを開き、ビルドしてください。
+Open the created sln file in Visual Studio and build it.
 
-"saba_viewer" プロジェクトがアプリケーションとなります。
+"saba_viewer" project is the viewer application.
 
-#### Mac / Linux
+#### Run CMake and build (on Mac/Linux)
 
 ```
 mkdir build
@@ -100,34 +142,20 @@ make -j4
 ./saba_viewer
 ```
 
-動作が重い場合は、以下をお試しください。
+If the operation is heavy, please try the following.
 
 ```
 cmake -DCMAKE_BUILD_TYPE=RELEASE ..
 make -j4
 ```
 
-#### GLFW をビルドする場合 (Option)
+## Initial setting
 
-GLFW をビルドする場合はサブモジュールの更新を行ってください。
+Initialize with the "init.json" or "init.lua" file placed in the current directory.
 
-```
-git clone https://github.com/benikabocha/saba.git
-cd saba
-git submodule init
-git submodule update
-mkdir build
-cd build
-cmake -D SABA_FORCE_GLFW_BUILD ..
-```
+Write "init.json" or "init.lua" file in UTF-8.
 
-## 初期化設定
-
-起動時のカレントディレクトリに"init.json"または、"init.lua"ファイルを配置することにより初期化時の設定を行うことができます。
-
-"init.json" 、 "initlua" は、 UTF-8 で記述してください。
-
-### init.json を使用する
+### 1. Example "init.json"
 ```javascript
 {
     "MSAAEnable":	true,
@@ -146,18 +174,18 @@ cmake -D SABA_FORCE_GLFW_BUILD ..
 ```
 #### MSAAEnable
 
-MSAA を有効にします。
+Enable MSAA.
 
 #### MSAACount
 
-MSAA のサンプリング数を設定します。
-MSAAEnable が true の場合のみ有効です。
+Set the number of MSAA samples.
 
 #### Commands
 
-起動時に実行するコマンドを設定します。
+Set the commands to be executed at startup.
 
-### init.lua を使用する
+### 2. Example "init.lua"
+
 ```lua
 MSAA = {
     Enable  = true,
@@ -179,8 +207,9 @@ Commands = {
 }
 ```
 
-"init.lua" ではスクリプトを実行することもできます。
-プログラムに渡されるコマンドライン引数は`Args`で取得できます。
+You can run the script.
+
+The command line argument is the "Args" variable.
 
 ```lua
 MSAA = {
@@ -211,127 +240,125 @@ Commands = {
 }
 ```
 
+## How to use
 
-## 操作方法
-
-起動すると、以下の画面が表示されます。
+Drag and drop files, or use the "open" command.
 
 ![saba_viewer](./images/saba_viewer_02.png)
 
-見たいモデルをドラッグアンドドロップしてください。
-MMD の場合は、モデル (PMD、PMX) を読み込んだ後、アニメーション (VMD) を読み込ませると、アニメーションできます。
+### MMD
 
-### カメラ
+1. Drag and drop model(PMD/PMX) file.
+2. Drag and drop motion(VMD) file.
 
-マウスをドラッグすることにより、カメラを操作できます。
-トラックパッド等を使用時は、キーボードのキーを組み合わせて動作させることもできます。
+### Camera
 
-* 左ボタン (z + 左ボタン): 回転
-* 右ボタン (c + 左ボタン): 遠近
-* 中ボタン (x + 左ボタン): 移動
+Drag the mouse to move the camera.
 
-### コマンド
+* Left Button (z + Left Button) : Rotate
+* Right Button (c + Left Button) : Zoom
+* Middle Button (x + Left Button) : Translate
 
-saba_viewer で使用できるコマンドです。
+### Commands
 
 #### open
 
 `open <file path>`
 
-ファイルを開きます。
-動作はドラックアンドドロップと変わりません。
+Open the file.
 
-対応ファイル:
+Supported file types.
 
+* OBJ
 * PMD
 * PMX
-* VMD  (事前に PMD または PMX を開いてください)
-* OBJ
+* VMD
 
-モデルファイルの場合、開いたモデルは選択状態となります。
-モデル名は `model_001` のように、 `model_` 後に読み込み順のIDが降られます。
+The model file will be selected when opened.
+The model name will be `model_xxx`(`nnn` is ID).
 
 #### select
 
 `select <model name>`
 
-モデルを選択します。
+Select a model.
+
 
 #### clear
 
 `clear [-all]`
 
-モデルをクリアします。
+Clear a model.
 
-引数無しで呼び出した際、選択中のモデルをクリアします。
+If invoked with no arguments, it clears the selected model.
 
-`-all` を指定した際、すべてのモデルをクリアします。
+If `-all` is specified, all models will be cleared.
 
 #### play
 
 `play`
 
-アニメーションを再生します。
+Play the animation.
 
 #### stop
 
 `stop`
 
-アニメーションを停止します。
+Stop the animation.
 
 #### translate
 
 `translate x y z`
 
-選択中のモデルを移動します。
+Translate the selected model.
 
 #### rotate
 
 `rotate x y z`
 
-選択中のモデルを回転します。
+Rotate the selected model.
 
 #### scale
 
 `scale x y z`
 
-選択中のモデルをスケールします。
+Scale the selected model.
 
 #### refreshCustomCommand
 
 `refreshCustomCommand`
 
-カスタムコマンドをリフレッシュします。
-再起動せずにカスタムコマンドを更新できます。
+Refresh the custom command.
 
 #### enableUI
 
 `enableUI [false]`
 
-UIの表示、非表示を設定します。
-<F1> キーで表示を切り替えることもできます。
+Switch the display of the UI.
+
+`F1` key works the same way.
 
 #### clearAnimation
 
 `clearAnimation [-all]`
 
-選択モデルのアニメーションをクリアします。
--all を指定すると、全モデルのアニメーションをクリアします。
+Clear animation of selected model.
 
 #### clearSceneAnimation
 
 `clearSceneAnimation`
 
-カメラアニメーション等のシーンにかかわるアニメーションをクリアします。
+Clear animation of scene(eg camera).
 
-## カスタムコマンド
+## Custom command
 
-Lua でカスタムコマンドを作成することができます。
-カレントディレクトリに "command.lua" を配置し、起動すると Lua で作成したカスタムコマンドが使用できます。
+You can create custom commands using Lua.
 
-例えば、以下のようなモデル、アニメーションのロードのスクリプトを作成し、ロードの操作をマクロとして登録することができます。
+When "command.lua" is placed in the current directory and started up, the custom command written in Lua is loaded.
 
-"command.lua" は、 UTF-8 で記述してください。
+Write "command.lua" with UTF - 8.
+
+For example, you can register a model or animation load as a macro.
 
 ```lua
 function OpenModel(files)
@@ -369,30 +396,32 @@ RegisterCommand("", OpenAnim(anims, true), "02_Anim/Anim1")
 
 ```
 
-"command.lua" で使用できるコマンドは以下になります。
+Here are functions that can be used in "command.lua".
 
 ### RegisterCommand
+
 ```lua
 RegisterCommand(commandName, commandFunc, menuName)
--- コマンドを登録します。
+-- Register command.
 
--- commandName : コマンド名
--- 空文字列の場合、コマンド名は自動的に作成されます。
+-- commandName : Command name
+-- If it is empty, the command name is set automatically.。
 
--- commandFunc : コマンド関数
+-- commandFunc : Command function
 
--- menuName : メニュー名
--- カスタムコマンドをメニューに追加する際の名前です。
--- 空の場合はメニューに追加されません
--- `/` で階層を追加することができます。
+-- menuName : Menu name
+-- This is the name when registering a custom command in the menu.。
+-- If it is empty it will not be added to the menu.
+-- '/' Separate the menu hierarchy.
 ```
 ### ExecuteCommand
+
 ```lua
 ExecuteCommand(command, args)
--- コマンドを実行します。
+-- Execute the command.
 
--- command : 実行するコマンド
+-- command : Execute the command.
 
---- args : コマンドに渡す引数
---- 文字列または、テーブルです。
+--- args : Arguments to pass to the command.
+--- It is a string or table.
 ```
