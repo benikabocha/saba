@@ -62,7 +62,7 @@ cmake --build . --config Release --target INSTALL
 
 Please change `-G "Visual Studio 14 2015 Win64"` according to your environment.
 
-#### Build Bullet Physics (on Mac)
+#### Setup Bullet Physics (on Mac)
 
 ```
 brew install bullet
@@ -88,7 +88,7 @@ pacman -S bullet
 
 [Download](http://www.glfw.org/download.html)
 
-#### Build GLFW (on Mac)
+#### Setup GLFW (on Mac)
 
 ```
 brew install glfw
