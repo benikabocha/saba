@@ -439,3 +439,9 @@ ExecuteCommand(command, args)
 --- args : コマンドに渡す引数
 --- 文字列または、テーブルです。
 ```
+
+## ライブラリの使い方
+
+[Wiki](https://github.com/benikabocha/saba/wiki/How-to-use-library)
+
+[Qiita](http://qiita.com/benikabocha/items/ae9d48e314f51746f453)

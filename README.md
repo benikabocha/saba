@@ -425,3 +425,7 @@ ExecuteCommand(command, args)
 --- args : Arguments to pass to the command.
 --- It is a string or table.
 ```
+
+## How to use library
+
+[Wiki](https://github.com/benikabocha/saba/wiki/How-to-use-library)
