@@ -29,6 +29,8 @@ namespace saba
 		float			m_specularPower;
 		glm::vec3		m_ambient;
 		uint8_t			m_edgeFlag;
+		float			m_edgeSize;
+		glm::vec4		m_edgeColor;
 		std::string		m_texture;
 		std::string		m_spTexture;
 		SphereTextureMode	m_spTextureMode;

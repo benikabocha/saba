@@ -37,22 +37,24 @@ namespace saba
 			GLSLDefine define;
 
 			MaterialShader matShader;
-			matShader.m_objMaterialIndex = matIdx;
-			matShader.m_objShaderIndex = m_drawContext->GetShaderIndex(define);
-			if (matShader.m_objShaderIndex == -1)
+			matShader.m_mmdMaterialIndex = matIdx;
+
+			// MMD Shader
+			matShader.m_mmdShaderIndex = m_drawContext->GetShaderIndex(define);
+			if (matShader.m_mmdShaderIndex == -1)
 			{
-				SABA_ERROR("Obj Material Shader not found.");
+				SABA_ERROR("MMD Material Shader not found.");
 				return false;
 			}
-			if (!matShader.m_vao.Create())
+			if (!matShader.m_mmdVao.Create())
 			{
 				SABA_ERROR("Vertex Array Object Create fail.");
 				return false;
 			}
 
-			auto shader = m_drawContext->GetShader(matShader.m_objShaderIndex);
+			auto shader = m_drawContext->GetShader(matShader.m_mmdShaderIndex);
 
-			glBindVertexArray(matShader.m_vao);
+			glBindVertexArray(matShader.m_mmdVao);
 
 			m_mmdModel->GetPositionBinder().Bind(shader->m_inPos, m_mmdModel->GetPositionVBO());
 			glEnableVertexAttribArray(shader->m_inPos);
@@ -70,6 +72,34 @@ namespace saba
 
 			glBindVertexArray(0);
 
+			// MMD Edge Shaer
+			matShader.m_mmdEdgeShaderIndex = m_drawContext->GetEdgeShaderIndex(define);
+			if (matShader.m_mmdEdgeShaderIndex == -1)
+			{
+				SABA_ERROR("MMD Edge Material Shader not found.");
+				return false;
+			}
+			if (!matShader.m_mmdEdgeVao.Create())
+			{
+				SABA_ERROR("Vertex Array Object Create fail.");
+				return false;
+			}
+
+			auto edgeShader = m_drawContext->GetEdgeShader(matShader.m_mmdEdgeShaderIndex);
+
+			glBindVertexArray(matShader.m_mmdEdgeVao);
+
+			m_mmdModel->GetPositionBinder().Bind(edgeShader->m_inPos, m_mmdModel->GetPositionVBO());
+			glEnableVertexAttribArray(edgeShader->m_inPos);
+
+			m_mmdModel->GetNormalBinder().Bind(edgeShader->m_inNor, m_mmdModel->GetNormalVBO());
+			glEnableVertexAttribArray(edgeShader->m_inNor);
+
+			glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_mmdModel->GetIBO());
+
+			glBindVertexArray(0);
+
+			// Add
 			m_materialShaders.emplace_back(std::move(matShader));
 
 			matIdx++;
@@ -108,6 +138,15 @@ namespace saba
 					auto animTime = ctxt->GetAnimationTime();
 					m_mmdModel->UpdateAnimation(animTime, false);
 				}
+			}
+			ImGui::TreePop();
+		}
+		if (ImGui::TreeNode("Edge"))
+		{
+			bool enableEdge = m_mmdModel->IsEnabledEdge();
+			if (ImGui::Checkbox("Enable", &enableEdge))
+			{
+				m_mmdModel->EnableEdge(enableEdge);
 			}
 			ImGui::TreePop();
 		}
@@ -154,7 +193,7 @@ namespace saba
 			int matID = subMesh.m_materialID;
 			const auto& matShader = m_materialShaders[matID];
 			const auto& mmdMat = m_mmdModel->GetMaterials()[matID];
-			auto shader = m_drawContext->GetShader(matShader.m_objShaderIndex);
+			auto shader = m_drawContext->GetShader(matShader.m_mmdShaderIndex);
 
 			if (mmdMat.m_alpha == 0.0f)
 			{
@@ -162,7 +201,7 @@ namespace saba
 			}
 
 			glUseProgram(shader->m_prog);
-			glBindVertexArray(matShader.m_vao);
+			glBindVertexArray(matShader.m_mmdVao);
 
 			SetUniform(shader->m_uWV, wv);
 			SetUniform(shader->m_uWVP, wvp);
@@ -282,6 +321,62 @@ namespace saba
 
 			glBindVertexArray(0);
 			glUseProgram(0);
+		}
+
+		if (m_mmdModel->IsEnabledEdge())
+		{
+			glm::vec2 screenSize(ctxt->GetFrameBufferWidth(), ctxt->GetFrameBufferHeight());
+			for (const auto& subMesh : m_mmdModel->GetSubMeshes())
+			{
+				int matID = subMesh.m_materialID;
+				const auto& matShader = m_materialShaders[matID];
+				const auto& mmdMat = m_mmdModel->GetMaterials()[matID];
+				auto shader = m_drawContext->GetEdgeShader(matShader.m_mmdEdgeShaderIndex);
+
+				if (!mmdMat.m_edgeFlag)
+				{
+					continue;
+				}
+				if (mmdMat.m_alpha == 0.0f)
+				{
+					continue;
+				}
+
+				glUseProgram(shader->m_prog);
+				glBindVertexArray(matShader.m_mmdEdgeVao);
+
+				SetUniform(shader->m_uWV, wv);
+				SetUniform(shader->m_uWVP, wvp);
+				SetUniform(shader->m_uScreenSize, screenSize);
+				SetUniform(shader->m_uEdgeSize, mmdMat.m_edgeSize);
+				SetUniform(shader->m_uEdgeColor, mmdMat.m_edgeColor);
+
+				bool alphaBlend = true;
+
+				glEnable(GL_CULL_FACE);
+				glCullFace(GL_FRONT);
+
+				if (alphaBlend)
+				{
+					glEnable(GL_BLEND);
+					glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+				}
+				else
+				{
+					glDisable(GL_BLEND);
+				}
+
+				size_t offset = subMesh.m_beginIndex * m_mmdModel->GetIndexTypeSize();
+				glDrawElements(
+					GL_TRIANGLES,
+					subMesh.m_vertexCount,
+					m_mmdModel->GetIndexType(),
+					(GLvoid*)offset
+				);
+
+				glBindVertexArray(0);
+				glUseProgram(0);
+			}
 		}
 
 		glBindVertexArray(0);

@@ -57,6 +57,26 @@ namespace saba
 		void Initialize();
 	};
 
+	struct GLMMDEdgeShader
+	{
+		GLSLDefine			m_define;
+		GLProgramObject		m_prog;
+
+		// attribute
+		GLint	m_inPos;
+		GLint	m_inNor;
+
+		// uniform
+		GLint	m_uWV;
+		GLint	m_uWVP;
+		GLint	m_uScreenSize;
+		GLint	m_uEdgeSize;
+
+		GLint	m_uEdgeColor;
+
+		void Initialize();
+	};
+
 	class GLMMDModelDrawContext
 	{
 	public:
@@ -68,10 +88,15 @@ namespace saba
 		int GetShaderIndex(const GLSLDefine& define);
 		GLMMDShader* GetShader(int shaderIndex) const;
 
+		int GetEdgeShaderIndex(const GLSLDefine& define);
+		GLMMDEdgeShader* GetEdgeShader(int edgeShaderIndex) const;
+
 	private:
-		using ObjShaderPtr = std::unique_ptr<GLMMDShader>;
+		using MMDShaderPtr = std::unique_ptr<GLMMDShader>;
+		using MMDEdgeShaderPtr = std::unique_ptr<GLMMDEdgeShader>;
 		ViewerContext*				m_viewerContext;
-		std::vector<ObjShaderPtr>	m_shaders;
+		std::vector<MMDShaderPtr>	m_shaders;
+		std::vector<MMDEdgeShaderPtr>	m_edgeShaders;
 	};
 }
 

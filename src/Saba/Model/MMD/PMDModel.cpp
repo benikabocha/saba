@@ -342,6 +342,7 @@ namespace saba
 			mat.m_specular = pmdMat.m_specular;
 			mat.m_ambient = pmdMat.m_ambient;
 			mat.m_edgeFlag = pmdMat.m_edgeFlag;
+			mat.m_edgeSize = pmdMat.m_edgeFlag == 0 ? 0.0f : 1.0f;
 			mat.m_spTextureMode = MMDMaterial::SphereTextureMode::None;
 			mat.m_bothFace = false;
 

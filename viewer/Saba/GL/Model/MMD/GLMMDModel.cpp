@@ -26,6 +26,7 @@ namespace saba
 		m_perfInfo.m_updateModelTime = 0;
 		m_perfInfo.m_updateGLBufferTime = 0;
 		m_enablePhysics = true;
+		m_enableEdge = true;
 	}
 
 	GLMMDModel::~GLMMDModel()
@@ -116,7 +117,9 @@ namespace saba
 			dest.m_specularPower = src.m_specularPower;
 			dest.m_specular = src.m_specular;
 			dest.m_ambient = src.m_ambient;
-			dest.m_edgeFlag = src.m_edgeFlag;
+			dest.m_edgeFlag = src.m_edgeFlag != 0;
+			dest.m_edgeSize = src.m_edgeSize;
+			dest.m_edgeColor = src.m_edgeColor;
 			if (!src.m_texture.empty())
 			{
 				dest.m_texture = CreateMMDTexture(texMan, src.m_texture, true, true);

@@ -25,7 +25,9 @@ namespace saba
 		float			m_specularPower;
 		glm::vec3		m_specular;
 		glm::vec3		m_ambient;
-		uint8_t			m_edgeFlag;
+		bool			m_edgeFlag;
+		float			m_edgeSize;
+		glm::vec4		m_edgeColor;
 		GLTextureRef	m_texture;
 		bool			m_textureHaveAlpha;
 		GLTextureRef	m_spTexture;
@@ -97,6 +99,9 @@ namespace saba
 		void EnablePhysics(bool enable) { m_enablePhysics = enable; }
 		bool IsEnabledPhysics() const { return m_enablePhysics; }
 
+		void EnableEdge(bool enable) { m_enableEdge = enable; }
+		bool IsEnabledEdge() const { return m_enableEdge; }
+
 	private:
 		std::shared_ptr<MMDModel>		m_mmdModel;
 
@@ -124,6 +129,7 @@ namespace saba
 		PerfInfo					m_perfInfo;
 
 		bool	m_enablePhysics;
+		bool	m_enableEdge;
 	};
 }
 

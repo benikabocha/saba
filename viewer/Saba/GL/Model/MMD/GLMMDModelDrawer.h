@@ -44,9 +44,11 @@ namespace saba
 	private:
 		struct MaterialShader
 		{
-			int					m_objMaterialIndex;
-			int					m_objShaderIndex;
-			GLVertexArrayObject	m_vao;
+			int					m_mmdMaterialIndex;
+			int					m_mmdShaderIndex;
+			GLVertexArrayObject	m_mmdVao;
+			int					m_mmdEdgeShaderIndex;
+			GLVertexArrayObject	m_mmdEdgeVao;
 		};
 
 	private:

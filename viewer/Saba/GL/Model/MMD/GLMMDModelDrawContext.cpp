@@ -49,6 +49,20 @@ namespace saba
 
 	}
 
+	void GLMMDEdgeShader::Initialize()
+	{
+		// attribute
+		m_inPos = glGetAttribLocation(m_prog, "in_Pos");
+		m_inNor = glGetAttribLocation(m_prog, "in_Nor");
+
+		// uniform
+		m_uWV = glGetUniformLocation(m_prog, "u_WV");
+		m_uWVP = glGetUniformLocation(m_prog, "u_WVP");
+		m_uScreenSize = glGetUniformLocation(m_prog, "u_ScreenSize");
+		m_uEdgeSize = glGetUniformLocation(m_prog, "u_EdgeSize");
+		m_uEdgeColor = glGetUniformLocation(m_prog, "u_EdgeColor");
+	}
+
 	GLMMDModelDrawContext::GLMMDModelDrawContext(ViewerContext * ctxt)
 		: m_viewerContext(ctxt)
 	{
@@ -65,12 +79,12 @@ namespace saba
 		auto findIt = std::find_if(
 			m_shaders.begin(),
 			m_shaders.end(),
-			[&define](const ObjShaderPtr& shader) {return shader->m_define == define;}
+			[&define](const MMDShaderPtr& shader) {return shader->m_define == define;}
 		);
 
 		if (findIt == m_shaders.end())
 		{
-			ObjShaderPtr shader = std::make_unique<GLMMDShader>();
+			MMDShaderPtr shader = std::make_unique<GLMMDShader>();
 			shader->m_define = std::move(define);
 			GLSLShaderUtil glslShaderUtil;
 			glslShaderUtil.SetShaderDir(m_viewerContext->GetShaderDir());
@@ -101,6 +115,54 @@ namespace saba
 		}
 
 		return m_shaders[shaderIndex].get();
+	}
+
+	int GLMMDModelDrawContext::GetEdgeShaderIndex(const GLSLDefine & define)
+	{
+		if (m_viewerContext == nullptr)
+		{
+			return -1;
+		}
+
+		auto findIt = std::find_if(
+			m_edgeShaders.begin(),
+			m_edgeShaders.end(),
+			[&define](const MMDEdgeShaderPtr& shader) {return shader->m_define == define; }
+		);
+
+		if (findIt == m_edgeShaders.end())
+		{
+			MMDEdgeShaderPtr shader = std::make_unique<GLMMDEdgeShader>();
+			shader->m_define = std::move(define);
+			GLSLShaderUtil glslShaderUtil;
+			glslShaderUtil.SetShaderDir(m_viewerContext->GetShaderDir());
+			glslShaderUtil.SetGLSLDefine(define);
+			shader->m_prog = glslShaderUtil.CreateProgram("mmd_edge");
+			if (shader->m_prog == 0)
+			{
+				SABA_ERROR("Shader Create fail.");
+				return -1;
+			}
+
+			shader->Initialize();
+			m_edgeShaders.emplace_back(std::move(shader));
+			return (int)(m_edgeShaders.size() - 1);
+		}
+		else
+		{
+			return (int)(findIt - m_edgeShaders.begin());
+		}
+	}
+
+	GLMMDEdgeShader* GLMMDModelDrawContext::GetEdgeShader(int shaderIndex) const
+	{
+		if (shaderIndex < 0)
+		{
+			SABA_ERROR("shaderIndex < 0");
+			return nullptr;
+		}
+
+		return m_edgeShaders[shaderIndex].get();
 	}
 
 }
