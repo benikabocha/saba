@@ -13,6 +13,8 @@
 ## 対応環境
 
 * Window
+  * Visual Studio 2017
+  * Visual Studio 2015 Update 3
 * Linux
 * Mac
 

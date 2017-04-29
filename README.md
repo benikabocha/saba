@@ -15,6 +15,8 @@
 ## Environment
 
 * Windows
+  * Visual Studio 2017
+  * Visual Studio 2015 Update 3
 * Linux
 * Mac
 
