@@ -19,6 +19,7 @@ namespace saba
 		: m_drawContext(ctxt)
 		, m_mmdModel(mmdModel)
 		, m_clipElapsed(true)
+		, m_viewLocal(true)
 		, m_selectedNode(nullptr)
 	{
 		SABA_ASSERT(ctxt != nullptr);
@@ -119,15 +120,37 @@ namespace saba
 		if (ImGui::TreeNode("Bone"))
 		{
 			std::string name = "";
+			if (m_selectedNode != nullptr)
+			{
+				name = m_selectedNode->GetName();
+			}
+			ImGui::Text("name:%s", name.c_str());
+
+			if (ImGui::RadioButton("Local", m_viewLocal))
+			{
+				m_viewLocal = true;
+			}
+			if (ImGui::RadioButton("Global", !m_viewLocal))
+			{
+				m_viewLocal = false;
+			}
 			glm::vec3 t(0);
 			glm::quat q;
 			if (m_selectedNode != nullptr)
 			{
-				name = m_selectedNode->GetName();
-				t = m_selectedNode->GetAnimationTranslate();
-				q = m_selectedNode->GetAnimationRotate();
+				if (m_viewLocal)
+				{
+					auto local = m_selectedNode->GetLocalTransform();
+					t = glm::vec3(local[3]);
+					q = glm::quat_cast(local);
+				}
+				else
+				{
+					auto global = m_selectedNode->GetGlobalTransform();
+					t = glm::vec3(global[3]);
+					q = glm::quat_cast(global);
+				}
 			}
-			ImGui::Text("name:%s", name.c_str());
 			ImGui::InputFloat3("T", &t[0], ImGuiInputTextFlags_ReadOnly);
 			ImGui::InputFloat4("Q", &q[0], ImGuiInputTextFlags_ReadOnly);
 			auto model = m_mmdModel->GetMMDModel();
