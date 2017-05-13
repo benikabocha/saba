@@ -19,6 +19,7 @@ namespace saba
 		: m_drawContext(ctxt)
 		, m_mmdModel(mmdModel)
 		, m_clipElapsed(true)
+		, m_selectedNode(nullptr)
 	{
 		SABA_ASSERT(ctxt != nullptr);
 		SABA_ASSERT(mmdModel != nullptr);
@@ -110,10 +111,74 @@ namespace saba
 	void GLMMDModelDrawer::Destroy()
 	{
 		m_materialShaders.clear();
+		m_selectedNode = nullptr;
 	}
 
 	void GLMMDModelDrawer::DrawUI(ViewerContext * ctxt)
 	{
+		if (ImGui::TreeNode("Bone"))
+		{
+			std::string name = "";
+			glm::vec3 t(0);
+			glm::quat q;
+			if (m_selectedNode != nullptr)
+			{
+				name = m_selectedNode->GetName();
+				t = m_selectedNode->GetAnimationTranslate();
+				q = m_selectedNode->GetAnimationRotate();
+			}
+			ImGui::Text("name:%s", name.c_str());
+			ImGui::InputFloat3("T", &t[0], ImGuiInputTextFlags_ReadOnly);
+			ImGui::InputFloat4("Q", &q[0], ImGuiInputTextFlags_ReadOnly);
+			auto model = m_mmdModel->GetMMDModel();
+			auto nodeMan = model->GetNodeManager();
+			MMDNode* clickNode = nullptr;
+			for (size_t nodeIdx = 0; nodeIdx < nodeMan->GetNodeCount(); nodeIdx++)
+			{
+				std::function<void(MMDNode*)> ViewNodes = [&ViewNodes, &clickNode, this](saba::MMDNode* node)
+				{
+					ImGuiTreeNodeFlags node_flags =
+						ImGuiTreeNodeFlags_OpenOnArrow |
+						ImGuiTreeNodeFlags_OpenOnDoubleClick |
+						((this->m_selectedNode == node) ? ImGuiTreeNodeFlags_Selected : 0);
+					if (node->GetChild() != nullptr)
+					{
+						if (ImGui::TreeNodeEx(node->GetName().c_str(), node_flags))
+						{
+							auto child = node->GetChild();
+							while (child != nullptr)
+							{
+								ViewNodes(child);
+								child = child->GetNext();
+							}
+							ImGui::TreePop();
+						}
+					}
+					else
+					{
+						node_flags |=
+							ImGuiTreeNodeFlags_Leaf |
+							ImGuiTreeNodeFlags_NoTreePushOnOpen;
+						ImGui::TreeNodeEx(node->GetName().c_str(), node_flags);
+					}
+					if (clickNode == nullptr && ImGui::IsItemClicked())
+					{
+						clickNode = node;
+					}
+				};
+				auto node = nodeMan->GetMMDNode(nodeIdx);
+				if (node->GetParent() == nullptr)
+				{
+					ViewNodes(node);
+				}
+			}
+
+			ImGui::TreePop();
+			if (clickNode != nullptr)
+			{
+				m_selectedNode = clickNode;
+			}
+		}
 		if (ImGui::TreeNode("Physics"))
 		{
 			bool enabledPhysics = m_mmdModel->IsEnabledPhysics();
