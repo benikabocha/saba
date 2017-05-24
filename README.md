@@ -431,3 +431,7 @@ ExecuteCommand(command, args)
 ## How to use library
 
 [Wiki](https://github.com/benikabocha/saba/wiki/How-to-use-library)
+
+### Use case
+
+* sanko-shoko.net (AR Example) http://www.sanko-shoko.net/note.php?id=sbtj
