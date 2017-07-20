@@ -63,10 +63,20 @@ namespace saba
 			glm::vec3	m_limitMax;
 			glm::vec3	m_limitMin;
 			glm::vec3	m_prevAngle;
+			glm::quat	m_saveIKRot;
+			float		m_planeModeAngle;
 		};
 
 	private:
+		void AddIKChain(IKChain&& chain);
 		void SolveCore(uint32_t iteration);
+
+		enum class SolveAxis {
+			X,
+			Y,
+			Z,
+		};
+		void SolvePlane(uint32_t iteration, size_t chainIdx, SolveAxis solveAxis);
 
 	private:
 		std::vector<IKChain>	m_chains;

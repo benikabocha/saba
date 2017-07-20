@@ -61,6 +61,7 @@ namespace saba
 	void MMDNode::BeginUpdateTransform()
 	{
 		LoadInitialTRS();
+		SetIKRotate(glm::quat());
 		OnBeginUpdateTransform();
 	}
 
