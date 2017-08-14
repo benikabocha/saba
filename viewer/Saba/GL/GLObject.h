@@ -91,6 +91,36 @@ namespace saba
 		}
 	};
 
+	struct GLFramebufferTraits
+	{
+		static GLuint Create()
+		{
+			GLuint fb;
+			glGenFramebuffers(1, &fb);
+			return fb;
+		}
+
+		static void Destroy(GLuint fb)
+		{
+			glDeleteFramebuffers(1, &fb);
+		}
+	};
+
+	struct GLRenderbufferTraits
+	{
+		static GLuint Create()
+		{
+			GLuint rb;
+			glGenRenderbuffers(1, &rb);
+			return rb;
+		}
+		
+		static void Destroy(GLuint rb)
+		{
+			glDeleteRenderbuffers(1, &rb);
+		}
+	};
+
 	template <typename GLTraits>
 	class GLObject
 	{
@@ -357,6 +387,8 @@ namespace saba
 	using GLBufferObject = GLObject<GLBufferTraits>;
 	using GLVertexArrayObject = GLObject<GLVertexArrayTraits>;
 	using GLTextureObject = GLObject<GLTextureTraits>;
+	using GLFramebufferObject = GLObject<GLFramebufferTraits>;
+	using GLRenderbufferObject = GLObject<GLRenderbufferTraits>;
 
 	template <GLenum ShaderType>
 	using GLShaderRef = GLRef< GLShaderTraits<ShaderType> >;
@@ -367,6 +399,8 @@ namespace saba
 	using GLBufferRef = GLRef<GLBufferTraits>;
 	using GLVertexArrayRef = GLRef<GLVertexArrayTraits>;
 	using GLTextureRef = GLRef<GLTextureTraits>;
+	using GLFramebufferRef = GLRef<GLFramebufferTraits>;
+	using GLRenderbufferRef = GLRef<GLRenderbufferTraits>;
 }
 
 #endif // !SABA_GL_GLOBJECT_H_

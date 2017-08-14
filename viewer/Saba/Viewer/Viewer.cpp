@@ -120,6 +120,10 @@ namespace saba
 		, m_lightManipOp(ImGuizmo::ROTATE)
 		, m_cameraOverride(true)
 		, m_clipElapsed(true)
+		, m_currentFrameBufferWidth(-1)
+		, m_currentFrameBufferHeight(-1)
+		, m_currentMSAAEnable(false)
+		, m_currentMSAACount(0)
 	{
 		if (!glfwInit())
 		{
@@ -152,7 +156,7 @@ namespace saba
 		if (m_msaaEnable)
 		{
 			m_context.EnableMSAA(true);
-			glfwWindowHint(GLFW_SAMPLES, m_msaaCount);
+			m_context.SetMSAACount(m_msaaCount);
 		}
 		m_window = glfwCreateWindow(1280, 800, "Saba Viewer", nullptr, nullptr);
 
@@ -489,6 +493,8 @@ namespace saba
 
 	void Viewer::Draw()
 	{
+		DrawBegin();
+
 		glClear(GL_DEPTH_BUFFER_BIT);
 
 		glDisable(GL_DEPTH_TEST);
@@ -540,6 +546,182 @@ namespace saba
 		if (m_context.GetPlayMode() == ViewerContext::PlayMode::Update)
 		{
 			m_context.SetPlayMode(ViewerContext::PlayMode::Stop);
+		}
+
+		DrawEnd();
+	}
+
+	void Viewer::DrawBegin()
+	{
+
+		glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+		if (m_context.GetFrameBufferWidth() != m_currentFrameBufferWidth ||
+			m_context.GetFrameBufferHeight() != m_currentFrameBufferHeight ||
+			m_context.IsMSAAEnabled() != m_currentMSAAEnable ||
+			m_context.GetMSAACount() != m_currentMSAACount
+			)
+		{
+			SABA_INFO(
+				"Create Framebuffer : ({}, {})",
+				m_context.GetFrameBufferWidth(), m_context.GetFrameBufferHeight()
+			);
+			m_currentFrameBuffer.Destroy();
+			m_currentMSAAFrameBuffer.Destroy();
+			m_currentColorTarget.Destroy();
+			m_currentMSAAColorTarget.Destroy();
+			m_currentDepthTarget.Destroy();
+
+			m_currentColorTarget.Create();
+			glBindTexture(GL_TEXTURE_2D, m_currentColorTarget);
+			glTexImage2D(
+				GL_TEXTURE_2D, 0, GL_RGBA,
+				m_context.GetFrameBufferWidth(),
+				m_context.GetFrameBufferHeight(),
+				0, GL_RGBA, GL_UNSIGNED_BYTE, nullptr
+			);
+			glBindTexture(GL_TEXTURE_2D, 0);
+
+			if (m_context.IsMSAAEnabled())
+			{
+				// Setup MSAA Target
+				m_currentMSAAColorTarget.Create();
+				glBindRenderbuffer(GL_RENDERBUFFER, m_currentMSAAColorTarget);
+				glRenderbufferStorageMultisample(
+					GL_RENDERBUFFER, m_context.GetMSAACount(), GL_RGBA,
+					m_context.GetFrameBufferWidth(),
+					m_context.GetFrameBufferHeight()
+				);
+				glBindRenderbuffer(GL_RENDERBUFFER, 0);
+
+				// Setup Depth Target
+				m_currentDepthTarget.Create();
+				glBindRenderbuffer(GL_RENDERBUFFER, m_currentDepthTarget);
+				glRenderbufferStorageMultisample(
+					GL_RENDERBUFFER, m_context.GetMSAACount(), GL_DEPTH24_STENCIL8,
+					m_context.GetFrameBufferWidth(),
+					m_context.GetFrameBufferHeight()
+				);
+				glBindRenderbuffer(GL_RENDERBUFFER, 0);
+
+
+				// Setup MSAA Framebuffer
+				m_currentMSAAFrameBuffer.Create();
+				glBindFramebuffer(GL_FRAMEBUFFER, m_currentMSAAFrameBuffer);
+				glFramebufferRenderbuffer(
+					GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_RENDERBUFFER, m_currentMSAAColorTarget
+				);
+				glFramebufferRenderbuffer(
+					GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, m_currentDepthTarget
+				);
+				auto status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
+				if (GL_FRAMEBUFFER_COMPLETE != status)
+				{
+					SABA_WARN("MSAA Framebuffer Status : {}", status);
+					glBindFramebuffer(GL_FRAMEBUFFER, 0);
+					return;
+				}
+				glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+				// Setup Framebuffer (depth target off)
+				m_currentFrameBuffer.Create();
+				glBindFramebuffer(GL_FRAMEBUFFER, m_currentFrameBuffer);
+				glFramebufferTexture2D(
+					GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,
+					GL_TEXTURE_2D, m_currentColorTarget, 0
+				);
+				glFramebufferRenderbuffer(
+					GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT,
+					GL_RENDERBUFFER, 0
+				);
+				status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
+				if (GL_FRAMEBUFFER_COMPLETE != status)
+				{
+					SABA_WARN("Framebuffer Status : {}", status);
+					glBindFramebuffer(GL_FRAMEBUFFER, 0);
+					return;
+				}
+				glBindFramebuffer(GL_FRAMEBUFFER, 0);
+			}
+			else
+			{
+				// Setup Depth Target
+				m_currentDepthTarget.Create();
+				glBindRenderbuffer(GL_RENDERBUFFER, m_currentDepthTarget);
+				glRenderbufferStorage(
+					GL_RENDERBUFFER, GL_DEPTH24_STENCIL8,
+					m_context.GetFrameBufferWidth(),
+					m_context.GetFrameBufferHeight()
+				);
+
+				// Setup Framebuffer (depth target off)
+				m_currentFrameBuffer.Create();
+				glBindFramebuffer(GL_FRAMEBUFFER, m_currentFrameBuffer);
+				glFramebufferTexture2D(
+					GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,
+					GL_TEXTURE_2D, m_currentColorTarget, 0
+				);
+				glFramebufferRenderbuffer(
+					GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT,
+					GL_RENDERBUFFER, m_currentDepthTarget
+				);
+				auto status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
+				if (GL_FRAMEBUFFER_COMPLETE != status)
+				{
+					SABA_WARN("Framebuffer Status : {}", status);
+					glBindFramebuffer(GL_FRAMEBUFFER, 0);
+					return;
+				}
+				glBindRenderbuffer(GL_RENDERBUFFER, 0);
+			}
+
+			m_currentFrameBufferWidth = m_context.GetFrameBufferWidth();
+			m_currentFrameBufferHeight = m_context.GetFrameBufferHeight();
+			m_currentMSAAEnable = m_context.IsMSAAEnabled();
+			m_currentMSAACount = m_context.GetMSAACount();
+		}
+
+		if (m_currentMSAAEnable)
+		{
+			glBindFramebuffer(GL_FRAMEBUFFER, m_currentMSAAFrameBuffer);
+			glEnable(GL_MULTISAMPLE);
+		}
+		else
+		{
+			glBindFramebuffer(GL_FRAMEBUFFER, m_currentFrameBuffer);
+		}
+	}
+
+	void Viewer::DrawEnd()
+	{
+		if (m_currentMSAAEnable)
+		{
+			glBindFramebuffer(GL_DRAW_FRAMEBUFFER, m_currentFrameBuffer);
+			glBindFramebuffer(GL_READ_FRAMEBUFFER, m_currentMSAAFrameBuffer);
+			glDrawBuffer(GL_BACK);
+			glBlitFramebuffer(
+				0, 0, m_currentFrameBufferWidth, m_currentFrameBufferHeight,
+				0, 0, m_currentFrameBufferWidth, m_currentFrameBufferHeight,
+				GL_COLOR_BUFFER_BIT, GL_NEAREST
+			);
+			glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
+			glBindFramebuffer(GL_READ_FRAMEBUFFER, 0);
+
+			glDisable(GL_MULTISAMPLE);
+		}
+
+		if (m_currentFrameBuffer != 0)
+		{
+			glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
+			glBindFramebuffer(GL_READ_FRAMEBUFFER, m_currentFrameBuffer);
+			glDrawBuffer(GL_BACK);
+			glBlitFramebuffer(
+				0, 0, m_currentFrameBufferWidth, m_currentFrameBufferHeight,
+				0, 0, m_currentFrameBufferWidth, m_currentFrameBufferHeight,
+				GL_COLOR_BUFFER_BIT, GL_NEAREST
+			);
+			glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
+			glBindFramebuffer(GL_READ_FRAMEBUFFER, 0);
 		}
 	}
 

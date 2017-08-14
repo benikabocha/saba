@@ -45,6 +45,7 @@ namespace saba
 		double GetElapsed() const { return m_elapsed; }
 		double GetAnimationTime() const { return m_animationTime; }
 		bool IsMSAAEnabled() const { return m_msaaEnable; }
+		int GetMSAACount() const { return m_msaaCount; }
 		int GetFrameBufferWidth() const { return m_frameBufferWidth; }
 		int GetFrameBufferHeight() const { return m_frameBufferHeight; }
 		int GetWindowWidth() const { return m_windowWidth; }
@@ -58,6 +59,7 @@ namespace saba
 		void SetElapsedTime(double elapsed);
 		void SetAnimationTime(double animTime) { m_animationTime = animTime; }
 		void EnableMSAA(bool enable) { m_msaaEnable = enable; }
+		void SetMSAACount(int count) { m_msaaCount = count; }
 		void SetFrameBufferSize(int w, int h) { m_frameBufferWidth = w; m_frameBufferHeight = h; }
 		void SetWindowSize(int w, int h) { m_windowWidth = w; m_windowHeight = h; }
 		void SetPlayMode(PlayMode playMode) { m_playMode = playMode; }
@@ -81,6 +83,7 @@ namespace saba
 		double	m_animationTime;
 
 		bool	m_msaaEnable;
+		int		m_msaaCount;
 
 		int		m_frameBufferWidth;
 		int		m_frameBufferHeight;

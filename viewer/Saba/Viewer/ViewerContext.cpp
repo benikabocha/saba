@@ -25,6 +25,7 @@ namespace saba
 		, m_elapsed(0.0)
 		, m_animationTime(0.0)
 		, m_msaaEnable(false)
+		, m_msaaCount(0)
 		, m_frameBufferWidth(0)
 		, m_frameBufferHeight(0)
 		, m_windowWidth(0)

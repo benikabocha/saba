@@ -94,6 +94,8 @@ namespace saba
 
 		void SetupSjisGryphRanges();
 		void Draw();
+		void DrawBegin();
+		void DrawEnd();
 		void DrawUI();
 		void DrawInfoUI();
 		void DrawLogUI();
@@ -279,6 +281,17 @@ namespace saba
 
 		// Clip Elapsed
 		bool	m_clipElapsed;
+
+		// CurrentFrameBuffer
+		int		m_currentFrameBufferWidth;
+		int		m_currentFrameBufferHeight;
+		bool	m_currentMSAAEnable;
+		int		m_currentMSAACount;
+		GLFramebufferObject		m_currentFrameBuffer;
+		GLFramebufferObject		m_currentMSAAFrameBuffer;
+		GLTextureObject			m_currentColorTarget;
+		GLRenderbufferObject	m_currentMSAAColorTarget;
+		GLRenderbufferObject	m_currentDepthTarget;
 	};
 }
 
