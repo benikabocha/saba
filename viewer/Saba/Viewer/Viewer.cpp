@@ -1345,6 +1345,7 @@ namespace saba
 		m_commands.emplace_back(Command{ "clearAnimation", [this](const Args& args) { return CmdClearAnimation(args); } });
 		m_commands.emplace_back(Command{ "clearSceneAnimation", [this](const Args& args) { return CmdClearSceneAnimation(args); } });
 		m_commands.emplace_back(Command{ "configPMXSetting", [this](const Args& args) { return CmdConfigPMXSetting(args); } });
+		m_commands.emplace_back(Command{ "setMSAA", [this](const Args& args) {return CmdSetMSAA(args); } });
 	}
 
 	void Viewer::RefreshCustomCommand()
@@ -1678,6 +1679,30 @@ namespace saba
 
 	namespace
 	{
+		bool ToInt(const std::vector<std::string>& args, size_t offset, int* outVal)
+		{
+			if (outVal == nullptr)
+			{
+				return false;
+			}
+
+			if (args.size() < offset + 1)
+			{
+				return false;
+			}
+
+			size_t outPos;
+			int temp = std::stoi(args[offset], &outPos);
+			if (outPos != args[offset].size())
+			{
+				return false;
+			}
+
+			*outVal = temp;
+
+			return true;
+		}
+
 		bool ToFloat(const std::vector<std::string>& args, size_t offset, float* outVal)
 		{
 			if (outVal == nullptr)
@@ -1724,6 +1749,31 @@ namespace saba
 			}
 
 			*outVec = temp;
+			return true;
+		}
+
+		bool ToBool(const std::vector<std::string>& args, size_t offset, bool* outVal)
+		{
+			if (outVal == nullptr)
+			{
+				return false;
+			}
+
+			if (args.size() < offset + 1)
+			{
+				return false;
+			}
+
+			const auto& arg = args[offset];
+			if (arg == "true") { *outVal = true; }
+			else if (arg == "false") { *outVal = false; }
+			else
+			{
+				int intVal;
+				if (!ToInt(args, offset, &intVal)) { return false; }
+				*outVal = !!intVal;
+			}
+
 			return true;
 		}
 	}
@@ -1882,6 +1932,31 @@ namespace saba
 				return false;
 			}
 		}
+		return true;
+	}
+
+	bool Viewer::CmdSetMSAA(const std::vector<std::string>& args)
+	{
+		bool msaaEnable = true;
+		int msaaCount = 4;
+
+		ToBool(args, 0, &msaaEnable);
+		ToInt(args, 1, &msaaCount);
+
+		GLint maxSamples;
+		glGetIntegerv(GL_MAX_SAMPLES, &maxSamples);
+		if (msaaCount < 0 || msaaCount > maxSamples)
+		{
+			SABA_WARN("MSAA Max Samples {}", maxSamples);
+			msaaCount = 4;
+		}
+
+		SABA_INFO("Set MSAA {} {}", msaaEnable, msaaCount);
+
+
+		m_context.EnableMSAA(msaaEnable);
+		m_context.SetMSAACount(msaaCount);
+
 		return true;
 	}
 

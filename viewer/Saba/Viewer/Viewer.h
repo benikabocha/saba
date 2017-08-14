@@ -128,6 +128,7 @@ namespace saba
 		bool CmdClearAnimation(const std::vector<std::string>& args);
 		bool CmdClearSceneAnimation(const std::vector<std::string>& args);
 		bool CmdConfigPMXSetting(const std::vector<std::string>& args);
+		bool CmdSetMSAA(const std::vector<std::string>& args);
 
 		bool LoadOBJFile(const std::string& filename);
 		bool LoadPMDFile(const std::string& filename);
