@@ -9,12 +9,7 @@ in vec2 in_UV;
 out vec3 vs_Pos;
 out vec3 vs_Nor;
 out vec2 vs_UV;
-/*
-out vec4 vs_shadowMapCoord0;
-out vec4 vs_shadowMapCoord1;
-out vec4 vs_shadowMapCoord2;
-out vec4 vs_shadowMapCoord3;
-*/
+
 out vec4 vs_shadowMapCoord[NUM_SHADOWMAP];
 
 uniform mat4 u_WV;
@@ -27,12 +22,7 @@ void main()
     vs_Pos = (u_WV * vec4(in_Pos, 1.0)).xyz;
     vs_Nor = mat3(u_WV) * in_Nor;
     vs_UV = in_UV;
-/*
-    vs_shadowMapCoord0 = u_LightWVP[0] * vec4(in_Pos, 1.0);
-    vs_shadowMapCoord1 = u_LightWVP[1] * vec4(in_Pos, 1.0);
-    vs_shadowMapCoord2 = u_LightWVP[2] * vec4(in_Pos, 1.0);
-    vs_shadowMapCoord3 = u_LightWVP[3] * vec4(in_Pos, 1.0);
-*/
+
     for (int i = 0; i < NUM_SHADOWMAP; i++)
     {
         vs_shadowMapCoord[i] = u_LightWVP[i] * vec4(in_Pos, 1.0);

@@ -56,7 +56,10 @@ namespace saba
 
 		GLint	m_uLightVP;
 		GLint	m_uShadowMapSplitPositions;
-		GLint	m_uShadowMap;
+		GLint	m_uShadowMap0;
+		GLint	m_uShadowMap1;
+		GLint	m_uShadowMap2;
+		GLint	m_uShadowMap3;
 		GLint	m_uShadowMapEnabled;
 
 		void Initialize();

@@ -491,7 +491,10 @@ namespace saba
 			if (ctxt->IsShadowEnabled() && mmdMat.m_shadowReceiver)
 			{
 				SetUniform(shader->m_uShadowMapEnabled, 1);
-				SetUniform(shader->m_uShadowMap, shadowMapTexs, numShadowMap);
+				SetUniform(shader->m_uShadowMap0, shadowMapTexs[0]);
+				SetUniform(shader->m_uShadowMap1, shadowMapTexs[1]);
+				SetUniform(shader->m_uShadowMap2, shadowMapTexs[2]);
+				SetUniform(shader->m_uShadowMap3, shadowMapTexs[3]);
 				SetUniform(shader->m_uShadowMapSplitPositions, shadowMapSplitPositions, numShadowMapSplitPosition);
 				SetUniform(shader->m_uLightVP, shadowMapVPs, numShadowMap);
 			}

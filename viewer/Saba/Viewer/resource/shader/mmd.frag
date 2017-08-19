@@ -5,12 +5,7 @@
 in vec3 vs_Pos;
 in vec3 vs_Nor;
 in vec2 vs_UV;
-/*
-in vec4 vs_shadowMapCoord0;
-in vec4 vs_shadowMapCoord1;
-in vec4 vs_shadowMapCoord2;
-in vec4 vs_shadowMapCoord3;
-*/
+
 in vec4 vs_shadowMapCoord[NUM_SHADOWMAP];
 
 out vec4 out_Color;
@@ -40,7 +35,10 @@ uniform vec4 u_SphereTexAddFactor;
 
 // ShadowMap
 uniform float u_ShadowMapSplitPositions[NUM_SHADOWMAP + 1];
-uniform  sampler2DShadow u_ShadowMap[NUM_SHADOWMAP];
+uniform sampler2DShadow u_ShadowMap0;
+uniform sampler2DShadow u_ShadowMap1;
+uniform sampler2DShadow u_ShadowMap2;
+uniform sampler2DShadow u_ShadowMap3;
 uniform int u_ShadowMapEnabled;
 
 vec3 ComputeTexMulFactor(vec3 texColor, vec4 factor)
@@ -73,20 +71,24 @@ void main()
 	if (u_ShadowMapEnabled != 0)
 	{
 		float z = -vs_Pos.z;
-		int shadowIdx = -1;
-		for (int i = 0; i < NUM_SHADOWMAP; i++)
+		float visibility = 1.0;
+		if (u_ShadowMapSplitPositions[0] <= z && z < u_ShadowMapSplitPositions[0 + 1])
 		{
-			if (u_ShadowMapSplitPositions[i] <= z && z < u_ShadowMapSplitPositions[i + 1])
-			{
-				shadowIdx = i;
-				break;
-			}
+			visibility = textureProj(u_ShadowMap0, vs_shadowMapCoord[0]);
 		}
-		if (shadowIdx != -1)
+		else if (u_ShadowMapSplitPositions[1] <= z && z < u_ShadowMapSplitPositions[1 + 1])
 		{
-			float visibility = textureProj(u_ShadowMap[shadowIdx], vs_shadowMapCoord[shadowIdx]);
-			ln *= (1.0 - visibility);
+			visibility = textureProj(u_ShadowMap1, vs_shadowMapCoord[1]);
 		}
+		else if (u_ShadowMapSplitPositions[2] <= z && z < u_ShadowMapSplitPositions[2 + 1])
+		{
+			visibility = textureProj(u_ShadowMap2, vs_shadowMapCoord[2]);
+		}
+		else if (u_ShadowMapSplitPositions[3] <= z && z < u_ShadowMapSplitPositions[3 + 1])
+		{
+			visibility = textureProj(u_ShadowMap3, vs_shadowMapCoord[3]);
+		}
+		ln *= (1.0 - visibility);
 	}
 
     if (u_TexMode != 0)

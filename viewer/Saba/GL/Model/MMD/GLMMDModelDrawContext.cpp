@@ -49,7 +49,10 @@ namespace saba
 
 		m_uLightVP = glGetUniformLocation(m_prog, "u_LightWVP");
 		m_uShadowMapSplitPositions = glGetUniformLocation(m_prog, "u_ShadowMapSplitPositions");
-		m_uShadowMap = glGetUniformLocation(m_prog, "u_ShadowMap");
+		m_uShadowMap0 = glGetUniformLocation(m_prog, "u_ShadowMap0");
+		m_uShadowMap1 = glGetUniformLocation(m_prog, "u_ShadowMap1");
+		m_uShadowMap2 = glGetUniformLocation(m_prog, "u_ShadowMap2");
+		m_uShadowMap3 = glGetUniformLocation(m_prog, "u_ShadowMap3");
 		m_uShadowMapEnabled = glGetUniformLocation(m_prog, "u_ShadowMapEnabled");
 	}
 
