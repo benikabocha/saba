@@ -8,6 +8,7 @@
 
 #include "Camera.h"
 #include "Light.h"
+#include "ShadowMap.h"
 
 #include <string>
 #include "../GL/GLSLUtil.h"
@@ -38,10 +39,12 @@ namespace saba
 
 		const Camera* GetCamera() const { return &m_camera; }
 		const Light* GetLight() const { return &m_light; }
+		const ShadowMap* GetShadowMap() const { return &m_shadowmap; }
 
 		bool IsUIEnabled() const { return m_uiEnable; }
 		bool IsCameraOverride() const { return m_cameraOverride; }
 		bool IsClipElapsed() const { return m_clipElapsed; }
+		bool IsShadowEnabled() const { return m_shadowEnabled; }
 		double GetElapsed() const { return m_elapsed; }
 		double GetAnimationTime() const { return m_animationTime; }
 		bool IsMSAAEnabled() const { return m_msaaEnable; }
@@ -55,6 +58,7 @@ namespace saba
 	private:
 		void EnableUI(bool enable) { m_uiEnable = enable; }
 		void EnableCameraOverride(bool enable) { m_cameraOverride = enable; }
+		void EnableShadow(bool enable) { m_shadowEnabled = enable; }
 		void SetClipElapsed(bool enable) { m_clipElapsed = enable; }
 		void SetElapsedTime(double elapsed);
 		void SetAnimationTime(double animTime) { m_animationTime = animTime; }
@@ -74,6 +78,7 @@ namespace saba
 
 		Camera	m_camera;
 		Light	m_light;
+		ShadowMap	m_shadowmap;
 
 		bool	m_uiEnable;
 		bool	m_cameraOverride;
@@ -91,6 +96,8 @@ namespace saba
 		int		m_windowHeight;
 
 		PlayMode	m_playMode;
+
+		bool	m_shadowEnabled;
 	};
 }
 

@@ -47,6 +47,10 @@ namespace saba
 		m_uLightColor = glGetUniformLocation(m_prog, "u_LightColor");
 		m_uLightDir = glGetUniformLocation(m_prog, "u_LightDir");
 
+		m_uLightVP = glGetUniformLocation(m_prog, "u_LightWVP");
+		m_uShadowMapSplitPositions = glGetUniformLocation(m_prog, "u_ShadowMapSplitPositions");
+		m_uShadowMap = glGetUniformLocation(m_prog, "u_ShadowMap");
+		m_uShadowMapEnabled = glGetUniformLocation(m_prog, "u_ShadowMapEnabled");
 	}
 
 	void GLMMDEdgeShader::Initialize()
@@ -163,6 +167,11 @@ namespace saba
 		}
 
 		return m_edgeShaders[shaderIndex].get();
+	}
+
+	ViewerContext * GLMMDModelDrawContext::GetViewerContext() const
+	{
+		return m_viewerContext;
 	}
 
 }

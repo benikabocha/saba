@@ -120,6 +120,10 @@ namespace saba
 	{
 	}
 
+	void GLOBJModelDrawer::DrawShadowMap(ViewerContext * ctxt, size_t csmIdx)
+	{
+	}
+
 	void GLOBJModelDrawer::Draw(ViewerContext * ctxt)
 	{
 		const auto& view = ctxt->GetCamera()->GetViewMatrix();

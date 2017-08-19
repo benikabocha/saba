@@ -1,8 +1,17 @@
 #version 140
 
+#define NUM_SHADOWMAP 4
+
 in vec3 vs_Pos;
 in vec3 vs_Nor;
 in vec2 vs_UV;
+/*
+in vec4 vs_shadowMapCoord0;
+in vec4 vs_shadowMapCoord1;
+in vec4 vs_shadowMapCoord2;
+in vec4 vs_shadowMapCoord3;
+*/
+in vec4 vs_shadowMapCoord[NUM_SHADOWMAP];
 
 out vec4 out_Color;
 
@@ -28,6 +37,11 @@ uniform int u_SphereTexMode;
 uniform sampler2D u_SphereTex;
 uniform vec4 u_SphereTexMulFactor;
 uniform vec4 u_SphereTexAddFactor;
+
+// ShadowMap
+uniform float u_ShadowMapSplitPositions[NUM_SHADOWMAP + 1];
+uniform  sampler2DShadow u_ShadowMap[NUM_SHADOWMAP];
+uniform int u_ShadowMapEnabled;
 
 vec3 ComputeTexMulFactor(vec3 texColor, vec4 factor)
 {
@@ -55,6 +69,25 @@ void main()
 	color = diffuseColor;
 	color += u_Ambient;
 	color = clamp(color, 0.0, 1.0);
+
+	if (u_ShadowMapEnabled != 0)
+	{
+		float z = -vs_Pos.z;
+		int shadowIdx = -1;
+		for (int i = 0; i < NUM_SHADOWMAP; i++)
+		{
+			if (u_ShadowMapSplitPositions[i] <= z && z < u_ShadowMapSplitPositions[i + 1])
+			{
+				shadowIdx = i;
+				break;
+			}
+		}
+		if (shadowIdx != -1)
+		{
+			float visibility = textureProj(u_ShadowMap[shadowIdx], vs_shadowMapCoord[shadowIdx]);
+			ln *= (1.0 - visibility);
+		}
+	}
 
     if (u_TexMode != 0)
     {
@@ -107,6 +140,6 @@ void main()
 	}
 
 	color += specular;
-
+	
 	out_Color = vec4(color, alpha);
 }

@@ -31,6 +31,7 @@ namespace saba
 		, m_windowWidth(0)
 		, m_windowHeight(0)
 		, m_playMode(PlayMode::None)
+		, m_shadowEnabled(false)
 	{
 #if _WIN32
 		DWORD sz = GetCurrentDirectoryW(0, nullptr);

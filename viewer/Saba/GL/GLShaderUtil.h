@@ -28,6 +28,9 @@ namespace saba
 	void SetUniform(GLint uniform, const glm::vec4& value);
 	void SetUniform(GLint uniform, const glm::mat3& value);
 	void SetUniform(GLint uniform, const glm::mat4& value);
+	void SetUniform(GLint uniform, const GLint* values, size_t count);
+	void SetUniform(GLint uniform, const float* values, size_t count);
+	void SetUniform(GLint uniform, const glm::mat4* values, size_t count);
 }
 
 #endif // !SABA_GL_SHADERUTIL_H_

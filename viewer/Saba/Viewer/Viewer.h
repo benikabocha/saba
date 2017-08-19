@@ -93,6 +93,8 @@ namespace saba
 		using ModelDrawerPtr = std::shared_ptr<ModelDrawer>;
 
 		void SetupSjisGryphRanges();
+		void Update();
+		void DrawShadowMap();
 		void Draw();
 		void DrawBegin();
 		void DrawEnd();
@@ -106,6 +108,7 @@ namespace saba
 		void DrawTransformCtrl();
 		void DrawAnimCtrl();
 		void DrawCameraCtrl();
+		void DrawShadowCtrl();
 		void DrawLightCtrl();
 		void DrawLightGuide();
 		void DrawModelCtrl();

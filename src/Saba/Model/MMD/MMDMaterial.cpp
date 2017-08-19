@@ -22,7 +22,8 @@ namespace saba
 		, m_textureAddFactor(0)
 		, m_spTextureAddFactor(0)
 		, m_toonTextureAddFactor(0)
-		, m_bothFace(false)
+		, m_shadowCaster(true)
+		, m_shadowReceiver(true)
 	{
 	}
 }

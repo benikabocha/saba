@@ -5,6 +5,7 @@
 
 #include "Viewer.h"
 #include "VMDCameraOverrider.h"
+#include "ShadowMap.h"
 
 #include <Saba/Base/Singleton.h>
 #include <Saba/Base/Log.h>
@@ -228,6 +229,17 @@ namespace saba
 			return false;
 		}
 
+		if (!m_context.m_shadowmap.InitializeShader(&m_context))
+		{
+			SABA_ERROR("shadowmap InitializeShader Fail.");
+			return false;
+		}
+		if (!m_context.m_shadowmap.Setup(1024, 1024, 4))
+		{
+			SABA_ERROR("shadowmap Setup Fail.");
+			return false;
+		}
+
 		m_objModelDrawContext = std::make_unique<GLOBJModelDrawContext>(&m_context);
 		m_mmdModelDrawContext = std::make_unique<GLMMDModelDrawContext>(&m_context);
 
@@ -302,8 +314,6 @@ namespace saba
 			int windowW, windowH;
 			glfwGetWindowSize(m_window, &windowW, &windowH);
 			m_context.SetWindowSize(windowW, windowH);
-
-			glViewport(0, 0, w, h);
 
 			if (m_context.IsUIEnabled())
 			{
@@ -407,6 +417,12 @@ namespace saba
 			m_context.SetElapsedTime(elapsed);
 			m_context.EnableCameraOverride(m_cameraOverride);
 
+			Update();
+
+			if (m_context.IsShadowEnabled())
+			{
+				DrawShadowMap();
+			}
 			Draw();
 
 			if (m_context.IsUIEnabled())
@@ -491,23 +507,8 @@ namespace saba
 		m_gryphRanges.push_back(0);
 	}
 
-	void Viewer::Draw()
+	void Viewer::Update()
 	{
-		DrawBegin();
-
-		glClear(GL_DEPTH_BUFFER_BIT);
-
-		glDisable(GL_DEPTH_TEST);
-		glBindVertexArray(m_bgVAO);
-		glUseProgram(m_bgProg);
-		SetUniform(m_uColor1, glm::vec3(0.2f, 0.2f, 0.2f));
-		SetUniform(m_uColor2, glm::vec3(0.4f, 0.4f, 0.4f));
-		glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
-		glUseProgram(0);
-		glBindVertexArray(0);
-
-		glEnable(GL_DEPTH_TEST);
-
 		if (m_context.IsUIEnabled())
 		{
 			DrawUI();
@@ -523,6 +524,63 @@ namespace saba
 		}
 		m_context.m_camera.UpdateMatrix();
 
+
+		for (auto& modelDrawer : m_modelDrawers)
+		{
+			// Update
+			modelDrawer->Update(&m_context);
+		}
+
+		if (m_context.IsShadowEnabled())
+		{
+			m_context.m_shadowmap.CalcShadowMap(m_context.GetCamera(), m_context.GetLight());
+		}
+
+		if (m_context.GetPlayMode() == ViewerContext::PlayMode::Update)
+		{
+			m_context.SetPlayMode(ViewerContext::PlayMode::Stop);
+		}
+	}
+
+	void Viewer::DrawShadowMap()
+	{
+		auto shadowMap = m_context.GetShadowMap();
+		glDisable(GL_MULTISAMPLE);
+		glViewport(0, 0, shadowMap->GetWidth(), shadowMap->GetHeight());
+		size_t csmCount = shadowMap->GetClipSpaceCount();
+		for (size_t i = 0; i < csmCount; i++)
+		{
+			const auto& clipSpace = m_context.GetShadowMap()->GetClipSpace(i);
+			glBindFramebuffer(GL_FRAMEBUFFER, clipSpace.m_shadowmapFBO);
+			glClear(GL_DEPTH_BUFFER_BIT);
+
+			for (auto& modelDrawer : m_modelDrawers)
+			{
+				// Shadow
+				modelDrawer->DrawShadowMap(&m_context, i);
+			}
+		}
+		glBindFramebuffer(GL_FRAMEBUFFER, 0);
+	}
+
+	void Viewer::Draw()
+	{
+		DrawBegin();
+
+		glViewport(0, 0, m_context.GetFrameBufferWidth(), m_context.GetFrameBufferHeight());
+		glClear(GL_DEPTH_BUFFER_BIT);
+
+		glDisable(GL_DEPTH_TEST);
+		glBindVertexArray(m_bgVAO);
+		glUseProgram(m_bgProg);
+		SetUniform(m_uColor1, glm::vec3(0.2f, 0.2f, 0.2f));
+		SetUniform(m_uColor2, glm::vec3(0.4f, 0.4f, 0.4f));
+		glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
+		glUseProgram(0);
+		glBindVertexArray(0);
+
+		glEnable(GL_DEPTH_TEST);
+
 		auto world = glm::mat4(1.0);
 		auto view = m_context.GetCamera()->GetViewMatrix();
 		auto proj = m_context.GetCamera()->GetProjectionMatrix();
@@ -536,16 +594,8 @@ namespace saba
 
 		for (auto& modelDrawer : m_modelDrawers)
 		{
-			// Update
-			modelDrawer->Update(&m_context);
-
 			// Draw
 			modelDrawer->Draw(&m_context);
-		}
-
-		if (m_context.GetPlayMode() == ViewerContext::PlayMode::Update)
-		{
-			m_context.SetPlayMode(ViewerContext::PlayMode::Stop);
 		}
 
 		DrawEnd();
@@ -553,7 +603,6 @@ namespace saba
 
 	void Viewer::DrawBegin()
 	{
-
 		glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
 		if (m_context.GetFrameBufferWidth() != m_currentFrameBufferWidth ||
@@ -1018,6 +1067,10 @@ namespace saba
 		{
 			DrawCameraCtrl();
 		}
+		if (ImGui::CollapsingHeader("Shadow"))
+		{
+			DrawShadowCtrl();
+		}
 		if (ImGui::CollapsingHeader("Light"))
 		{
 			DrawLightCtrl();
@@ -1168,6 +1221,52 @@ namespace saba
 		if (ImGui::InputFloat("Far Clip", &farClip))
 		{
 			cam->SetClip(nearClip, farClip);
+		}
+	}
+
+	void Viewer::DrawShadowCtrl()
+	{
+		bool shadowEnable = m_context.IsShadowEnabled();
+		if (ImGui::Checkbox("Use Shadow", &shadowEnable))
+		{
+			m_context.EnableShadow(shadowEnable);
+		}
+
+		auto shadowMap = &m_context.m_shadowmap;
+		auto cam = &m_context.m_camera;
+
+		float nearClip = shadowMap->GetNearClip();
+		float farClip = shadowMap->GetFarClip();
+		if (ImGui::InputFloat("Near Clip", &nearClip, cam->GetNearClip(), cam->GetFarClip()))
+		{
+			if (nearClip < farClip)
+			{
+				shadowMap->SetClip(nearClip, farClip);
+			}
+		}
+		if (ImGui::InputFloat("Far Clip", &farClip, cam->GetNearClip(), cam->GetFarClip()))
+		{
+			if (nearClip < farClip)
+			{
+				shadowMap->SetClip(nearClip, farClip);
+			}
+		}
+
+		float bias = shadowMap->GetBias();
+		if (ImGui::SliderFloat("Bias", &bias, 0.0f, 1.0f))
+		{
+			shadowMap->SetBias(bias);
+		}
+
+		int width = shadowMap->GetWidth();
+		int height = shadowMap->GetHeight();
+		int size[2] = { width, height };
+		if (ImGui::InputInt2("Texture Size", size))
+		{
+			glm::ivec2 texSize(size[0], size[1]);
+			texSize = glm::max(glm::ivec2(1), texSize);
+			texSize = glm::min(glm::ivec2(8192), texSize);
+			shadowMap->Setup(texSize.x, texSize.y, 4);
 		}
 	}
 
@@ -2188,6 +2287,10 @@ namespace saba
 			bboxMin.x, bboxMin.y, bboxMin.z,
 			bboxMax.x, bboxMax.y, bboxMax.z,
 			radius, gridSize);
+
+		m_context.m_shadowmap.SetClip(
+			m_context.m_camera.GetNearClip() * 10.0f, m_context.m_camera.GetFarClip() * 0.1f
+		);
 
 		return true;
 	}

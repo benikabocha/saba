@@ -193,5 +193,15 @@ namespace saba
 	{
 		return m_farClip;
 	}
+
+	float Camera::GetWidth() const
+	{
+		return m_width;
+	}
+
+	float Camera::GetHeight() const
+	{
+		return m_height;
+	}
 }
 

@@ -38,6 +38,8 @@ namespace saba
 		float GetFovY() const;
 		float GetNearClip() const;
 		float GetFarClip() const;
+		float GetWidth() const;
+		float GetHeight() const;
 
 	private:
 		// View

@@ -38,6 +38,7 @@ namespace saba
 		void ResetAnimation(ViewerContext* ctxt) override;
 		void Update(ViewerContext* ctxt) override;
 		void DrawUI(ViewerContext* ctxt) override;
+		void DrawShadowMap(ViewerContext* ctxt, size_t csmIdx) override;
 		void Draw(ViewerContext* ctxt) override;
 
 	private:

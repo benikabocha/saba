@@ -42,6 +42,8 @@ namespace saba
 		glm::vec4		m_spTextureAddFactor;
 		glm::vec4		m_toonTextureAddFactor;
 		bool			m_bothFace;
+		bool			m_shadowCaster;
+		bool			m_shadowReceiver;
 	};
 }
 

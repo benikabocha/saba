@@ -171,4 +171,19 @@ namespace saba
 	{
 		glUniformMatrix4fv(uniform, 1, GL_FALSE, &value[0][0]);
 	}
+
+	void SetUniform(GLint uniform, const GLint * values, size_t count)
+	{
+		glUniform1iv(uniform, count, values);
+	}
+
+	void SetUniform(GLint uniform, const float * values, size_t count)
+	{
+		glUniform1fv(uniform, count, values);
+	}
+
+	void SetUniform(GLint uniform, const glm::mat4 * values, size_t count)
+	{
+		glUniformMatrix4fv(uniform, count, GL_FALSE, &values[0][0][0]);
+	}
 }

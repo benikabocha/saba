@@ -33,6 +33,7 @@ namespace saba
 		virtual void ResetAnimation(ViewerContext* ctxt) = 0;
 		virtual void DrawUI(ViewerContext* ctxt) = 0;
 		virtual void Update(ViewerContext* ctxt) = 0;
+		virtual void DrawShadowMap(ViewerContext* ctxt, size_t csmIdx) = 0;
 		virtual void Draw(ViewerContext* ctxt) = 0;
 
 		void SetName(const std::string& name) { m_name = name; }

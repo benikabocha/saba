@@ -37,6 +37,7 @@ namespace saba
 		void ResetAnimation(ViewerContext* ctxt) override;
 		void Update(ViewerContext* ctxt) override;
 		void DrawUI(ViewerContext* ctxt) override;
+		void DrawShadowMap(ViewerContext* ctxt, size_t csmIdx) override;
 		void Draw(ViewerContext* ctxt) override;
 
 		GLMMDModel* GetModel() { return m_mmdModel.get(); }
@@ -49,6 +50,7 @@ namespace saba
 			GLVertexArrayObject	m_mmdVao;
 			int					m_mmdEdgeShaderIndex;
 			GLVertexArrayObject	m_mmdEdgeVao;
+			GLVertexArrayObject	m_shadowVao;
 		};
 
 	private:
@@ -56,9 +58,6 @@ namespace saba
 		std::shared_ptr<GLMMDModel>	m_mmdModel;
 
 		std::vector<MaterialShader>	m_materialShaders;
-
-		glm::mat4	m_world;
-
 
 		// IMGui
 		bool		m_clipElapsed;

@@ -101,6 +101,23 @@ namespace saba
 
 			glBindVertexArray(0);
 
+			// Shadow
+			if (!matShader.m_shadowVao.Create())
+			{
+				SABA_ERROR("Vertex Array Object Create fail.");
+				return false;
+			}
+
+			glBindVertexArray(matShader.m_shadowVao);
+			auto shadowShader = m_drawContext->GetViewerContext()->GetShadowMap()->GetShader();
+
+			m_mmdModel->GetPositionBinder().Bind(shadowShader->m_inPos, m_mmdModel->GetPositionVBO());
+			glEnableVertexAttribArray(shadowShader->m_inPos);
+
+			glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_mmdModel->GetIBO());
+
+			glBindVertexArray(0);
+
 			// Add
 			m_materialShaders.emplace_back(std::move(matShader));
 
@@ -240,6 +257,56 @@ namespace saba
 		}
 	}
 
+	void GLMMDModelDrawer::DrawShadowMap(ViewerContext * ctxt, size_t csmIdx)
+	{
+		const auto shadowMap = ctxt->GetShadowMap();
+		const auto shader = shadowMap->GetShader();
+		const auto& clipSpace = shadowMap->GetClipSpace(csmIdx);
+
+		const auto& world = GetTransform();
+		const auto& view = shadowMap->GetShadowViewMatrix();
+		const auto& proj = clipSpace.m_projection;
+		auto wvp = proj * view * world;
+
+		glUseProgram(shader->m_prog);
+		SetUniform(shader->m_uWVP, wvp);
+
+		for (const auto& subMesh : m_mmdModel->GetSubMeshes())
+		{
+			int matID = subMesh.m_materialID;
+			const auto& matShader = m_materialShaders[matID];
+			const auto& mmdMat = m_mmdModel->GetMaterials()[matID];
+			if (!mmdMat.m_shadowCaster)
+			{
+				continue;
+			}
+
+			glBindVertexArray(matShader.m_shadowVao);
+
+			if (mmdMat.m_bothFace)
+			{
+				glDisable(GL_CULL_FACE);
+			}
+			else
+			{
+				glEnable(GL_CULL_FACE);
+				glCullFace(GL_BACK);
+			}
+
+			size_t offset = subMesh.m_beginIndex * m_mmdModel->GetIndexTypeSize();
+			glDrawElements(
+				GL_TRIANGLES,
+				subMesh.m_vertexCount,
+				m_mmdModel->GetIndexType(),
+				(GLvoid*)offset
+			);
+
+			glBindVertexArray(0);
+		}
+
+		glUseProgram(0);
+	}
+
 	void GLMMDModelDrawer::Play()
 	{
 	}
@@ -270,12 +337,41 @@ namespace saba
 		const auto& view = ctxt->GetCamera()->GetViewMatrix();
 		const auto& proj = ctxt->GetCamera()->GetProjectionMatrix();
 
-		m_world = GetTransform();
-		auto wv = view * m_world;
-		auto wvp = proj * view * m_world;
-		auto wvit = glm::mat3(view * m_world);
+		const auto& world = GetTransform();
+		auto wv = view * world;
+		auto wvp = proj * view * world;
+		auto wvit = glm::mat3(view * world);
 		wvit = glm::inverse(wvit);
 		wvit = glm::transpose(wvit);
+
+		const static size_t MaxShadowMap = 4;
+		GLint shadowMapTexs[MaxShadowMap] = { 0 };
+		glm::mat4 shadowMapVPs[MaxShadowMap];
+		auto shadowMap = ctxt->GetShadowMap();
+		size_t numShadowMap = glm::min(MaxShadowMap, shadowMap->GetShadowMapCount());
+		const float* shadowMapSplitPositions = shadowMap->GetSplitPositions();
+		size_t numShadowMapSplitPosition = glm::max(MaxShadowMap + 1, shadowMap->GetSplitPositionCount());
+		if (ctxt->IsShadowEnabled())
+		{
+			for (size_t i = 0; i < numShadowMap; i++)
+			{
+				const auto& clipSpace = shadowMap->GetClipSpace(i);
+				GLint texIdx = GLint(i + 3);
+				glActiveTexture(GL_TEXTURE0 + texIdx);
+				glBindTexture(GL_TEXTURE_2D, clipSpace.m_shadomap);
+
+				glm::mat4 offset;
+				offset[0] = glm::vec4(0.5f, 0.0f, 0.0f, 0.0f);
+				offset[1] = glm::vec4(0.0f, 0.5f, 0.0f, 0.0f);
+				offset[2] = glm::vec4(0.0f, 0.0f, 0.5f, 0.0f);
+				offset[3] = glm::vec4(0.5f, 0.5f, 0.5f, 1.0f);
+				glm::mat4 bias;
+				bias[3][2] = -shadowMap->GetBias();
+				shadowMapTexs[i] = texIdx;
+				shadowMapVPs[i] = bias * offset * clipSpace.m_projection * shadowMap->GetShadowViewMatrix() * world;
+			}
+		}
+
 		for (const auto& subMesh : m_mmdModel->GetSubMeshes())
 		{
 			int matID = subMesh.m_materialID;
@@ -392,6 +488,18 @@ namespace saba
 				glDisable(GL_BLEND);
 			}
 
+			if (ctxt->IsShadowEnabled() && mmdMat.m_shadowReceiver)
+			{
+				SetUniform(shader->m_uShadowMapEnabled, 1);
+				SetUniform(shader->m_uShadowMap, shadowMapTexs, numShadowMap);
+				SetUniform(shader->m_uShadowMapSplitPositions, shadowMapSplitPositions, numShadowMapSplitPosition);
+				SetUniform(shader->m_uLightVP, shadowMapVPs, numShadowMap);
+			}
+			else
+			{
+				SetUniform(shader->m_uShadowMapEnabled, 0);
+			}
+
 			size_t offset = subMesh.m_beginIndex * m_mmdModel->GetIndexTypeSize();
 			glDrawElements(
 				GL_TRIANGLES,
@@ -409,6 +517,13 @@ namespace saba
 
 			glBindVertexArray(0);
 			glUseProgram(0);
+		}
+
+		for (size_t i = 0; i < MaxShadowMap; i++)
+		{
+			GLint texIdx = GLint(i + 3);
+			glActiveTexture(GL_TEXTURE0 + texIdx);
+			glBindTexture(GL_TEXTURE_2D, 0);
 		}
 
 		if (m_mmdModel->IsEnabledEdge())

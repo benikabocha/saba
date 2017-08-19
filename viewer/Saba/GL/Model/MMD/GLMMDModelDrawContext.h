@@ -54,6 +54,11 @@ namespace saba
 		GLint	m_uLightColor;
 		GLint	m_uLightDir;
 
+		GLint	m_uLightVP;
+		GLint	m_uShadowMapSplitPositions;
+		GLint	m_uShadowMap;
+		GLint	m_uShadowMapEnabled;
+
 		void Initialize();
 	};
 
@@ -90,6 +95,8 @@ namespace saba
 
 		int GetEdgeShaderIndex(const GLSLDefine& define);
 		GLMMDEdgeShader* GetEdgeShader(int edgeShaderIndex) const;
+
+		ViewerContext* GetViewerContext() const;
 
 	private:
 		using MMDShaderPtr = std::unique_ptr<GLMMDShader>;
