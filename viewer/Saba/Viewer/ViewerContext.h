@@ -24,6 +24,7 @@ namespace saba
 		enum class PlayMode
 		{
 			None,
+			PlayStart,
 			Play,
 			Stop,
 			Update,

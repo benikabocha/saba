@@ -115,6 +115,7 @@ namespace saba
 		, m_currentManipMode(ImGuizmo::LOCAL)
 		, m_animCtrlEditFPS(30.0f)
 		, m_animCtrlFPSMode(FPSMode::FPS30)
+		, m_animFixedUpdate(false)
 		, m_enableCtrlUI(true)
 		, m_enableLightManip(false)
 		, m_enableLightGuide(false)
@@ -368,6 +369,10 @@ namespace saba
 							m_animCtrlFPSMode = FPSMode::FPS60;
 							m_animCtrlEditFPS = 60.0f;
 						}
+						if (ImGui::MenuItem("Fixed Animation", nullptr, m_animFixedUpdate))
+						{
+							m_animFixedUpdate = !m_animFixedUpdate;
+						}
 						ImGui::EndMenu();
 					}
 					if (ImGui::BeginMenu("CustomCommand"))
@@ -409,13 +414,6 @@ namespace saba
 					ImGui::EndMainMenuBar();
 				}
 			}
-
-			double time = GetTime();
-			double elapsed = time - m_prevTime;
-			m_prevTime = time;
-			m_context.SetClipElapsed(m_clipElapsed);
-			m_context.SetElapsedTime(elapsed);
-			m_context.EnableCameraOverride(m_cameraOverride);
 
 			Update();
 
@@ -514,7 +512,42 @@ namespace saba
 			DrawUI();
 		}
 
-		UpdateAnimation();
+		m_context.SetClipElapsed(m_clipElapsed);
+		m_context.EnableCameraOverride(m_cameraOverride);
+		bool update = true;
+		double time = GetTime();
+		double elapsed = time - m_prevTime;
+		if (m_animFixedUpdate)
+		{
+			double fixedEpalsed = 1.0 / double(m_animCtrlEditFPS);
+			if (elapsed > fixedEpalsed)
+			{
+				double offsetElapsed = elapsed - fixedEpalsed;
+				if (offsetElapsed < fixedEpalsed)
+				{
+					m_prevTime = time - offsetElapsed;
+				}
+				else
+				{
+					m_prevTime = time;
+				}
+				m_context.SetElapsedTime(fixedEpalsed);
+			}
+			else
+			{
+				update = false;
+			}
+		}
+		else
+		{
+			m_prevTime = time;
+			m_context.SetElapsedTime(elapsed);
+		}
+
+		if (update)
+		{
+			UpdateAnimation();
+		}
 
 		if (m_cameraOverride && m_cameraOverrider)
 		{
@@ -524,11 +557,13 @@ namespace saba
 		}
 		m_context.m_camera.UpdateMatrix();
 
-
-		for (auto& modelDrawer : m_modelDrawers)
+		if (update)
 		{
-			// Update
-			modelDrawer->Update(&m_context);
+			for (auto& modelDrawer : m_modelDrawers)
+			{
+				// Update
+				modelDrawer->Update(&m_context);
+			}
 		}
 
 		if (m_context.IsShadowEnabled())
@@ -1176,7 +1211,7 @@ namespace saba
 		{
 			if (ImGui::Button("Play"))
 			{
-				m_context.SetPlayMode(ViewerContext::PlayMode::Play);
+				m_context.SetPlayMode(ViewerContext::PlayMode::PlayStart);
 			}
 		}
 		if (ImGui::Button("Next Frame"))
@@ -1390,6 +1425,10 @@ namespace saba
 		switch (m_context.GetPlayMode())
 		{
 		case ViewerContext::PlayMode::None:
+			break;
+		case ViewerContext::PlayMode::PlayStart:
+			m_context.SetAnimationTime(animTime);
+			m_context.SetPlayMode(ViewerContext::PlayMode::Play);
 			break;
 		case ViewerContext::PlayMode::Play:
 			m_context.SetAnimationTime(animTime + m_context.GetElapsed());
@@ -1741,7 +1780,7 @@ namespace saba
 			modelDrawer->Play();
 		}
 
-		m_context.SetPlayMode(ViewerContext::PlayMode::Play);
+		m_context.SetPlayMode(ViewerContext::PlayMode::PlayStart);
 
 		return true;
 	}

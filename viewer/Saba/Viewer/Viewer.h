@@ -269,6 +269,7 @@ namespace saba
 		// AnimCtrl
 		float		m_animCtrlEditFPS;
 		FPSMode		m_animCtrlFPSMode;
+		bool		m_animFixedUpdate;
 
 		// Control UI
 		bool		m_enableCtrlUI;
