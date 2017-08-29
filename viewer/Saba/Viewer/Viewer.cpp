@@ -1272,14 +1272,14 @@ namespace saba
 
 		float nearClip = shadowMap->GetNearClip();
 		float farClip = shadowMap->GetFarClip();
-		if (ImGui::InputFloat("Near Clip", &nearClip, cam->GetNearClip(), cam->GetFarClip()))
+		if (ImGui::InputFloat("Shadow:Near Clip", &nearClip, cam->GetNearClip(), cam->GetFarClip()))
 		{
 			if (nearClip < farClip)
 			{
 				shadowMap->SetClip(nearClip, farClip);
 			}
 		}
-		if (ImGui::InputFloat("Far Clip", &farClip, cam->GetNearClip(), cam->GetFarClip()))
+		if (ImGui::InputFloat("Shadow:Far Clip", &farClip, cam->GetNearClip(), cam->GetFarClip()))
 		{
 			if (nearClip < farClip)
 			{
@@ -1288,7 +1288,7 @@ namespace saba
 		}
 
 		float bias = shadowMap->GetBias();
-		if (ImGui::SliderFloat("Bias", &bias, 0.0f, 1.0f))
+		if (ImGui::SliderFloat("Shadow:Bias", &bias, 0.0f, 1.0f))
 		{
 			shadowMap->SetBias(bias);
 		}
@@ -1296,7 +1296,7 @@ namespace saba
 		int width = shadowMap->GetWidth();
 		int height = shadowMap->GetHeight();
 		int size[2] = { width, height };
-		if (ImGui::InputInt2("Texture Size", size))
+		if (ImGui::InputInt2("Shadow:Texture Size", size))
 		{
 			glm::ivec2 texSize(size[0], size[1]);
 			texSize = glm::max(glm::ivec2(1), texSize);
