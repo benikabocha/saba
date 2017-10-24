@@ -7,6 +7,7 @@
 
 #include "MMDNode.h"
 #include "MMDModel.h"
+#include "Saba/Base/Log.h"
 
 #include <glm/gtc/matrix_transform.hpp>
 
@@ -19,8 +20,7 @@ namespace saba
 	{
 	public:
 		virtual void Reset() = 0;
-		virtual void BeginUpdate() = 0;
-		virtual void EndUpdate() = 0;
+		virtual void ReflectGlobalTransform() = 0;
 	};
 
 	namespace
@@ -140,12 +140,18 @@ namespace saba
 
 	void MMDPhysics::AddJoint(MMDJoint * mmdJoint)
 	{
-		m_world->addConstraint(mmdJoint->GetConstraint());
+		if (mmdJoint->GetConstraint() != nullptr)
+		{
+			m_world->addConstraint(mmdJoint->GetConstraint());
+		}
 	}
 
 	void MMDPhysics::RemoveJoint(MMDJoint * mmdJoint)
 	{
-		m_world->removeConstraint(mmdJoint->GetConstraint());
+		if (mmdJoint->GetConstraint() != nullptr)
+		{
+			m_world->removeConstraint(mmdJoint->GetConstraint());
+		}
 	}
 
 	btDiscreteDynamicsWorld * MMDPhysics::GetDynamicsWorld() const
@@ -182,11 +188,7 @@ namespace saba
 			m_transform = m_initialTransform;
 		}
 
-		virtual void BeginUpdate() override
-		{
-		}
-
-		virtual void EndUpdate() override
+		virtual void ReflectGlobalTransform() override
 		{
 		}
 
@@ -224,31 +226,15 @@ namespace saba
 			m_transform.setFromOpenGLMatrix(&global[0][0]);
 		}
 
-		void BeginUpdate() override
-		{
-		}
-
-		void EndUpdate() override
+		void ReflectGlobalTransform() override
 		{
 			glm::mat4 world;
 			m_transform.getOpenGLMatrix(&world[0][0]);
 			glm::mat4 btGlobal = InvZ(world) * m_invOffset;
 
-			MMDNode* parent = m_node->GetParent();
-			glm::mat4 local;
-			if (parent != nullptr)
-			{
-				local = glm::inverse(parent->GetGlobalTransform()) * btGlobal;
-			}
-			else
-			{
-				local = btGlobal;
-			}
-
 			if (m_override)
 			{
-				m_node->SetLocalTransform(local);
-				m_node->UpdateGlobalTransform();
+				m_node->SetGlobalTransform(btGlobal);
 			}
 		}
 
@@ -288,11 +274,7 @@ namespace saba
 			m_transform.setFromOpenGLMatrix(&global[0][0]);
 		}
 
-		void BeginUpdate() override
-		{
-		}
-
-		void EndUpdate() override
+		void ReflectGlobalTransform()
 		{
 			glm::mat4 world;
 			m_transform.getOpenGLMatrix(&world[0][0]);
@@ -300,21 +282,10 @@ namespace saba
 			glm::mat4 global = m_node->GetGlobalTransform();
 			btGlobal[3] = global[3];
 
-			MMDNode* parent = m_node->GetParent();
-			glm::mat4 local;
-			if (parent != nullptr)
-			{
-				local = glm::inverse(parent->GetGlobalTransform()) * btGlobal;
-			}
-			else
-			{
-				local = btGlobal;
-			}
-
 			if (m_override)
 			{
-				m_node->SetLocalTransform(local);
-				m_node->UpdateGlobalTransform();
+				m_node->SetGlobalTransform(btGlobal);
+				m_node->UpdateChildTransform();
 			}
 		}
 
@@ -359,11 +330,7 @@ namespace saba
 		{
 		}
 
-		void BeginUpdate() override
-		{
-		}
-
-		void EndUpdate() override
+		void ReflectGlobalTransform() override
 		{
 		}
 
@@ -692,27 +659,28 @@ namespace saba
 		m_rigidBody->clearForces();
 	}
 
-	void MMDRigidBody::BeginUpdate()
+	void MMDRigidBody::ReflectGlobalTransform()
 	{
 		if (m_activeMotionState != nullptr)
 		{
-			m_activeMotionState->BeginUpdate();
+			m_activeMotionState->ReflectGlobalTransform();
 		}
 		if (m_kinematicMotionState != nullptr)
 		{
-			m_kinematicMotionState->BeginUpdate();
+			m_kinematicMotionState->ReflectGlobalTransform();
 		}
 	}
 
-	void MMDRigidBody::EndUpdate()
+	void MMDRigidBody::CalcLocalTransform()
 	{
-		if (m_activeMotionState != nullptr)
+		if (m_node != nullptr)
 		{
-			m_activeMotionState->EndUpdate();
-		}
-		if (m_kinematicMotionState != nullptr)
-		{
-			m_kinematicMotionState->EndUpdate();
+			auto parent = m_node->GetParent();
+			if (parent != nullptr)
+			{
+				auto local = glm::inverse(parent->GetGlobalTransform()) * m_node->GetGlobalTransform();
+				m_node->SetLocalTransform(local);
+			}
 		}
 	}
 

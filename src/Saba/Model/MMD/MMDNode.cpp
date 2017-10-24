@@ -93,6 +93,16 @@ namespace saba
 		}
 	}
 
+	void MMDNode::UpdateChildTransform()
+	{
+		MMDNode* child = m_child;
+		while (child != nullptr)
+		{
+			child->UpdateGlobalTransform();
+			child = child->m_next;
+		}
+	}
+
 	void MMDNode::CalculateInverseInitTransform()
 	{
 		m_inverseInit = glm::inverse(m_global);

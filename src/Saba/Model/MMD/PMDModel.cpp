@@ -132,16 +132,23 @@ namespace saba
 			rb->ResetTransform();
 		}
 
-		for (auto& rb : (*rigidbodys))
-		{
-			rb->BeginUpdate();
-		}
-
 		physics->Update(1.0f / 60.0f);
 
 		for (auto& rb : (*rigidbodys))
 		{
-			rb->EndUpdate();
+			rb->ReflectGlobalTransform();
+		}
+		for (auto& rb : (*rigidbodys))
+		{
+			rb->CalcLocalTransform();
+		}
+
+		for (auto& node : (*m_nodeMan.GetNodes()))
+		{
+			if (node->GetParent() == nullptr)
+			{
+				node->UpdateGlobalTransform();
+			}
 		}
 
 		for (auto& rb : (*rigidbodys))
@@ -167,17 +174,25 @@ namespace saba
 			rb->SetActivation(true);
 		}
 
-		for (auto& rb : (*rigidbodys))
-		{
-			rb->BeginUpdate();
-		}
-
 		physics->Update(elapsed);
 
 		for (auto& rb : (*rigidbodys))
 		{
-			rb->EndUpdate();
+			rb->ReflectGlobalTransform();
 		}
+		for (auto& rb : (*rigidbodys))
+		{
+			rb->CalcLocalTransform();
+		}
+
+		for (auto& node : (*m_nodeMan.GetNodes()))
+		{
+			if (node->GetParent() == nullptr)
+			{
+				node->UpdateGlobalTransform();
+			}
+		}
+
 	}
 
 	void PMDModel::Update()
@@ -526,7 +541,8 @@ namespace saba
 		for (const auto& pmdJoint : pmd.m_joints)
 		{
 			if (pmdJoint.m_rigidBodyA != -1 &&
-				pmdJoint.m_rigidBodyB != -1)
+				pmdJoint.m_rigidBodyB != -1 &&
+				pmdJoint.m_rigidBodyA != pmdJoint.m_rigidBodyB)
 			{
 				auto joint = m_physicsMan.AddJoint();
 				MMDNode* node = nullptr;
@@ -542,6 +558,10 @@ namespace saba
 					return false;
 				}
 				m_physicsMan.GetMMDPhysics()->AddJoint(joint);
+			}
+			else
+			{
+				SABA_WARN("Illegal Joint [{}]", pmdJoint.m_jointName.ToUtf8String());
 			}
 		}
 

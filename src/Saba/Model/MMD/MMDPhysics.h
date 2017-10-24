@@ -56,8 +56,8 @@ namespace saba
 		void ResetTransform();
 		void Reset(MMDPhysics* physics);
 
-		void BeginUpdate();
-		void EndUpdate();
+		void ReflectGlobalTransform();
+		void CalcLocalTransform();
 
 		glm::mat4 GetTransform();
 

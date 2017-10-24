@@ -25,6 +25,7 @@ namespace saba
 
 		void UpdateLocalTransform();
 		void UpdateGlobalTransform();
+		void UpdateChildTransform();
 
 		void SetIndex(uint32_t idx) { m_index = idx; }
 		uint32_t GetIndex() const { return m_index; }
