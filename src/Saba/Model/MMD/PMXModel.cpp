@@ -694,7 +694,7 @@ namespace saba
 			bool appendTranslate = ((uint16_t)bone.m_boneFlag & (uint16_t)PMXBoneFlags::AppendTranslate) != 0;
 			node->EnableAppendRotate(appendRotate);
 			node->EnableAppendTranslate(appendTranslate);
-			if (appendRotate || appendTranslate)
+			if ((appendRotate || appendTranslate) && (bone.m_appendBoneIndex != -1))
 			{
 				bool appendLocal = ((uint16_t)bone.m_boneFlag & (uint16_t)PMXBoneFlags::AppendLocal) != 0;
 				auto appendNode = m_nodeMan.GetNode(bone.m_appendBoneIndex);
