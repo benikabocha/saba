@@ -274,7 +274,7 @@ namespace saba
 			m_transform.setFromOpenGLMatrix(&global[0][0]);
 		}
 
-		void ReflectGlobalTransform()
+		void ReflectGlobalTransform() override
 		{
 			glm::mat4 world;
 			m_transform.getOpenGLMatrix(&world[0][0]);
