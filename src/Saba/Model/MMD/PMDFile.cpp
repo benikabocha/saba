@@ -543,7 +543,6 @@ namespace saba
 		SABA_INFO("PMD File Open. {}", filename);
 
 		File file;
-		file.Open(filename);
 		if (!file.Open(filename))
 		{
 			SABA_INFO("PMD File Open Fail. {}", filename);

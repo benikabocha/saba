@@ -38,7 +38,6 @@ namespace saba
 		}
 
 		SABA_ASSERT(child->m_parent == nullptr);
-		SABA_ASSERT(child->m_child == nullptr);
 		SABA_ASSERT(child->m_next == nullptr);
 		SABA_ASSERT(child->m_prev == nullptr);
 		child->m_parent = this;

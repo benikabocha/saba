@@ -836,7 +836,6 @@ namespace saba
 	bool ReadPMXFile(PMXFile * pmxFile, const char* filename)
 	{
 		File file;
-		file.Open(filename);
 		if (!file.Open(filename))
 		{
 			SABA_INFO("PMX File Open Fail. {}", filename);

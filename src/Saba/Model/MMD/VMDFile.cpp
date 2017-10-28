@@ -229,7 +229,6 @@ namespace saba
 
 	bool ReadVMDFile(VMDFile * vmd, const char * filename)
 	{
-		std::ifstream ifs(filename, std::ifstream::binary);
 		File file;
 		if (!file.Open(filename))
 		{
