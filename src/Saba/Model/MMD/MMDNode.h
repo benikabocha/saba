@@ -83,8 +83,8 @@ namespace saba
 			m_translate = m_initTranslate;
 			m_rotate = m_initRotate;
 			m_scale = m_initScale;
-			m_animTranslate = glm::vec3(0);
-			m_animRotate = glm::quat(1, 0, 0, 0);
+			//m_animTranslate = glm::vec3(0);
+			//m_animRotate = glm::quat(1, 0, 0, 0);
 		}
 		const glm::vec3& GetInitialTranslate() const { return m_initTranslate; }
 		const glm::quat& GetInitialRotate() const { return m_initRotate; }

@@ -137,6 +137,7 @@ namespace saba
 		bool LoadPMDFile(const std::string& filename);
 		bool LoadPMXFile(const std::string& filename);
 		bool LoadVMDFile(const std::string& filename);
+		bool LoadVPDFile(const std::string& filename);
 
 		bool ClearAnimation(ModelDrawer* modelDrawer);
 		bool ClearSceneAnimation();

@@ -28,6 +28,12 @@ namespace saba
 	{
 		ClearBaseAnimation();
 
+		for (auto& node : (*m_nodeMan.GetNodes()))
+		{
+			node->SetAnimationTranslate(glm::vec3(0));
+			node->SetAnimationRotate(glm::quat(1, 0, 0, 0));
+		}
+
 		BeginAnimation();
 
 		for (auto& node : (*m_nodeMan.GetNodes()))

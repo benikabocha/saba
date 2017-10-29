@@ -207,6 +207,14 @@ namespace saba
 		return true;
 	}
 
+	void GLMMDModel::LoadPose(const VPDFile & vpd, int frameCount)
+	{
+		if (m_mmdModel != nullptr)
+		{
+			m_mmdModel->LoadPose(vpd, frameCount);
+		}
+	}
+
 	void GLMMDModel::ResetAnimation()
 	{
 		m_mmdModel->InitializeAnimation();

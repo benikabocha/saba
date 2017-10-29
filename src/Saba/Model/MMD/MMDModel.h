@@ -24,6 +24,7 @@ namespace saba
 	class MMDPhysics;
 	class MMDRigidBody;
 	class MMDJoint;
+	struct VPDFile;
 
 	class MMDNodeManager
 	{
@@ -165,6 +166,8 @@ namespace saba
 		virtual void UpdatePhysics(float elapsed) = 0;
 		// 頂点を更新する
 		virtual void Update() = 0;
+
+		void LoadPose(const VPDFile& vpd, int frameCount = 30);
 
 	protected:
 		template <typename NodeType>

@@ -54,6 +54,7 @@ namespace saba
 		void Destroy();
 
 		bool LoadAnimation(const VMDFile& vmd);
+		void LoadPose(const VPDFile& vpd, int frameCount = 30);
 
 		/*
 		現在のアニメーションの初期化と Physics の初期化を行う。

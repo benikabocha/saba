@@ -45,6 +45,7 @@ set (
     Saba/Model/MMD/VMDAnimation.cpp
     Saba/Model/MMD/VMDCameraAnimation.cpp
     Saba/Model/MMD/VMDFile.cpp
+    Saba/Model/MMD/VPDFile.cpp
 )
 set (
     MODEL_MMD_HEADER
@@ -64,6 +65,7 @@ set (
     Saba/Model/MMD/VMDAnimation.h
     Saba/Model/MMD/VMDCameraAnimation.h
     Saba/Model/MMD/VMDFile.h
+    Saba/Model/MMD/VPDFile.h
 )
 
 add_library(

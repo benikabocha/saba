@@ -20,6 +20,7 @@
 
 #include <Saba/Model/MMD/PMDModel.h>
 #include <Saba/Model/MMD/VMDFile.h>
+#include <Saba/Model/MMD/VPDFile.h>
 #include <Saba/Model/MMD/PMXModel.h>
 #include <Saba/GL/Model/MMD/GLMMDModel.h>
 #include <Saba/GL/Model/MMD/GLMMDModelDrawer.h>
@@ -1230,6 +1231,23 @@ namespace saba
 		{
 			InitializeAnimation();
 		}
+		if (ImGui::Button("Clear Animation"))
+		{
+			if (m_selectedModelDrawer != nullptr)
+			{
+				ClearAnimation(m_selectedModelDrawer.get());
+			}
+		}
+		if (ImGui::Button("Clear All Animation"))
+		{
+			ClearSceneAnimation();
+			for (auto& modelDrawer : m_modelDrawers)
+			{
+				ClearAnimation(modelDrawer.get());
+			}
+			InitializeAnimation();
+			AdjustSceneScale();
+		}
 	}
 
 	void Viewer::DrawCameraCtrl()
@@ -1721,6 +1739,13 @@ namespace saba
 		{
 			InitializeAnimation();
 			if (!LoadPMXFile(filepath))
+			{
+				return false;
+			}
+		}
+		else if (ext == "vpd")
+		{
+			if (!LoadVPDFile(filepath))
 			{
 				return false;
 			}
@@ -2249,6 +2274,32 @@ namespace saba
 		}
 
 		return mmdModel->LoadAnimation(vmd);
+	}
+
+	bool Viewer::LoadVPDFile(const std::string & filename)
+	{
+		GLMMDModel* mmdModel = nullptr;
+		if (m_selectedModelDrawer != nullptr && m_selectedModelDrawer->GetType() == ModelDrawerType::MMDModelDrawer)
+		{
+			auto mmdModelDrawer = reinterpret_cast<GLMMDModelDrawer*>(m_selectedModelDrawer.get());
+			mmdModel = mmdModelDrawer->GetModel();
+			ClearAnimation(mmdModelDrawer);
+		}
+		if (mmdModel == nullptr)
+		{
+			SABA_INFO("MMD Model not selected.");
+			return false;
+		}
+
+		VPDFile vpd;
+		if (!ReadVPDFile(&vpd, filename.c_str()))
+		{
+			return false;
+		}
+
+		mmdModel->LoadPose(vpd);
+
+		return true;
 	}
 
 	bool Viewer::ClearAnimation(ModelDrawer * modelDrawer)
