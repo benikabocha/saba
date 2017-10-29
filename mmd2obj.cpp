@@ -10,6 +10,7 @@
 #include <Saba/Model/MMD/PMXModel.h>
 #include <Saba/Model/MMD/VMDFile.h>
 #include <Saba/Model/MMD/VMDAnimation.h>
+#include <Saba/Model/MMD/VPDFile.h>
 
 #include <iostream>
 #include <vector>
@@ -18,7 +19,7 @@
 
 void Usage()
 {
-	std::cout << "mmd2obj <pmd/pmx file> [-vmd <vmd file>] [-t <animation time (sec)>]\n";
+	std::cout << "mmd2obj <pmd/pmx file> [-vmd <vmd file>] [-t <animation time (sec)>] [-vpd <vpd file>]\n";
 }
 
 bool MMD2Obj(const std::vector<std::string>& args)
@@ -32,6 +33,7 @@ bool MMD2Obj(const std::vector<std::string>& args)
 	// Analyze commad line.
 	const std::string& modelPath = args[1];
 	std::vector<std::string> vmdPaths;
+	std::string vpdPath;
 	double	animTime = 0.0;
 
 	for (size_t i = 2; i < args.size(); i++)
@@ -62,6 +64,19 @@ bool MMD2Obj(const std::vector<std::string>& args)
 				return false;
 			}
 		}
+		else if (args[i] == "-vpd")
+		{
+			i++;
+			if (i < args.size())
+			{
+				vpdPath = args[i];
+			}
+			else
+			{
+				Usage();
+				return false;
+			}
+		}
 		else
 		{
 			Usage();
@@ -78,7 +93,7 @@ bool MMD2Obj(const std::vector<std::string>& args)
 		auto pmdModel = std::make_unique<saba::PMDModel>();
 		if (!pmdModel->Load(modelPath, mmdDataPath))
 		{
-			std::cout << "Load PMDModel Fail.\n";
+			std::cout << "Failed to load PMDModel.\n";
 			return false;
 		}
 		mmdModel = std::move(pmdModel);
@@ -88,7 +103,7 @@ bool MMD2Obj(const std::vector<std::string>& args)
 		auto pmxModel = std::make_unique<saba::PMXModel>();
 		if (!pmxModel->Load(modelPath, mmdDataPath))
 		{
-			std::cout << "Load PMXModel Fail.\n";
+			std::cout << "Failed to load PMXModel.\n";
 			return false;
 		}
 		mmdModel = std::move(pmxModel);
@@ -100,10 +115,11 @@ bool MMD2Obj(const std::vector<std::string>& args)
 	}
 
 	// Load animation.
+	bool useVMDAnimation = !vmdPaths.empty();
 	auto vmdAnim = std::make_unique<saba::VMDAnimation>();
 	if (!vmdAnim->Create(mmdModel))
 	{
-		std::cout << "Create VMDAnimation Fail.\n";
+		std::cout << "Failed to create VMDAnimation.\n";
 		return false;
 	}
 	for (const auto& vmdPath : vmdPaths)
@@ -111,13 +127,32 @@ bool MMD2Obj(const std::vector<std::string>& args)
 		saba::VMDFile vmdFile;
 		if (!saba::ReadVMDFile(&vmdFile, vmdPath.c_str()))
 		{
-			std::cout << "Read VMD File Fail.\n";
+			std::cout << "Failed to read VMD file.\n";
 			return false;
 		}
 		if (!vmdAnim->Add(vmdFile))
 		{
-			std::cout << "Add VMDAnimation Fail.\n";
+			std::cout << "Failed to add VMDAnimation.\n";
 			return false;
+		}
+	}
+
+	// Load pose.
+	saba::VPDFile vpdFile;
+	if (!vpdPath.empty())
+	{
+		if (!vmdPaths.empty())
+		{
+			std::cout << "Warning : Canceled to read VPD file.";
+		}
+		else
+		{
+			if (!saba::ReadVPDFile(&vpdFile, vpdPath.c_str()))
+			{
+				std::cout << "Failed to read VPD file.\n";
+				return false;
+			}
+
 		}
 	}
 
@@ -125,14 +160,24 @@ bool MMD2Obj(const std::vector<std::string>& args)
 	{
 		// Sync physics animation.
 		mmdModel->InitializeAnimation();
-		vmdAnim->SyncPhysics((float)animTime * 30.0f);
+		if (useVMDAnimation)
+		{
+			vmdAnim->SyncPhysics((float)animTime * 30.0f);
+		}
+		else
+		{
+			mmdModel->LoadPose(vpdFile);
+		}
 	}
 
 	// Update animation(animation loop).
 	{
 		// Update bone animation.
 		mmdModel->BeginAnimation();
-		vmdAnim->Evaluate((float)animTime * 30.0f);
+		if (useVMDAnimation)
+		{
+			vmdAnim->Evaluate((float)animTime * 30.0f);
+		}
 		mmdModel->UpdateAnimation();
 		mmdModel->EndAnimation();
 
@@ -148,7 +193,7 @@ bool MMD2Obj(const std::vector<std::string>& args)
 	objFile.open("output.obj");
 	if (!objFile.is_open())
 	{
-		std::cout << "Open OBJ File Fail.\n";
+		std::cout << "Failed to open OBJ file.\n";
 		return false;
 	}
 	objFile << "# mmmd2obj\n";
@@ -230,7 +275,7 @@ bool MMD2Obj(const std::vector<std::string>& args)
 	mtlFile.open("output.mtl");
 	if (!mtlFile.is_open())
 	{
-		std::cout << "Open MTL File Fail.\n";
+		std::cout << "Failed to open MTL file.\n";
 		return false;
 	}
 
@@ -265,7 +310,7 @@ int wmain(int argc, wchar_t** argv)
 
 	if (!MMD2Obj(args))
 	{
-		std::cout << "Convert Fail.\n";
+		std::cout << "Failed to convert model data.\n";
 		return 1;
 	}
 
@@ -282,7 +327,7 @@ int main(int argc, char** argv)
 
 	if (!MMD2Obj(args))
 	{
-		std::cout << "Convert Fail.\n";
+		std::cout << "Failed to convert model data.\n";
 		return 1;
 	}
 
