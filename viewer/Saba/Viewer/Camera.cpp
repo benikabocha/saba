@@ -35,6 +35,16 @@ namespace saba
 		UpdateMatrix();
 	}
 
+	void Camera::Initialize(const glm::vec3 & center, glm::vec3 & eye, float nearClip, float farClip, float radius)
+	{
+		m_target = center;
+		m_eye = eye;
+		m_up = glm::vec3(0, 1, 0);
+		m_radius = radius;
+		m_nearClip = nearClip;
+		m_farClip = farClip;
+	}
+
 	namespace
 	{
 		glm::vec2 VectorToLatLong(const glm::vec3& vec)

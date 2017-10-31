@@ -106,6 +106,65 @@ namespace
 					viewerInitParam.m_msaaCount = msaa["Count"].get_or(4);
 				}
 
+				auto initCamera = lua["InitCamera"];
+				if (initCamera)
+				{
+					bool useInitCamera = true;
+					auto center = initCamera["Center"];
+					auto eye = initCamera["Eye"];
+					auto nearClip = initCamera["NearClip"];
+					auto farClip = initCamera["FarClip"];
+					auto radius = initCamera["Radius"];
+					if (center.valid() &&
+						eye.valid() &&
+						nearClip.valid() &&
+						farClip.valid() &&
+						radius.valid()
+						)
+					{
+						if (center["x"].valid() && center["y"].valid() && center["z"].valid())
+						{
+							viewerInitParam.m_initCameraCenter.x = center["x"].get<float>();
+							viewerInitParam.m_initCameraCenter.y = center["y"].get<float>();
+							viewerInitParam.m_initCameraCenter.z = center["z"].get<float>();
+						}
+						else
+						{
+							useInitCamera = false;
+						}
+
+						if (eye["x"].valid() && eye["y"].valid() && eye["z"].valid())
+						{
+							viewerInitParam.m_initCameraEye.x = eye["x"].get<float>();
+							viewerInitParam.m_initCameraEye.y = eye["y"].get<float>();
+							viewerInitParam.m_initCameraEye.z = eye["z"].get<float>();
+						}
+						else
+						{
+							useInitCamera = false;
+						}
+
+						viewerInitParam.m_initCameraNearClip = nearClip.get<float>();
+						viewerInitParam.m_initCameraFarClip = farClip.get<float>();
+
+						viewerInitParam.m_initCameraRadius = radius.get<float>();
+
+						viewerInitParam.m_initCamera = useInitCamera;
+					}
+
+					auto initScene = lua["InitScene"];
+					if (initScene)
+					{
+						auto unitScale = initScene["UnitScale"];
+						if (unitScale.valid())
+						{
+							viewerInitParam.m_initSceneUnitScale = unitScale.get<float>();
+
+							viewerInitParam.m_initScene = true;
+						}
+					}
+				}
+
 				sol::object commandsObj = lua["Commands"];
 				if (commandsObj.is<sol::table>())
 				{
@@ -134,7 +193,7 @@ namespace
 		}
 		catch (sol::error e)
 		{
-			SABA_INFO("init.lua error.\n{}", e.what());
+			SABA_ERROR("Failed to load init.lua.\n{}", e.what());
 		}
 	}
 } // namespace

@@ -87,6 +87,14 @@ namespace saba
 	Viewer::InitializeParameter::InitializeParameter()
 		: m_msaaEnable(false)
 		, m_msaaCount(4)
+		, m_initCamera(false)
+		, m_initCameraCenter(0, 0, 0)
+		, m_initCameraEye(0, 0, 10)
+		, m_initCameraNearClip(0.1f)
+		, m_initCameraFarClip(1000.0f)
+		, m_initCameraRadius(10.0f)
+		, m_initScene(false)
+		, m_initSceneUnitScale(1.0f)
 	{
 	}
 
@@ -96,15 +104,13 @@ namespace saba
 	}
 
 	Viewer::Viewer()
-		: m_msaaEnable(false)
-		, m_msaaCount(4)
-		, m_glfwInitialized(false)
+		: m_glfwInitialized(false)
 		, m_window(nullptr)
 		, m_uColor1(-1)
 		, m_uColor2(-2)
 		, m_cameraMode(CameraMode::None)
 		, m_mouseLockMode(MouseLockMode::None)
-		, m_sceneUnit(1)
+		, m_sceneUnitScale(1)
 		, m_prevTime(0)
 		, m_modelNameID(1)
 		, m_enableInfoUI(true)
@@ -145,21 +151,20 @@ namespace saba
 
 	bool Viewer::Initialize(const InitializeParameter& initParam)
 	{
+		m_initParam = initParam;
+
 		auto logger = Singleton<saba::Logger>::Get();
 		m_imguiLogSink = logger->AddSink<ImGUILogSink>();
-
-		m_msaaEnable = initParam.m_msaaEnable;
-		m_msaaCount = initParam.m_msaaCount;
 
 		SABA_INFO("CurDir = {}", m_context.GetWorkDir());
 		glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
 		glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 2);
 		glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
 		glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
-		if (m_msaaEnable)
+		if (m_initParam.m_msaaEnable)
 		{
 			m_context.EnableMSAA(true);
-			m_context.SetMSAACount(m_msaaCount);
+			m_context.SetMSAACount(m_initParam.m_msaaCount);
 		}
 		m_window = glfwCreateWindow(1280, 800, "Saba Viewer", nullptr, nullptr);
 
@@ -202,12 +207,6 @@ namespace saba
 		{
 			SABA_ERROR("gl3w Init Fail.");
 			return false;
-		}
-
-		// MSAA の設定
-		if (m_msaaEnable)
-		{
-			glEnable(GL_MULTISAMPLE);
 		}
 
 		GLSLShaderUtil glslShaderUtil;
@@ -1246,7 +1245,7 @@ namespace saba
 				ClearAnimation(modelDrawer.get());
 			}
 			InitializeAnimation();
-			AdjustSceneScale();
+			InitializeScene();
 		}
 	}
 
@@ -1417,10 +1416,10 @@ namespace saba
 			auto drawList = ImGui::GetWindowDrawList();
 			auto wvp = proj * view * m_lgihtManipMat;
 			auto startPos = WorldToScreen(glm::vec3(0), wvp);
-			auto endPos = WorldToScreen(glm::vec3(0, 0, -m_sceneUnit), wvp);
-			auto axEndoPos = WorldToScreen(glm::vec3(m_sceneUnit * 0.1f, 0, 0), wvp);
-			auto ayEndoPos = WorldToScreen(glm::vec3(0, m_sceneUnit * 0.1f, 0), wvp);
-			auto azEndoPos = WorldToScreen(glm::vec3(0, 0, m_sceneUnit * 0.1f), wvp);
+			auto endPos = WorldToScreen(glm::vec3(0, 0, -m_sceneUnitScale), wvp);
+			auto axEndoPos = WorldToScreen(glm::vec3(m_sceneUnitScale * 0.1f, 0, 0), wvp);
+			auto ayEndoPos = WorldToScreen(glm::vec3(0, m_sceneUnitScale * 0.1f, 0), wvp);
+			auto azEndoPos = WorldToScreen(glm::vec3(0, 0, m_sceneUnitScale * 0.1f), wvp);
 
 			drawList->AddLine(startPos, endPos, ImColor(1.0f, 0.9f, 0.1f));
 			drawList->AddLine(startPos, axEndoPos, ImColor(1.0f, 0.0f, 0.0f));
@@ -1789,7 +1788,7 @@ namespace saba
 				m_modelDrawers.clear();
 				m_cameraOverrider.reset();
 
-				AdjustSceneScale();
+				InitializeScene();
 			}
 		}
 
@@ -2053,7 +2052,7 @@ namespace saba
 	bool Viewer::CmdClearSceneAnimation(const std::vector<std::string>& args)
 	{
 		ClearSceneAnimation();
-		AdjustSceneScale();
+		InitializeScene();
 		return true;
 	}
 
@@ -2153,7 +2152,7 @@ namespace saba
 		m_selectedModelDrawer->SetName(GetNewModelName());
 		m_selectedModelDrawer->SetBBox(objModel.GetBBoxMin(), objModel.GetBBoxMax());
 
-		AdjustSceneScale();
+		InitializeScene();
 
 		m_prevTime = GetTime();
 
@@ -2194,7 +2193,7 @@ namespace saba
 		m_selectedModelDrawer->SetName(GetNewModelName());
 		m_selectedModelDrawer->SetBBox(pmdModel->GetBBoxMin(), pmdModel->GetBBoxMax());
 
-		AdjustSceneScale();
+		InitializeScene();
 
 		m_prevTime = GetTime();
 
@@ -2236,7 +2235,7 @@ namespace saba
 		m_selectedModelDrawer->SetName(GetNewModelName());
 		m_selectedModelDrawer->SetBBox(pmxModel->GetBBoxMin(), pmxModel->GetBBoxMax());
 
-		AdjustSceneScale();
+		InitializeScene();
 
 		m_prevTime = GetTime();
 
@@ -2325,8 +2324,9 @@ namespace saba
 		return true;
 	}
 
-	bool Viewer::AdjustSceneScale()
+	bool Viewer::InitializeScene()
 	{
+		// Initialize BBox
 		auto bboxMin = glm::vec3(0);
 		auto bboxMax = glm::vec3(0);
 		if (m_modelDrawers.empty())
@@ -2345,44 +2345,89 @@ namespace saba
 			bboxMin = glm::min(bboxMin, modelDrawer->GetBBoxMin());
 			bboxMax = glm::max(bboxMax, modelDrawer->GetBBoxMax());
 		}
+
+		m_bboxMin = bboxMin;
+		m_bboxMax = bboxMax;
+
 		auto center = (bboxMax + bboxMin) * 0.5f;
 		auto radius = glm::length(bboxMax - center);
-		m_context.m_camera.Initialize(center, radius);
 
-		// グリッドのスケールを調節する
-		float gridSize = 1.0f;
-		if (radius < 1.0f)
+		// Initialize Scene Setting
+		if (m_initParam.m_initScene)
 		{
-			while (!(gridSize <= radius && radius <= gridSize * 10.0f))
-			{
-				gridSize /= 10.0f;
-			}
+			m_sceneUnitScale = m_initParam.m_initSceneUnitScale;
 		}
 		else
 		{
-			while (!(gridSize <= radius && radius <= gridSize * 10.0f))
-			{
-				gridSize *= 10.0f;
-			}
+			AdjustSceneUnitScale();
 		}
-		if (!m_grid.Initialize(m_context, gridSize, 10, 5))
+
+		// Reset Grid
+		if (!m_grid.Initialize(m_context, m_sceneUnitScale, 10, 5))
 		{
 			SABA_ERROR("grid Init Fail.");
 			return false;
 		}
 
-		m_sceneUnit = gridSize;
-
 		SABA_INFO("bbox [{}, {}, {}] - [{}, {}, {}] radisu [{}] grid [{}]",
 			bboxMin.x, bboxMin.y, bboxMin.z,
 			bboxMax.x, bboxMax.y, bboxMax.z,
-			radius, gridSize);
+			radius, m_sceneUnitScale);
 
+		// Initialize Camera
+		InitializeCamera();
+
+		// Reset Shadow
 		m_context.m_shadowmap.SetClip(
 			m_context.m_camera.GetNearClip() * 10.0f, m_context.m_camera.GetFarClip() * 0.1f
 		);
 
 		return true;
+	}
+
+	void Viewer::InitializeCamera()
+	{
+		if (m_initParam.m_initCamera)
+		{
+			m_context.m_camera.Initialize(
+				m_initParam.m_initCameraCenter,
+				m_initParam.m_initCameraEye,
+				m_initParam.m_initCameraNearClip,
+				m_initParam.m_initCameraFarClip,
+				m_initParam.m_initCameraRadius
+			);
+		}
+		else
+		{
+			auto center = (m_bboxMax + m_bboxMin) * 0.5f;
+			auto radius = glm::length(m_bboxMax - center);
+
+			m_context.m_camera.Initialize(center, radius);
+		}
+	}
+
+	void Viewer::AdjustSceneUnitScale()
+	{
+		auto center = (m_bboxMax + m_bboxMin) * 0.5f;
+		auto radius = glm::length(m_bboxMax - center);
+
+		float unitScale = 1.0f;
+		if (radius < 1.0f)
+		{
+			while (!(unitScale <= radius && radius <= unitScale * 10.0f))
+			{
+				unitScale /= 10.0f;
+			}
+		}
+		else
+		{
+			while (!(unitScale <= radius && radius <= unitScale * 10.0f))
+			{
+				unitScale *= 10.0f;
+			}
+		}
+
+		m_sceneUnitScale = unitScale;
 	}
 
 	std::string Viewer::GetNewModelName()

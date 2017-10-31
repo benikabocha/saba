@@ -26,6 +26,7 @@
 * PMD
 * PMX
 * VMD
+* VPD
 
 ## How to build
 
@@ -194,6 +195,18 @@ MSAA = {
     Count    = 8
 }
 
+InitCamera = {
+    Center = {x = 0, y = 10, z = 0},
+    Eye = {x = 0, y = 10, z = 50},
+    NearClip = 1.0,
+    FarClip = 2000.0,
+    Radius = 100
+}
+
+InitScene = {
+    UnitScale = 10
+}
+
 Commands = {
     {
         Cmd     = "open",
@@ -209,21 +222,49 @@ Commands = {
 }
 ```
 
+#### MSAA.Enable
+
+Enable MSAA.
+
+#### MSAA.Count
+
+Set the number of MSAA samples.
+
+#### InitCamera.Center
+
+Set camera center position at scene initialization.
+
+#### InitCamera.Eye
+
+Set camera eye position at scene initialization.
+
+#### InitCamera.NearClip
+
+Set camera near clip at scene initialization.
+
+#### InitCamera.FarClip
+
+Set camera far clip at scene initialization.
+
+#### InitCamera.Radius
+
+Set camera zoom radius at scene initialization.
+
+#### InitScene.UnitScale
+
+Set grid size at scene initialization.
+
+#### Commands
+
+Set the commands to be executed at startup.
+
+#### Run Script
+
 You can run the script.
 
 The command line argument is the "Args" variable.
 
 ```lua
-MSAA = {
-    Enable  = true,
-    Count   = 8
-}
-
-Models = {
-    "test1.pmx",
-    "test2.pmx"
-}
-
 ModelIndex = 1
 print(Args[1])
 

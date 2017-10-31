@@ -17,6 +17,7 @@ namespace saba
 		Camera();
 
 		void Initialize(const glm::vec3& center, float radius);
+		void Initialize(const glm::vec3& center, glm::vec3& eye, float nearClip, float farClip, float radius);
 
 		void Orbit(float x, float y);
 		void Dolly(float z);

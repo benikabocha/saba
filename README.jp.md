@@ -3,7 +3,7 @@
 [![Build Status](https://travis-ci.org/benikabocha/saba.svg?branch=master)](https://travis-ci.org/benikabocha/saba)
 [![Build status](https://ci.appveyor.com/api/projects/status/kjk8chdx0du65m3n?svg=true)](https://ci.appveyor.com/project/benikabocha/saba)
 
-* MMD (PMD/PMX/VMD) を再生できるライブラリ
+* MMD (PMD/PMX/VMD/VPD) を再生できるライブラリ
 * 簡易 OpenGL Viewer
 
 ![saba_viewer](./images/saba_viewer_01.png)
@@ -24,6 +24,7 @@
 * PMD
 * PMX
 * VMD
+* VPD
 
 ## ビルド方法
 
@@ -209,6 +210,18 @@ MSAA = {
     Count    = 8
 }
 
+InitCamera = {
+    Center = {x = 0, y = 10, z = 0},
+    Eye = {x = 0, y = 10, z = 50},
+    NearClip = 1.0,
+    FarClip = 2000.0,
+    Radius = 100
+}
+
+InitScene = {
+    UnitScale = 10
+}
+
 Commands = {
     {
         Cmd     = "open",
@@ -224,20 +237,49 @@ Commands = {
 }
 ```
 
+#### MSAA.Enable
+
+MSAA を有効にします。
+
+#### MSAA.Count
+
+MSAA のサンプリング数を設定します。
+MSAAEnable が true の場合のみ有効です。
+
+#### InitCamera.Center
+
+シーン初期化時のカメラ中心位置を設定します。
+
+#### InitCamera.Eye
+
+シーン初期化時のカメラ視点位置を設定します。
+
+#### InitCamera.NearClip
+
+シーン初期化時のニアクリップを設定します。
+
+#### InitCamera.FarClip
+
+シーン初期化時のファークリップを設定します。
+
+#### InitCamera.Radius
+
+シーン初期化時のズーム可能半径を設定します。
+
+#### InitScene.UnitScale
+
+シーン初期化時のグリッドサイズを設定します。
+
+#### Commands
+
+起動時に実行するコマンドを設定します。
+
+#### スクリプトを実行する
+
 "init.lua" ではスクリプトを実行することもできます。
 プログラムに渡されるコマンドライン引数は`Args`で取得できます。
 
 ```lua
-MSAA = {
-    Enable  = true,
-    Count   = 8
-}
-
-Models = {
-    "test1.pmx",
-    "test2.pmx"
-}
-
 ModelIndex = 1
 print(Args[1])
 

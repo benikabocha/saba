@@ -46,6 +46,16 @@ namespace saba
 
 			bool	m_msaaEnable;
 			int		m_msaaCount;
+
+			bool		m_initCamera;
+			glm::vec3	m_initCameraCenter;
+			glm::vec3	m_initCameraEye;
+			float		m_initCameraNearClip;
+			float		m_initCameraFarClip;
+			float		m_initCameraRadius;
+
+			bool		m_initScene;
+			float		m_initSceneUnitScale;
 		};
 
 		bool Initialize(const InitializeParameter& initParam = InitializeParameter());
@@ -142,7 +152,9 @@ namespace saba
 		bool ClearAnimation(ModelDrawer* modelDrawer);
 		bool ClearSceneAnimation();
 
-		bool AdjustSceneScale();
+		bool InitializeScene();
+		void InitializeCamera();
+		void AdjustSceneUnitScale();
 		std::string GetNewModelName();
 		ModelDrawerPtr FindModelDrawer(const std::string& name);
 
@@ -202,8 +214,7 @@ namespace saba
 		};
 
 	private:
-		bool	m_msaaEnable;
-		int		m_msaaCount;
+		InitializeParameter	m_initParam;
 
 		ViewerContext	m_context;
 		std::unique_ptr<GLOBJModelDrawContext>	m_objModelDrawContext;
@@ -227,7 +238,9 @@ namespace saba
 		CameraMode	m_cameraMode;
 		Grid		m_grid;
 		MouseLockMode	m_mouseLockMode;
-		float		m_sceneUnit;
+		glm::vec3	m_bboxMin;
+		glm::vec3	m_bboxMax;
+		float		m_sceneUnitScale;
 
 		double		m_prevTime;
 
