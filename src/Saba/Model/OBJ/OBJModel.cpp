@@ -6,37 +6,96 @@
 #include "OBJModel.h"
 #include "../../Base/Path.h"
 #include "../../Base/Log.h"
+#include "../../Base/File.h"
 
 #include <iostream>
+#include <sstream>
 #include <limits>
 #include <glm/glm.hpp>
 #include <tiny_obj_loader.h>
 
 namespace saba
 {
+	namespace
+	{
+		class SabaMaterialReader : public tinyobj::MaterialReader
+		{
+		public:
+			SabaMaterialReader(const std::string objPath)
+				: m_objPath(objPath)
+			{
+			}
+
+			bool operator()(
+				const std::string& matId,
+				std::vector<tinyobj::material_t>* materials,
+				std::map<std::string, int>* matMap,
+				std::string* err
+				) override
+			{
+				std::string fileDir = PathUtil::GetDirectoryName(m_objPath);
+				std::string mtlPath = PathUtil::Combine(fileDir, matId);
+				TextFileReader fr;
+				if (!fr.Open(mtlPath))
+				{
+					SABA_WARN("Failed to open MTL file.");
+					SABA_INFO("Try obj name + .mtl.");
+					std::string objFileName = PathUtil::GetFilenameWithoutExt(m_objPath);
+					mtlPath = PathUtil::Combine(fileDir, objFileName + ".mtl");
+					if (!fr.Open(mtlPath))
+					{
+						SABA_WARN("Failed to open MTL file.");
+						if (err)
+						{
+							*err = "Failed to open MTL file.";
+						}
+						return false;
+					}
+				}
+				std::string allText = fr.ReadAll();
+				std::stringstream mtlSS(allText);
+
+				tinyobj::MaterialStreamReader msr(mtlSS);
+
+				if (!msr(matId, materials, matMap, err))
+				{
+					return false;
+				}
+				return true;
+			}
+
+		private:
+			std::string	m_objPath;
+		};
+	}
+
 	bool OBJModel::Load(const char * filepath)
 	{
-		SABA_INFO("OBJ File Open. {}", filepath);
+		SABA_INFO("Open OBJ file. {}", filepath);
 
-		std::string fileDir = PathUtil::GetDirectoryName(filepath);
-		fileDir += PathUtil::GetDelimiter();
+		TextFileReader textFileReader;
+		if (!textFileReader.Open(filepath))
+		{
+			SABA_WARN("Failed to open OBJ file. {}", filepath);
+			return false;
+		}
+
 		tinyobj::attrib_t attrib;
 		std::vector<tinyobj::shape_t> shapes;
 		std::vector<tinyobj::material_t> materials;
 		std::string err;
-		bool ret = tinyobj::LoadObj(
-			&attrib,
-			&shapes,
-			&materials,
-			&err,
-			filepath,
-			fileDir.c_str(),
-			true
-		);
+
+		std::string allText = textFileReader.ReadAll();
+		std::stringstream objSS(allText);
+		SabaMaterialReader smr(filepath);
+		auto ret = tinyobj::LoadObj(&attrib, &shapes, &materials, &err, &objSS, &smr, true);
+
+		std::string fileDir = PathUtil::GetDirectoryName(filepath);
+		fileDir += PathUtil::GetDelimiter();
 
 		if (!ret)
 		{
-			SABA_WARN("OBJ File Fail. {}", filepath);
+			SABA_WARN("Failed to load OBJ file. {}", filepath);
 			return false;
 		}
 
