@@ -40,4 +40,31 @@ namespace saba
 	{
 		return Singleton<UtfConverter>::Get()->ToUtf8String(wStr);
 	}
+
+	bool TryToWString(const std::string & utf8Str, std::wstring & wStr)
+	{
+		try
+		{
+			wStr = Singleton<UtfConverter>::Get()->ToWString(utf8Str);
+		}
+		catch (std::exception&)
+		{
+			return false;
+		}
+
+		return true;
+	}
+	bool TryToUtf8String(const std::wstring & wStr, std::string & utf8Str)
+	{
+		try
+		{
+			utf8Str = Singleton<UtfConverter>::Get()->ToUtf8String(wStr);
+		}
+		catch (std::exception&)
+		{
+			return false;
+		}
+
+		return true;
+	}
 }

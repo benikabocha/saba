@@ -29,7 +29,11 @@ namespace saba
 			Close();
 		}
 #if _WIN32
-		std::wstring wFilepath = ToWString(filepath);
+		std::wstring wFilepath;
+		if (!TryToWString(filepath, wFilepath))
+		{
+			return false;
+		}
 		std::wstring wMode = ToWString(mode);
 		auto err = _wfopen_s(&m_fp, wFilepath.c_str(), wMode.c_str());
 		if (err != 0)
@@ -193,7 +197,11 @@ namespace saba
 	bool TextFileReader::Open(const char * filepath)
 	{
 #if _WIN32
-		std::wstring wFilepath = ToWString(filepath);
+		std::wstring wFilepath;
+		if (!TryToWString(filepath, wFilepath))
+		{
+			return false;
+		}
 		m_ifs.open(wFilepath);
 #else
 		m_ifs.open(filepath);

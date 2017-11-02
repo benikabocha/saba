@@ -25,7 +25,12 @@ namespace saba
 	{
 #if _WIN32
 		auto utf8Message = msg.raw.str();
-		auto wMessage = ToWString(utf8Message);
+		std::wstring wMessage = ToWString(utf8Message);
+		if (!TryToWString(utf8Message, wMessage))
+		{
+			m_defaultLogger->log(msg.level, "Failed to convert message.");
+			return;
+		}
 		int chCount = WideCharToMultiByte(
 			CP_OEMCP,
 			0,
