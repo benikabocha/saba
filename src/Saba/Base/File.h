@@ -128,6 +128,7 @@ namespace saba
 		bool IsOpen();
 
 		std::string ReadLine();
+		void ReadAllLines(std::vector<std::string>& lines);
 		std::string ReadAll();
 		bool IsEof();
 

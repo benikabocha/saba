@@ -205,4 +205,40 @@ TEST(BaseTest, TextFileReader)
 		EXPECT_EQ(text, textFile.ReadAll());
 		EXPECT_EQ(true, textFile.IsEof());
 	}
+
+	// ReadAllLines
+	{
+		saba::TextFileReader textFile;
+		std::vector<std::string> lines;
+		textFile.ReadAllLines(lines);
+		EXPECT_TRUE(lines.empty());
+	}
+
+	// ReadAllLines
+	{
+		saba::TextFileReader textFile(dataPath + u8"/text_test1.txt");
+		EXPECT_EQ(true, textFile.IsOpen());
+		std::vector<std::string> lines;
+		textFile.ReadAllLines(lines);
+		EXPECT_EQ(4, lines.size());
+		EXPECT_EQ(std::string("abc"), lines[0]);
+		EXPECT_EQ(std::string("def"), lines[1]);
+		EXPECT_EQ(std::string(""), lines[2]);
+		EXPECT_EQ(std::string("efg"), lines[3]);
+		EXPECT_EQ(true, textFile.IsEof());
+	}
+
+	// ReadAllLines
+	{
+		saba::TextFileReader textFile(dataPath + u8"/text_test2.txt");
+		EXPECT_EQ(true, textFile.IsOpen());
+		std::vector<std::string> lines;
+		textFile.ReadAllLines(lines);
+		EXPECT_EQ(4, lines.size());
+		EXPECT_EQ(std::string("abc"), lines[0]);
+		EXPECT_EQ(std::string("def"), lines[1]);
+		EXPECT_EQ(std::string(""), lines[2]);
+		EXPECT_EQ(std::string("efg"), lines[3]);
+		EXPECT_EQ(true, textFile.IsEof());
+	}
 }

@@ -204,7 +204,7 @@ namespace saba
 		}
 		m_ifs.open(wFilepath);
 #else
-		m_ifs.open(filepath);
+		m_ifs.open(filepath, std::ios::binary);
 #endif
 		return m_ifs.is_open();
 	}
@@ -226,9 +226,44 @@ namespace saba
 
 	std::string TextFileReader::ReadLine()
 	{
+		if (!IsOpen() || IsEof())
+		{
+			return "";
+		}
+		std::istreambuf_iterator<char> it(m_ifs);
+		std::istreambuf_iterator<char> end;
 		std::string line;
-		std::getline(m_ifs, line);
+		auto outputIt = std::back_inserter(line);
+		while (it != end && (*it) != '\r' && (*it) != '\n')
+		{
+			(*outputIt) = (*it);
+			++outputIt;
+			++it;
+		}
+		if (it != end)
+		{
+			auto ch = *it;
+			++it;
+			if (ch == '\r' && (*it) == '\n')
+			{
+				++it;
+			}
+		}
+
 		return line;
+	}
+
+	void TextFileReader::ReadAllLines(std::vector<std::string>& lines)
+	{
+		lines.clear();
+		if (!IsOpen() || IsEof())
+		{
+			return;
+		}
+		while (!IsEof())
+		{
+			lines.emplace_back(ReadLine());
+		}
 	}
 
 	std::string TextFileReader::ReadAll()
@@ -237,6 +272,7 @@ namespace saba
 		std::istreambuf_iterator<char> end;
 		return std::string(begin, end);
 	}
+
 	bool TextFileReader::IsEof()
 	{
 		if (!m_ifs.is_open())
