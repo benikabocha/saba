@@ -17,36 +17,16 @@ namespace saba
 {
 	bool ReadVPDFile(VPDFile * vpd, const char * filename)
 	{
-		File file;
+		
+		TextFileReader file;
 		if (!file.Open(filename))
 		{
 			SABA_INFO("VPD File Open Fail. {}", filename);
 			return false;
 		}
 
-		std::vector<char> buffer;
-		if (!file.ReadAll(&buffer))
-		{
-			SABA_INFO("VPD File Read Fail. {}", filename);
-			return false;
-		}
-
 		std::vector<std::string> lines;
-
-		auto bufferIt = buffer.begin();
-		while (bufferIt != buffer.end())
-		{
-			auto delimIt = std::find_if(bufferIt, buffer.end(), [](char ch) {
-				return ch == '\r' || ch == '\n';
-			});
-			lines.emplace_back(std::string(bufferIt, delimIt));
-			if ((delimIt + 1) != buffer.end() && *(delimIt + 1) == '\n')
-			{
-				delimIt++;
-			}
-
-			bufferIt = delimIt + 1;
-		}
+		file.ReadAllLines(lines);
 
 		if (lines.empty() || lines[0] != "Vocaloid Pose Data file")
 		{

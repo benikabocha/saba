@@ -244,7 +244,7 @@ namespace saba
 		{
 			auto ch = *it;
 			++it;
-			if (ch == '\r' && (*it) == '\n')
+			if (it != end && ch == '\r' && (*it) == '\n')
 			{
 				++it;
 			}
