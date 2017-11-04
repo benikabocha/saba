@@ -7,6 +7,7 @@
 #include "UnicodeUtil.h"
 
 #include <streambuf>
+#include <iterator>
 
 namespace saba
 {
