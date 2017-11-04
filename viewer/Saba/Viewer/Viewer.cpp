@@ -26,6 +26,10 @@
 #include <Saba/GL/Model/MMD/GLMMDModelDrawer.h>
 #include <Saba/Model/MMD/SjisToUnicode.h>
 
+#include <Saba/Model/XFile/XFileModel.h>
+#include <Saba/GL/Model/XFile/GLXFileModel.h>
+#include <Saba/GL/Model/XFile/GLXFileModelDrawer.h>
+
 #include <imgui.h>
 #include <imgui_impl_glfw_gl3.h>
 #include <ImGuizmo.h>
@@ -243,6 +247,7 @@ namespace saba
 
 		m_objModelDrawContext = std::make_unique<GLOBJModelDrawContext>(&m_context);
 		m_mmdModelDrawContext = std::make_unique<GLMMDModelDrawContext>(&m_context);
+		m_xfileModelDrawContext = std::make_unique<GLXFileModelDrawContext>(&m_context);
 
 		RegisterCommand();
 		RefreshCustomCommand();
@@ -1749,6 +1754,13 @@ namespace saba
 				return false;
 			}
 		}
+		else if (ext == "x")
+		{
+			if (!LoadXFile(filepath))
+			{
+				return false;
+			}
+		}
 		else
 		{
 			SABA_INFO("Unknown File Ext [{}]", ext);
@@ -2297,6 +2309,43 @@ namespace saba
 		}
 
 		mmdModel->LoadPose(vpd);
+
+		return true;
+	}
+
+	bool Viewer::LoadXFile(const std::string & filename)
+	{
+		XFileModel xfileModel;
+		if (!xfileModel.Load(filename.c_str()))
+		{
+			SABA_WARN("Failed to load XFile.");
+			return false;
+		}
+
+		auto glXFileModel = std::make_shared<GLXFileModel>();
+		if (!glXFileModel->Create(xfileModel))
+		{
+			SABA_WARN("Failed to create GLXFileModel.");
+			return false;
+		}
+
+		auto xfileDrawer = std::make_unique<GLXFileModelDrawer>(
+			m_xfileModelDrawContext.get(),
+			glXFileModel
+			);
+		if (!xfileDrawer->Create())
+		{
+			SABA_WARN("Failed to create GLXFileModelDrawer.");
+			return false;
+		}
+		m_modelDrawers.emplace_back(std::move(xfileDrawer));
+		m_selectedModelDrawer = m_modelDrawers[m_modelDrawers.size() - 1];
+		m_selectedModelDrawer->SetName(GetNewModelName());
+		m_selectedModelDrawer->SetBBox(xfileModel.GetBBoxMin(), xfileModel.GetBBoxMax());
+
+		InitializeScene();
+
+		m_prevTime = GetTime();
 
 		return true;
 	}

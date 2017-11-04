@@ -1,4 +1,5 @@
 
+# Base
 set (
     BASE_SOURCE
     Saba/Base/File.cpp
@@ -18,6 +19,7 @@ set (
     Saba/Base/UnicodeUtil.h
 )
 
+# OBJ Model
 set (
     MODEL_OBJ_SOURCE
     Saba/Model/OBJ/OBJModel.cpp
@@ -28,6 +30,18 @@ set (
     Saba/Model/OBJ/OBJModel.h
 )
 
+# XFile Model
+set (
+    MODEL_XFILE_SOURCE
+    Saba/Model/XFile/XFileModel.cpp
+)
+
+set (
+    MODEL_XFILE_HEADER
+    Saba/Model/XFile/XFileModel.h
+)
+
+# MMD Model
 set (
     MODEL_MMD_SOURCE
     Saba/Model/MMD/MMDIkSolver.cpp
@@ -74,6 +88,8 @@ add_library(
     ${BASE_HEADER}
     ${MODEL_OBJ_SOURCE}
     ${MODEL_OBJ_HEADER}
+    ${MODEL_XFILE_SOURCE}
+    ${MODEL_XFILE_HEADER}
     ${MODEL_MMD_SOURCE}
     ${MODEL_MMD_HEADER}
 )
@@ -88,6 +104,7 @@ target_link_libraries(Saba PRIVATE ${Saba_LIBRARIES})
 
 SOURCE_GROUP(Base FILES ${BASE_SOURCE} ${BASE_HEADER})
 SOURCE_GROUP(Model\\OBJ FILES ${MODEL_OBJ_SOURCE} ${MODEL_OBJ_HEADER})
+SOURCE_GROUP(Model\\XFile FILES ${MODEL_XFILE_SOURCE} ${MODEL_XFILE_HEADER})
 SOURCE_GROUP(Model\\MMD FILES ${MODEL_MMD_SOURCE} ${MODEL_MMD_HEADER})
 
 # install

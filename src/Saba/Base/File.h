@@ -135,6 +135,12 @@ namespace saba
 	private:
 		std::ifstream	m_ifs;
 	};
+
+	bool OpenFromUtf8Path(
+		const std::string& filepath,
+		std::ifstream& ifs,
+		std::ios_base::openmode mode = std::ios_base::in
+	);
 }
 
 #endif // !BASE_FILE_H_

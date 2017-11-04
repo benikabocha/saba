@@ -1,3 +1,4 @@
+# GL
 set (
     GL_SOURCE
     Saba/GL/GLShaderUtil.cpp
@@ -12,6 +13,8 @@ set (
     Saba/GL/GLTextureUtil.h
     Saba/GL/GLVertexUtil.h
 )
+
+# OBJ
 set (
     GL_MODEL_OBJ_SOURCE
     Saba/GL/Model/OBJ/GLOBJModel.cpp
@@ -24,6 +27,22 @@ set (
     Saba/GL/Model/OBJ/GLOBJModelDrawContext.h
     Saba/GL/Model/OBJ/GLOBJModelDrawer.h
 )
+
+# XFile
+set (
+    GL_MODEL_XFILE_SOURCE
+    Saba/GL/Model/XFile/GLXFileModel.cpp
+    Saba/GL/Model/XFile/GLXFileModelDrawContext.cpp
+    Saba/GL/Model/XFile/GLXFileModelDrawer.cpp
+)
+set (
+    GL_MODEL_XFILE_HEADER
+    Saba/GL/Model/XFile/GLXFileModel.h
+    Saba/GL/Model/XFile/GLXFileModelDrawContext.h
+    Saba/GL/Model/XFile/GLXFileModelDrawer.h
+)
+
+# MMD
 set (
     GL_MODEL_MMD_SOURCE
     Saba/GL/Model/MMD/GLMMDModel.cpp
@@ -37,6 +56,7 @@ set (
     Saba/GL/Model/MMD/GLMMDModelDrawer.h
 )
 
+# Viewer
 set (
     VIEWER_SOURCE
     Saba/Viewer/Camera.cpp
@@ -64,8 +84,10 @@ set (
     Saba/Viewer/ShadowMap.h
 )
 
+# gl3w
 set (GL3W_SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/../external/gl3w/src/gl3w.c)
 
+# imgui
 set (
     IMGUI_SOURCE
     ${CMAKE_CURRENT_SOURCE_DIR}/../external/imgui/src/imgui.cpp
@@ -74,20 +96,23 @@ set (
     ${CMAKE_CURRENT_SOURCE_DIR}/../external/imgui/src/ImGuizmo.cpp
 )
 
+# Group
 SOURCE_GROUP(GL FILES ${GL_SOURCE} ${GL_HEADER})
 SOURCE_GROUP(GL\\Model\\OBJ FILES ${GL_MODEL_OBJ_SOURCE} ${GL_MODEL_OBJ_HEADER})
+SOURCE_GROUP(GL\\Model\\XFile FILES ${GL_MODEL_XFILE_SOURCE} ${GL_MODEL_XFILE_HEADER})
 SOURCE_GROUP(GL\\Model\\MMD FILES ${GL_MODEL_MMD_SOURCE} ${GL_MODEL_MMD_HEADER})
 SOURCE_GROUP(Viewer FILES ${VIEWER_SOURCE} ${VIEWER_HEADER})
 SOURCE_GROUP(GL3W FILES ${GL3W_SOURCE})
 SOURCE_GROUP(IMGUI FILES ${IMGUI_SOURCE})
 
 # SabaViewer
-
 add_library(SabaViewer
     ${GL_SOURCE}
     ${GL_HEADER}
     ${GL_MODEL_OBJ_SOURCE}
     ${GL_MODEL_OBJ_HEADER}
+    ${GL_MODEL_XFILE_SOURCE}
+    ${GL_MODEL_XFILE_HEADER}
     ${GL_MODEL_MMD_SOURCE}
     ${GL_MODEL_MMD_HEADER}
     ${VIEWER_SOURCE}

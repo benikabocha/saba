@@ -292,5 +292,20 @@ namespace saba
 
 		return false;
 	}
+
+	bool OpenFromUtf8Path(const std::string & filepath, std::ifstream & ifs, std::ios_base::openmode mode)
+	{
+#if _WIN32
+		std::wstring wFilepath;
+		if (!TryToWString(filepath, wFilepath))
+		{
+			return false;
+		}
+		ifs.open(wFilepath, mode);
+#else
+		ifs.open(filepath, mode);
+#endif
+		return ifs.is_open();
+	}
 }
 

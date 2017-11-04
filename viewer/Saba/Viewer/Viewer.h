@@ -19,6 +19,7 @@
 #include <Saba/GL/Model/MMD/GLMMDModel.h>
 #include <Saba/GL/Model/OBJ/GLOBJModelDrawContext.h>
 #include <Saba/GL/Model/MMD/GLMMDModelDrawContext.h>
+#include <Saba/GL/Model/XFile/GLXFileModelDrawContext.h>
 
 #include <imgui.h>
 #include <ImGuizmo.h>
@@ -148,6 +149,7 @@ namespace saba
 		bool LoadPMXFile(const std::string& filename);
 		bool LoadVMDFile(const std::string& filename);
 		bool LoadVPDFile(const std::string& filename);
+		bool LoadXFile(const std::string& filename);
 
 		bool ClearAnimation(ModelDrawer* modelDrawer);
 		bool ClearSceneAnimation();
@@ -219,6 +221,7 @@ namespace saba
 		ViewerContext	m_context;
 		std::unique_ptr<GLOBJModelDrawContext>	m_objModelDrawContext;
 		std::unique_ptr<GLMMDModelDrawContext>	m_mmdModelDrawContext;
+		std::unique_ptr<GLXFileModelDrawContext>	m_xfileModelDrawContext;
 		std::vector<Command>	m_commands;
 
 		std::vector<ModelDrawerPtr>	m_modelDrawers;

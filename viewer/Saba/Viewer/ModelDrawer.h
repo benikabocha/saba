@@ -14,6 +14,7 @@ namespace saba
 	{
 		OBJModelDrawer,
 		MMDModelDrawer,
+		XFileModelDrawer,
 	};
 
 	class ModelDrawer
