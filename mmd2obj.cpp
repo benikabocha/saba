@@ -214,7 +214,7 @@ bool MMD2Obj(const std::vector<std::string>& args)
 	const glm::vec2* uvs = mmdModel->GetUpdateUVs();
 	for (size_t i = 0; i < vtxCount; i++)
 	{
-		objFile << "vt " << uvs[i].x << " " << uvs[i].y << "\n";
+		objFile << "vt " << uvs[i].x << " " << 1.0 - uvs[i].y << "\n";
 	}
 
 	// Copy vertex indices.
@@ -291,7 +291,7 @@ bool MMD2Obj(const std::vector<std::string>& args)
 		mtlFile << "Kd " << m.m_diffuse.r << " " << m.m_diffuse.g << " " << m.m_diffuse.b << "\n";
 		mtlFile << "Ks " << m.m_specular.r << " " << m.m_specular.g << " " << m.m_specular.b << "\n";
 		mtlFile << "d " << m.m_alpha << "\n";
-		mtlFile << "map_Kd " << m.m_texture << "\n";
+		mtlFile << "map_Kd " << saba::PathUtil::GetFilename(m.m_texture) << "\n";
 		mtlFile << "\n";
 	}
 	mtlFile.close();
