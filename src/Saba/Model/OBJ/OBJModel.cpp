@@ -166,7 +166,7 @@ namespace saba
 		for (size_t uvIdx = 0; uvIdx < uvCount; uvIdx++)
 		{
 			m_uvs[uvIdx].x = attrib.texcoords[uvIdx * 2 + 0];
-			m_uvs[uvIdx].y = attrib.texcoords[uvIdx * 2 + 1];
+			m_uvs[uvIdx].y = 1.0f - attrib.texcoords[uvIdx * 2 + 1];
 		}
 
 		if (!m_positions.empty())

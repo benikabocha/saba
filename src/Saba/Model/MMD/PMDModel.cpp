@@ -314,7 +314,7 @@ namespace saba
 		{
 			glm::vec3 pos = v.m_position * glm::vec3(1, 1, -1);
 			glm::vec3 nor = v.m_normal * glm::vec3(1, 1, -1);
-			glm::vec2 uv = glm::vec2(v.m_uv.x, v.m_uv.y);
+			glm::vec2 uv = glm::vec2(v.m_uv.x, 1.0f - v.m_uv.y);
 			m_positions.push_back(pos);
 			m_normals.push_back(nor);
 			m_uvs.push_back(uv);

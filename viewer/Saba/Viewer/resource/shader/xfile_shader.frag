@@ -59,6 +59,7 @@ void main()
 	if (u_SphereTexMode != 0)
 	{
 		vec2 spUV = nor.xy * 0.5 + 0.5;
+		spUV.y = 1.0 - spUV.y;
 		vec3 spColor = texture(u_SphereTex, spUV).rgb;
 		if (u_SphereTexMode == 1)
 		{

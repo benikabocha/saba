@@ -130,7 +130,7 @@ namespace saba
 				mesh->m_uvs.reserve(xfileMesh.m_textureCoords.size());
 				for (const auto& xfileUV : xfileMesh.m_textureCoords)
 				{
-					mesh->m_uvs.emplace_back(glm::vec2(xfileUV.x, xfileUV.y));
+					mesh->m_uvs.emplace_back(glm::vec2(xfileUV.x, 1.0f - xfileUV.y));
 				}
 
 				// material

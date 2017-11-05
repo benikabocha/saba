@@ -14,6 +14,7 @@
 #include <gli/convert.hpp>
 #include <gli/generate_mipmaps.hpp>
 #include <gli/gli.hpp>
+#include <gli/core/flip.hpp>
 
 #define	STB_IMAGE_IMPLEMENTATION
 #define STB_IMAGE_STATIC
@@ -163,12 +164,19 @@ namespace saba
 			{
 				return false;
 			}
-			return LoadTextureFromGLI(tex, gliTex);
+			gliTex = gli::flip(gliTex);
+			if (!LoadTextureFromGLI(tex, gliTex))
+			{
+				return false;
+			}
+			return true;
 		}
 
 		bool LoadTextureFromStb(const GLTextureObject& tex, const char * filename, bool genMipMap, bool rgba)
 		{
 			glBindTexture(GL_TEXTURE_2D, tex);
+
+			stbi_set_flip_vertically_on_load(true);
 
 			File file;
 			if (!file.Open(filename))
