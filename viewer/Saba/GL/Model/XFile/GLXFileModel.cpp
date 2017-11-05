@@ -5,6 +5,9 @@
 
 #include "GLXFileModel.h"
 
+#include <Saba/Base/Path.h>
+
+#include "../../../Viewer/ViewerContext.h"
 #include "../../GLTextureUtil.h"
 
 namespace saba
@@ -18,7 +21,7 @@ namespace saba
 		Destroy();
 	}
 
-	bool GLXFileModel::Create(const XFileModel& xfileModel)
+	bool GLXFileModel::Create(ViewerContext* ctxt, const XFileModel& xfileModel)
 	{
 		size_t numFrames = xfileModel.GetFrameCount();
 		for (size_t i = 0; i < numFrames; i++)
@@ -48,8 +51,16 @@ namespace saba
 				mat.m_emissive = xmat.m_emissive;
 				if (!xmat.m_texture.empty())
 				{
-					auto tex = CreateTextureFromFile(xmat.m_texture);
-					mat.m_texture = std::move(tex);
+					auto texname = PathUtil::GetFilenameWithoutExt(xmat.m_texture);
+					if (texname == "screen")
+					{
+						mat.m_texture = ctxt->GetCaptureTexture();
+					}
+					else
+					{
+						auto tex = CreateTextureFromFile(xmat.m_texture);
+						mat.m_texture = std::move(tex);
+					}
 				}
 				mat.m_spTextureMode = xmat.m_spTextureMode;
 				if (!xmat.m_spTexture.empty())

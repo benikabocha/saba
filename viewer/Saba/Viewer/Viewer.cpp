@@ -678,6 +678,33 @@ namespace saba
 			);
 			glBindTexture(GL_TEXTURE_2D, 0);
 
+			if (!m_context.ResizeCaptureTexture())
+			{
+				SABA_ERROR("Failed to resize capture texture.");
+			}
+			// Setup capture framebuffer
+			{
+				m_captureFrameBuffer.Create();
+				glBindFramebuffer(GL_FRAMEBUFFER, m_captureFrameBuffer);
+				glFramebufferTexture2D(
+					GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,
+					GL_TEXTURE_2D, m_context.GetCaptureTexture(), 0
+				);
+				glFramebufferRenderbuffer(
+					GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT,
+					GL_RENDERBUFFER, 0
+				);
+				auto status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
+				if (GL_FRAMEBUFFER_COMPLETE != status)
+				{
+					SABA_WARN("Framebuffer Status : {}", status);
+					glBindFramebuffer(GL_FRAMEBUFFER, 0);
+					return;
+				}
+				glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+			}
+
 			if (m_context.IsMSAAEnabled())
 			{
 				// Setup MSAA Target
@@ -795,6 +822,19 @@ namespace saba
 			glDisable(GL_MULTISAMPLE);
 			glBindFramebuffer(GL_DRAW_FRAMEBUFFER, m_currentFrameBuffer);
 			glBindFramebuffer(GL_READ_FRAMEBUFFER, m_currentMSAAFrameBuffer);
+			glBlitFramebuffer(
+				0, 0, m_currentFrameBufferWidth, m_currentFrameBufferHeight,
+				0, 0, m_currentFrameBufferWidth, m_currentFrameBufferHeight,
+				GL_COLOR_BUFFER_BIT, GL_NEAREST
+			);
+			glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
+			glBindFramebuffer(GL_READ_FRAMEBUFFER, 0);
+		}
+
+		if (m_captureFrameBuffer != 0)
+		{
+			glBindFramebuffer(GL_DRAW_FRAMEBUFFER, m_captureFrameBuffer);
+			glBindFramebuffer(GL_READ_FRAMEBUFFER, m_currentFrameBuffer);
 			glBlitFramebuffer(
 				0, 0, m_currentFrameBufferWidth, m_currentFrameBufferHeight,
 				0, 0, m_currentFrameBufferWidth, m_currentFrameBufferHeight,
@@ -2328,7 +2368,7 @@ namespace saba
 		}
 
 		auto glXFileModel = std::make_shared<GLXFileModel>();
-		if (!glXFileModel->Create(xfileModel))
+		if (!glXFileModel->Create(&m_context, xfileModel))
 		{
 			SABA_WARN("Failed to create GLXFileModel.");
 			return false;

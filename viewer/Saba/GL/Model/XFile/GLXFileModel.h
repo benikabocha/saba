@@ -12,6 +12,8 @@
 
 namespace saba
 {
+	class ViewerContext;
+
 	class GLXFileModel
 	{
 	public:
@@ -58,7 +60,7 @@ namespace saba
 		GLXFileModel();
 		~GLXFileModel();
 
-		bool Create(const XFileModel& xfileModel);
+		bool Create(ViewerContext* ctxt, const XFileModel& xfileModel);
 		void Destroy();
 
 		const glm::vec3& GetBBoxMin() const { return m_bboxMin; }

@@ -314,6 +314,7 @@ namespace saba
 		GLTextureObject			m_currentColorTarget;
 		GLRenderbufferObject	m_currentMSAAColorTarget;
 		GLRenderbufferObject	m_currentDepthTarget;
+		GLFramebufferObject		m_captureFrameBuffer;
 	};
 }
 

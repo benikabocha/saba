@@ -62,6 +62,7 @@ namespace saba
 
 		GLTextureRef GetDummyColorTexture() const { return m_dummyColorTexture; }
 		GLTextureRef GetDummyShadowDepthTexture() const { return m_dummyShadowDepthTexture; }
+		GLTextureRef GetCaptureTexture() const { return m_captureTex; }
 
 	private:
 		void EnableUI(bool enable) { m_uiEnable = enable; }
@@ -79,6 +80,8 @@ namespace saba
 		void SetCamera(const Camera& cam) { m_camera = cam; }
 		void SetLight(const Light& light) { m_light = light; }
 
+		bool ResizeCaptureTexture();
+
 	private:
 		std::string	m_workDir;
 		std::string	m_resourceDir;
@@ -86,6 +89,7 @@ namespace saba
 
 		GLTextureRef	m_dummyColorTexture;
 		GLTextureRef	m_dummyShadowDepthTexture;
+		GLTextureRef	m_captureTex;
 
 		Camera	m_camera;
 		Light	m_light;

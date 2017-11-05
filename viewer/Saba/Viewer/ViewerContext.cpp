@@ -76,6 +76,23 @@ namespace saba
 		glBindTexture(GL_TEXTURE_2D, 0);
 		m_dummyShadowDepthTexture = std::move(dummyShadowDepthTex);
 
+		GLTextureObject captureTex;
+		if (!captureTex.Create())
+		{
+			return false;
+		}
+		glBindTexture(GL_TEXTURE_2D, captureTex);
+		glTexImage2D(
+			GL_TEXTURE_2D, 0, GL_RGBA,
+			m_frameBufferWidth,
+			m_frameBufferHeight,
+			0, GL_RGBA, GL_UNSIGNED_BYTE, nullptr
+		);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+		glBindTexture(GL_TEXTURE_2D, 0);
+		m_captureTex = std::move(captureTex);
+
 		return true;
 	}
 
@@ -83,6 +100,7 @@ namespace saba
 	{
 		m_dummyColorTexture.Release();
 		m_dummyShadowDepthTexture.Release();
+		m_captureTex.Release();
 	}
 
 	void ViewerContext::SetElapsedTime(double elapsed)
@@ -102,6 +120,20 @@ namespace saba
 		{
 			m_elapsed = elapsed;
 		}
+	}
+
+	bool ViewerContext::ResizeCaptureTexture()
+	{
+		glBindTexture(GL_TEXTURE_2D, m_captureTex);
+		glTexImage2D(
+			GL_TEXTURE_2D, 0, GL_RGBA,
+			m_frameBufferWidth,
+			m_frameBufferHeight,
+			0, GL_RGBA, GL_UNSIGNED_BYTE, nullptr
+		);
+		glBindTexture(GL_TEXTURE_2D, 0);
+
+		return true;
 	}
 
 }
