@@ -10,6 +10,11 @@
 
 © 2017 Pronama LLC
 
+## 重要な変更
+[commit 7ba7020](https://github.com/benikabocha/saba/commit/7ba70208741d6cd5f0105f27a2264b555a5ce043)
+
+このコミットから内部の uv が反転しました。
+
 ## 対応環境
 
 * Window
