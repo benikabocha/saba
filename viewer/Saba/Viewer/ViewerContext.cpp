@@ -48,6 +48,43 @@ namespace saba
 		m_shaderDir = PathUtil::Combine(m_resourceDir, u8"shader");
 	}
 
+	bool ViewerContext::Initialize()
+	{
+		GLTextureObject dummyColorTex;
+		if (!dummyColorTex.Create())
+		{
+			return false;
+		}
+		glBindTexture(GL_TEXTURE_2D, dummyColorTex);
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, 1, 1, 0, GL_RGBA, GL_UNSIGNED_BYTE, nullptr);
+		glBindTexture(GL_TEXTURE_2D, 0);
+		m_dummyColorTexture = std::move(dummyColorTex);
+
+		GLTextureObject dummyShadowDepthTex;
+		if (!dummyShadowDepthTex.Create())
+		{
+			return false;
+		}
+		glBindTexture(GL_TEXTURE_2D, dummyShadowDepthTex);
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT16, 1, 1, 0, GL_DEPTH_COMPONENT, GL_FLOAT, nullptr);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_COMPARE_MODE, GL_COMPARE_REF_TO_TEXTURE);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_COMPARE_FUNC, GL_LESS);
+		glBindTexture(GL_TEXTURE_2D, 0);
+		m_dummyShadowDepthTexture = std::move(dummyShadowDepthTex);
+
+		return true;
+	}
+
+	void ViewerContext::Uninitialize()
+	{
+		m_dummyColorTexture.Release();
+		m_dummyShadowDepthTexture.Release();
+	}
+
 	void ViewerContext::SetElapsedTime(double elapsed)
 	{
 		if (m_clipElapsed)

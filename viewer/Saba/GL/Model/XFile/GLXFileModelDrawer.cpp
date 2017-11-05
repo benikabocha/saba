@@ -142,29 +142,29 @@ namespace saba
 				SetUniform(shader->m_uLightDir, lightDir);
 				SetUniform(shader->m_uLightColor, lightColor);
 
+				glActiveTexture(GL_TEXTURE0 + 0);
+				SetUniform(shader->m_uTex, 0);
 				if (mat.m_texture != 0)
 				{
-					glActiveTexture(GL_TEXTURE0 + 0);
 					glBindTexture(GL_TEXTURE_2D, mat.m_texture);
-					SetUniform(shader->m_uTex, 0);
 					SetUniform(shader->m_uTexMode, (GLint)1);
 				}
 				else
 				{
-					SetUniform(shader->m_uTex, 0);
+					glBindTexture(GL_TEXTURE_2D, ctxt->GetDummyColorTexture());
 					SetUniform(shader->m_uTexMode, (GLint)0);
 				}
 
+				glActiveTexture(GL_TEXTURE0 + 1);
+				SetUniform(shader->m_uSphereTex, 1);
 				if (mat.m_spTexture != 0)
 				{
-					glActiveTexture(GL_TEXTURE0 + 1);
 					glBindTexture(GL_TEXTURE_2D, mat.m_spTexture);
-					SetUniform(shader->m_uSphereTex, 1);
 					SetUniform(shader->m_uSphereTexMode, (GLint)mat.m_spTextureMode);
 				}
 				else
 				{
-					SetUniform(shader->m_uSphereTex, 0);
+					glBindTexture(GL_TEXTURE_2D, ctxt->GetDummyColorTexture());
 					SetUniform(shader->m_uSphereTexMode, (GLint)0);
 				}
 

@@ -213,6 +213,12 @@ namespace saba
 			return false;
 		}
 
+		if (!m_context.Initialize())
+		{
+			SABA_ERROR("Failed to initialize ViewerContext.");
+			return false;
+		}
+
 		GLSLShaderUtil glslShaderUtil;
 		glslShaderUtil.SetShaderDir(m_context.GetShaderDir());
 
@@ -264,11 +270,12 @@ namespace saba
 		m_imguiLogSink.reset();
 
 		ImGui_ImplGlfwGL3_Shutdown();
+
+		m_context.Uninitialize();
 	}
 
 	int Viewer::Run()
 	{
-
 		while (!glfwWindowShouldClose(m_window))
 		{
 			ImGui_ImplGlfwGL3_NewFrame();

@@ -371,6 +371,17 @@ namespace saba
 				shadowMapVPs[i] = bias * offset * clipSpace.m_projection * shadowMap->GetShadowViewMatrix() * world;
 			}
 		}
+		else
+		{
+			for (size_t i = 0; i < numShadowMap; i++)
+			{
+				const auto& clipSpace = shadowMap->GetClipSpace(i);
+				GLint texIdx = GLint(i + 3);
+				glActiveTexture(GL_TEXTURE0 + texIdx);
+				glBindTexture(GL_TEXTURE_2D, ctxt->GetDummyShadowDepthTexture());
+				shadowMapTexs[i] = texIdx;
+			}
+		}
 
 		for (const auto& subMesh : m_mmdModel->GetSubMeshes())
 		{
@@ -419,7 +430,7 @@ namespace saba
 			else
 			{
 				SetUniform(shader->m_uTexMode, (GLint)0);
-				glBindTexture(GL_TEXTURE_2D, 0);
+				glBindTexture(GL_TEXTURE_2D, ctxt->GetDummyColorTexture());
 			}
 
 			glActiveTexture(GL_TEXTURE0 + 1);
@@ -441,7 +452,7 @@ namespace saba
 			else
 			{
 				SetUniform(shader->m_uSphereTexMode, (GLint)0);
-				glBindTexture(GL_TEXTURE_2D, 0);
+				glBindTexture(GL_TEXTURE_2D, ctxt->GetDummyColorTexture());
 			}
 
 			glActiveTexture(GL_TEXTURE0 + 2);
@@ -458,7 +469,7 @@ namespace saba
 			else
 			{
 				SetUniform(shader->m_uToonTexMode, (GLint)0);
-				glBindTexture(GL_TEXTURE_2D, 0);
+				glBindTexture(GL_TEXTURE_2D, ctxt->GetDummyColorTexture());
 			}
 
 			glm::vec3 lightColor = ctxt->GetLight()->GetLightColor();
@@ -501,6 +512,10 @@ namespace saba
 			else
 			{
 				SetUniform(shader->m_uShadowMapEnabled, 0);
+				SetUniform(shader->m_uShadowMap0, shadowMapTexs[0]);
+				SetUniform(shader->m_uShadowMap1, shadowMapTexs[1]);
+				SetUniform(shader->m_uShadowMap2, shadowMapTexs[2]);
+				SetUniform(shader->m_uShadowMap3, shadowMapTexs[3]);
 			}
 
 			size_t offset = subMesh.m_beginIndex * m_mmdModel->GetIndexTypeSize();

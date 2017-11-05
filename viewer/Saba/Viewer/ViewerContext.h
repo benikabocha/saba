@@ -12,6 +12,7 @@
 
 #include <string>
 #include "../GL/GLSLUtil.h"
+#include "../GL/GLObject.h"
 
 #include <glm/vec3.hpp>
 
@@ -33,6 +34,9 @@ namespace saba
 		};
 
 		ViewerContext();
+
+		bool Initialize();
+		void Uninitialize();
 
 		const std::string& GetWorkDir() const { return m_workDir; }
 		const std::string& GetResourceDir() const { return m_resourceDir; }
@@ -56,6 +60,9 @@ namespace saba
 		int GetWindowHeight() const { return m_windowHeight; }
 		PlayMode GetPlayMode() const { return m_playMode; }
 
+		GLTextureRef GetDummyColorTexture() const { return m_dummyColorTexture; }
+		GLTextureRef GetDummyShadowDepthTexture() const { return m_dummyShadowDepthTexture; }
+
 	private:
 		void EnableUI(bool enable) { m_uiEnable = enable; }
 		void EnableCameraOverride(bool enable) { m_cameraOverride = enable; }
@@ -76,6 +83,9 @@ namespace saba
 		std::string	m_workDir;
 		std::string	m_resourceDir;
 		std::string	m_shaderDir;
+
+		GLTextureRef	m_dummyColorTexture;
+		GLTextureRef	m_dummyShadowDepthTexture;
 
 		Camera	m_camera;
 		Light	m_light;
