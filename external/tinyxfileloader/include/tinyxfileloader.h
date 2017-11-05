@@ -174,7 +174,7 @@ bool XFileLoader::Load(std::istream& input, XFile* xfile) {
 
         if (blockType == "Mesh") {
             auto frame = std::make_unique<Frame>();
-            frame->m_mesh.m_name == blockName;
+            frame->m_mesh.m_name = blockName;
             if (!ReadMesh(frame->m_mesh)) {
                 return false;
             }
