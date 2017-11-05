@@ -785,9 +785,9 @@ namespace saba
 	{
 		if (m_currentMSAAEnable)
 		{
+			glDisable(GL_MULTISAMPLE);
 			glBindFramebuffer(GL_DRAW_FRAMEBUFFER, m_currentFrameBuffer);
 			glBindFramebuffer(GL_READ_FRAMEBUFFER, m_currentMSAAFrameBuffer);
-			glDrawBuffer(GL_BACK);
 			glBlitFramebuffer(
 				0, 0, m_currentFrameBufferWidth, m_currentFrameBufferHeight,
 				0, 0, m_currentFrameBufferWidth, m_currentFrameBufferHeight,
@@ -795,8 +795,6 @@ namespace saba
 			);
 			glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
 			glBindFramebuffer(GL_READ_FRAMEBUFFER, 0);
-
-			glDisable(GL_MULTISAMPLE);
 		}
 
 		if (m_currentFrameBuffer != 0)
