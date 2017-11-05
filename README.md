@@ -27,6 +27,7 @@
 * PMX
 * VMD
 * VPD
+* x file (mmd extension)
 
 ## How to build
 
