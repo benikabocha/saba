@@ -148,7 +148,21 @@ namespace saba
 						auto spPos = xfileMat.m_texture.find('*');
 						if (spPos == std::string::npos)
 						{
-							mat.m_texture = PathUtil::Combine(fileDir, xfileMat.m_texture);
+							std::string ext = PathUtil::GetExt(xfileMat.m_texture);
+							if (ext == "sph")
+							{
+								mat.m_spTextureMode = Material::SpTextureMode::Mul;
+								mat.m_spTexture = PathUtil::Combine(fileDir, xfileMat.m_texture);
+							}
+							else if (ext == "spa")
+							{
+								mat.m_spTextureMode = Material::SpTextureMode::Add;
+								mat.m_spTexture = PathUtil::Combine(fileDir, xfileMat.m_texture);
+							}
+							else
+							{
+								mat.m_texture = PathUtil::Combine(fileDir, xfileMat.m_texture);
+							}
 						}
 						else
 						{
