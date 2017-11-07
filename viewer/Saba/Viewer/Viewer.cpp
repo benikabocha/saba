@@ -107,11 +107,14 @@ namespace saba
 	{
 	}
 
+	const glm::vec3 Viewer::DefaultBGColor1 = glm::vec3(0.2f);
+	const glm::vec3 Viewer::DefaultBGColor2 = glm::vec3(0.4f);
+
 	Viewer::Viewer()
 		: m_glfwInitialized(false)
 		, m_window(nullptr)
 		, m_uColor1(-1)
-		, m_uColor2(-2)
+		, m_uColor2(-1)
 		, m_cameraMode(CameraMode::None)
 		, m_gridEnabled(true)
 		, m_mouseLockMode(MouseLockMode::None)
@@ -132,6 +135,8 @@ namespace saba
 		, m_enableLightManip(false)
 		, m_enableLightGuide(false)
 		, m_lightManipOp(ImGuizmo::ROTATE)
+		, m_bgColor1(DefaultBGColor1)
+		, m_bgColor2(DefaultBGColor2)
 		, m_cameraOverride(true)
 		, m_clipElapsed(true)
 		, m_currentFrameBufferWidth(-1)
@@ -622,8 +627,8 @@ namespace saba
 		glDisable(GL_DEPTH_TEST);
 		glBindVertexArray(m_bgVAO);
 		glUseProgram(m_bgProg);
-		SetUniform(m_uColor1, glm::vec3(0.2f, 0.2f, 0.2f));
-		SetUniform(m_uColor2, glm::vec3(0.4f, 0.4f, 0.4f));
+		SetUniform(m_uColor1, m_bgColor1);
+		SetUniform(m_uColor2, m_bgColor2);
 		glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
 		glUseProgram(0);
 		glBindVertexArray(0);
@@ -1180,6 +1185,10 @@ namespace saba
 				DrawModelCtrl();
 			}
 		}
+		if (ImGui::CollapsingHeader("BG"))
+		{
+			DrawBGCtrl();
+		}
 
 		ImGui::End();
 	}
@@ -1486,6 +1495,17 @@ namespace saba
 		if (m_selectedModelDrawer != nullptr)
 		{
 			m_selectedModelDrawer->DrawUI(&m_context);
+		}
+	}
+
+	void Viewer::DrawBGCtrl()
+	{
+		ImGui::ColorEdit3("BG Color1", &m_bgColor1[0]);
+		ImGui::ColorEdit3("BG Color2", &m_bgColor2[0]);
+		if (ImGui::Button("Reset BG Color"))
+		{
+			m_bgColor1 = DefaultBGColor1;
+			m_bgColor2 = DefaultBGColor2;
 		}
 	}
 

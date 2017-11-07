@@ -123,6 +123,7 @@ namespace saba
 		void DrawLightCtrl();
 		void DrawLightGuide();
 		void DrawModelCtrl();
+		void DrawBGCtrl();
 		void UpdateAnimation();
 		void InitializeAnimation();
 		void ResetAnimation();
@@ -298,6 +299,12 @@ namespace saba
 		ImGuizmo::OPERATION	m_lightManipOp;
 		glm::vec3	m_lightManipPos;
 		glm::mat4	m_lgihtManipMat;
+
+		// BG Ctrl
+		static const glm::vec3	DefaultBGColor1;
+		static const glm::vec3	DefaultBGColor2;
+		glm::vec3	m_bgColor1;
+		glm::vec3	m_bgColor2;
 
 		// Camera Override
 		bool	m_cameraOverride;
