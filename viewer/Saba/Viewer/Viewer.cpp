@@ -113,6 +113,7 @@ namespace saba
 		, m_uColor1(-1)
 		, m_uColor2(-2)
 		, m_cameraMode(CameraMode::None)
+		, m_gridEnabled(true)
 		, m_mouseLockMode(MouseLockMode::None)
 		, m_sceneUnitScale(1)
 		, m_prevTime(0)
@@ -367,6 +368,7 @@ namespace saba
 							m_cameraOverride = cameraOverride;
 						}
 						ImGui::MenuItem("ClipElapsed", nullptr, &m_clipElapsed);
+						ImGui::MenuItem("Grid", nullptr, &m_gridEnabled);
 						ImGui::EndMenu();
 					}
 					if (ImGui::BeginMenu("Animation"))
@@ -628,16 +630,17 @@ namespace saba
 
 		glEnable(GL_DEPTH_TEST);
 
-		auto world = glm::mat4(1.0);
-		auto view = m_context.GetCamera()->GetViewMatrix();
-		auto proj = m_context.GetCamera()->GetProjectionMatrix();
-		auto wv = view * world;
-		auto wvp = proj * view * world;
-		auto wvit = glm::mat3(view * world);
-		wvit = glm::inverse(wvit);
-		wvit = glm::transpose(wvit);
-		m_grid.SetWVPMatrix(wvp);
-		m_grid.Draw();
+		if (m_gridEnabled)
+		{
+			// Draw grid
+			auto world = glm::mat4(1.0);
+			auto view = m_context.GetCamera()->GetViewMatrix();
+			auto proj = m_context.GetCamera()->GetProjectionMatrix();
+			auto wv = view * world;
+			auto wvp = proj * view * world;
+			m_grid.SetWVPMatrix(wvp);
+			m_grid.Draw();
+		}
 
 		for (auto& modelDrawer : m_modelDrawers)
 		{

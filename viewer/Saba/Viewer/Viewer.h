@@ -240,6 +240,7 @@ namespace saba
 		Mouse		m_mouse;
 		CameraMode	m_cameraMode;
 		Grid		m_grid;
+		bool		m_gridEnabled;
 		MouseLockMode	m_mouseLockMode;
 		glm::vec3	m_bboxMin;
 		glm::vec3	m_bboxMax;
