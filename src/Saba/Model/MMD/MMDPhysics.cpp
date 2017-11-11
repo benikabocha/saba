@@ -681,6 +681,10 @@ namespace saba
 				auto local = glm::inverse(parent->GetGlobalTransform()) * m_node->GetGlobalTransform();
 				m_node->SetLocalTransform(local);
 			}
+			else
+			{
+				m_node->SetLocalTransform(m_node->GetGlobalTransform());
+			}
 		}
 	}
 
