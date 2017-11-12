@@ -82,7 +82,8 @@ namespace saba
 		lineIt = std::find_if(lineIt, lines.end(), [](const std::string& line) {
 			return !line.empty();
 		});
-		while (lineIt != lines.end())
+		int boneCount = 0;
+		while (boneCount < numBones && lineIt != lines.end())
 		{
 			int boneIdx = 0;
 			{
@@ -252,6 +253,7 @@ namespace saba
 			lineIt = std::find_if(lineIt, lines.end(), [](const std::string& line) {
 				return !line.empty();
 			});
+			boneCount++;
 		}
 
 		for (auto& bone : bones)
@@ -260,6 +262,101 @@ namespace saba
 		}
 
 		vpd->m_bones = std::move(bones);
+
+		std::vector<VPDMorph> morphs;
+		while (lineIt != lines.end())
+		{
+			VPDMorph morph;
+			{
+				const auto& line = (*lineIt);
+				auto delimPos1 = line.find("Morph");
+				if (delimPos1 == line.npos)
+				{
+					SABA_INFO("VPD File Parse Error. {}:[Not Found Morph]", size_t(lineIt - lines.begin()));
+					return false;
+				}
+				delimPos1 += sizeof("Morph") - 1;
+
+				auto delimPos2 = line.find('{', delimPos1);
+				if (delimPos2 == line.npos)
+				{
+					SABA_INFO("VPD File Parse Error. {}:[Not Found Morph]", size_t(lineIt - lines.begin()));
+					return false;
+				}
+
+				auto numStr = line.substr(delimPos1, delimPos2 - delimPos1);
+				try
+				{
+					int morphIndex = std::stoi(numStr);
+				}
+				catch (std::exception& e)
+				{
+					SABA_INFO("VPD File Parse Error. {}:[{}]", size_t(lineIt - lines.begin()), e.what());
+					return false;
+				}
+				morph.m_morphName = line.substr(delimPos2 + 1);
+			}
+			++lineIt;;
+			lineIt = std::find_if(lineIt, lines.end(), [](const std::string& line) {
+				return !line.empty();
+			});
+
+			{
+				const auto& line = (*lineIt);
+				auto delim1 = line.find_first_not_of(" \t");
+				auto delim2 = line.find_first_of(" \t;", delim1);
+				if (line.npos == delim1 || line.npos == delim2)
+				{
+					SABA_INFO("VPD File Parse Error. {}:[Split error]", size_t(lineIt - lines.begin()));
+					return false;
+				}
+
+				auto delim3 = line.find_first_of(";", delim2);
+				if (line.npos == delim2)
+				{
+					SABA_INFO("VPD File Parse Error. {}:[Split error]", size_t(lineIt - lines.begin()));
+					return false;
+				}
+
+				try
+				{
+					auto numStr1 = line.substr(delim1, delim2 - delim1);
+					morph.m_weight = std::stof(numStr1);
+				}
+				catch (std::exception& e)
+				{
+					SABA_INFO("VPD File Parse Error. {}:[{}]", size_t(lineIt - lines.begin()), e.what());
+					return false;
+				}
+				++lineIt;;
+				lineIt = std::find_if(lineIt, lines.end(), [](const std::string& line) {
+					return !line.empty();
+				});
+
+				{
+					const auto& line = (*lineIt);
+					if (line.find(('}')) == line.npos)
+					{
+						SABA_INFO("VPD File Parse Error. {}:[Split error]", size_t(lineIt - lines.begin()));
+						return false;
+					}
+				}
+				++lineIt;;
+				lineIt = std::find_if(lineIt, lines.end(), [](const std::string& line) {
+					return !line.empty();
+				});
+				boneCount++;
+			}
+
+			morphs.emplace_back(std::move(morph));
+		}
+
+		for (auto& morph : morphs)
+		{
+			morph.m_morphName = ToUtf8String(ConvertSjisToWString(morph.m_morphName.c_str()));
+		}
+
+		vpd->m_morphs = std::move(morphs);
 
 		return true;
 	}

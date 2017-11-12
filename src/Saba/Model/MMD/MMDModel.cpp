@@ -178,6 +178,26 @@ namespace saba
 			}
 		}
 
+		struct Morph
+		{
+			MMDMorph*	m_morph;
+			float		m_beginWeight;
+			float		m_endWeight;
+		};
+		std::vector<Morph> morphs;
+		for (const auto& vpdMorph : vpd.m_morphs)
+		{
+			auto morphIdx = GetMorphManager()->FindMorphIndex(vpdMorph.m_morphName);
+			if (MMDMorphManager::NPos != morphIdx)
+			{
+				Morph morph;
+				morph.m_morph = GetMorphManager()->GetMorph(vpdMorph.m_morphName);
+				morph.m_beginWeight = morph.m_morph->GetWeight();
+				morph.m_endWeight = vpdMorph.m_weight;
+				morphs.emplace_back(std::move(morph));
+			}
+		}
+
 		// Physicsを反映する
 		for (int i = 0; i < frameCount; i++)
 		{
@@ -191,6 +211,12 @@ namespace saba
 				auto q = glm::slerp(pose.m_beginRotate, pose.m_endRotate, w);
 				pose.m_node->SetAnimationTranslate(t);
 				pose.m_node->SetAnimationRotate(q);
+			}
+
+			for (auto& morph : morphs)
+			{
+				auto weight = glm::mix(morph.m_beginWeight, morph.m_endWeight, w);
+				morph.m_morph->SetWeight(weight);
 			}
 
 			UpdateAnimation();

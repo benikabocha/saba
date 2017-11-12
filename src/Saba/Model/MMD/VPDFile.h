@@ -21,9 +21,16 @@ namespace saba
 		glm::quat	m_quaternion;
 	};
 
+	struct VPDMorph
+	{
+		std::string	m_morphName;
+		float		m_weight;
+	};
+
 	struct VPDFile
 	{
 		std::vector<VPDBone>	m_bones;
+		std::vector<VPDMorph>	m_morphs;
 	};
 
 	bool ReadVPDFile(VPDFile* vpd, const char* filename);
