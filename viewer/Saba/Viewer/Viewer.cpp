@@ -41,6 +41,7 @@
 #include <sstream>
 #include <iomanip>
 #include <string>
+#include <thread>
 
 namespace saba
 {
@@ -102,8 +103,8 @@ namespace saba
 	{
 	}
 
-	Viewer::PMXConfig::PMXConfig()
-		: m_asyncCount(0)
+	Viewer::MMDModelConfig::MMDModelConfig()
+		: m_parallelUpdateCount(0)
 	{
 	}
 
@@ -1572,7 +1573,7 @@ namespace saba
 		m_commands.emplace_back(Command{ "enableUI", [this](const Args& args) { return CmdEnableUI(args); } });
 		m_commands.emplace_back(Command{ "clearAnimation", [this](const Args& args) { return CmdClearAnimation(args); } });
 		m_commands.emplace_back(Command{ "clearSceneAnimation", [this](const Args& args) { return CmdClearSceneAnimation(args); } });
-		m_commands.emplace_back(Command{ "configPMXSetting", [this](const Args& args) { return CmdConfigPMXSetting(args); } });
+		m_commands.emplace_back(Command{ "setMMDConfig", [this](const Args& args) { return CmdSetMMDConfig(args); } });
 		m_commands.emplace_back(Command{ "setMSAA", [this](const Args& args) {return CmdSetMSAA(args); } });
 	}
 
@@ -2136,16 +2137,16 @@ namespace saba
 		return true;
 	}
 
-	bool Viewer::CmdConfigPMXSetting(const std::vector<std::string>& args)
+	bool Viewer::CmdSetMMDConfig(const std::vector<std::string>& args)
 	{
 		if (args.empty())
 		{
-			SABA_INFO("asyncCount : {}", m_pmxConfig.m_asyncCount);
+			SABA_INFO("Parallel : {}", m_mmdModelConfig.m_parallelUpdateCount);
 		}
 		auto argIt = args.begin();
 		for (; argIt != args.end(); ++argIt)
 		{
-			if ((*argIt) == "-async")
+			if ((*argIt) == "-pallalel" || (*argIt) == "-p")
 			{
 				++argIt;
 				if (argIt == args.end())
@@ -2154,13 +2155,23 @@ namespace saba
 				}
 				try
 				{
-					auto asyncCount = std::stoul(*argIt);
-					if (asyncCount > 16)
+					const size_t MaxParallelCount = std::max(size_t(std::thread::hardware_concurrency()), size_t(16));
+					auto parallelCount = std::stoul(*argIt);
+					if (parallelCount > MaxParallelCount)
 					{
-						SABA_WARN("async : 0 - 16");
+						SABA_WARN("parallel : 0 - {}", MaxParallelCount);
 						return false;
 					}
-					m_pmxConfig.m_asyncCount = uint32_t(asyncCount);
+					m_mmdModelConfig.m_parallelUpdateCount = parallelCount;
+					for (auto& modelDrawer : m_modelDrawers)
+					{
+						if (modelDrawer->GetType() == ModelDrawerType::MMDModelDrawer)
+						{
+							auto mmdModelDrawer = reinterpret_cast<GLMMDModelDrawer*>(modelDrawer.get());
+							auto mmdModel = mmdModelDrawer->GetModel();
+							mmdModel->GetMMDModel()->SetParallelUpdateHint(parallelCount);
+						}
+					}
 				}
 				catch (std::exception e)
 				{
@@ -2246,6 +2257,7 @@ namespace saba
 			m_context.GetResourceDir(),
 			"mmd"
 		);
+		pmdModel->SetParallelUpdateHint(m_mmdModelConfig.m_parallelUpdateCount);
 		if (!pmdModel->Load(filename, mmdDataDir))
 		{
 			SABA_WARN("PMD Load Fail.");
@@ -2287,7 +2299,7 @@ namespace saba
 			m_context.GetResourceDir(),
 			"mmd"
 		);
-		pmxModel->SetAsyncUpdate(m_pmxConfig.m_asyncCount);
+		pmxModel->SetParallelUpdateHint(m_mmdModelConfig.m_parallelUpdateCount);
 		if (!pmxModel->Load(filename, mmdDataDir))
 		{
 			SABA_WARN("PMD Load Fail.");

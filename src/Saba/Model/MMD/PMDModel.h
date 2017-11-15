@@ -57,6 +57,7 @@ namespace saba
 		void UpdatePhysics(float elapsed) override;
 		// 頂点データーを更新する
 		void Update() override;
+		void SetParallelUpdateHint(uint32_t) override {}
 
 		bool Load(const std::string& filepath, const std::string& mmdDataDir);
 		void Destroy();

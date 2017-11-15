@@ -11,6 +11,7 @@
 #include <Saba/Base/Path.h>
 #include <Saba/Base/File.h>
 #include <Saba/Base/Log.h>
+#include <Saba/Base/Singleton.h>
 
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
@@ -21,9 +22,21 @@
 #include <sstream>
 #include <iomanip>
 #include <thread>
+#include <mutex>
+#include <condition_variable>
 
 namespace saba
 {
+	PMXModel::PMXModel()
+		: m_parallelUpdateCount(0)
+	{
+	}
+
+	PMXModel::~PMXModel()
+	{
+		Destroy();
+	}
+
 	void PMXModel::InitializeAnimation()
 	{
 		ClearBaseAnimation();
@@ -241,16 +254,6 @@ namespace saba
 
 	void PMXModel::Update()
 	{
-		const auto* position = m_positions.data();
-		const auto* normal = m_normals.data();
-		const auto* uv = m_uvs.data();
-		const auto* morphPos = m_morphPositions.data();
-		const auto* morphUV = m_morphUVs.data();
-		const auto* vtxInfo = m_vertexBoneInfos.data();
-		auto* updatePosition = m_updatePositions.data();
-		auto* updateNormal = m_updateNormals.data();
-		auto* updateUV = m_updateUVs.data();
-		size_t numVertices = m_positions.size();
 		auto& nodes = (*m_nodeMan.GetNodes());
 
 		// スキンメッシュに使用する変形マトリクスを事前計算
@@ -259,178 +262,39 @@ namespace saba
 			m_transforms[i] = nodes[i]->GetGlobalTransform() * nodes[i]->GetInverseInitTransform();
 		}
 
-		auto UpdateVertex = [](
-			glm::vec3*			outUpdatePosition,
-			glm::vec3*			outUpdateNormal,
-			glm::vec2*			outUpdateUV,
-			const glm::vec3*	inPosition,
-			const glm::vec3*	inNormal,
-			const glm::vec2*	inUV,
-			const glm::vec3*	inMorphPos,
-			const glm::vec4*	inMorphUV,
-			const VertexBoneInfo*	inVertexInfo,
-			const glm::mat4*	inTransforms,
-			size_t				vertexOffset,
-			size_t				vertexCount
-			)
+		if (m_parallelUpdateCount != m_updateRanges.size())
 		{
-			const auto* position = inPosition + vertexOffset;
-			const auto* normal = inNormal + vertexOffset;
-			const auto* uv = inUV + vertexOffset;
-			const auto* morphPos = inMorphPos + vertexOffset;
-			const auto* morphUV = inMorphUV + vertexOffset;
-			const auto* vtxInfo = inVertexInfo + vertexOffset;
-			auto* updatePosition = outUpdatePosition + vertexOffset;
-			auto* updateNormal = outUpdateNormal + vertexOffset;
-			auto* updateUV = outUpdateUV + vertexOffset;
+			SetupParallelUpdate();
+		}
 
-			for (size_t i = 0; i < vertexCount; i++)
+		size_t futureCount = m_parallelUpdateFutures.size();
+		for (size_t i = 0; i < futureCount; i++)
+		{
+			size_t rangeIndex = i + 1;
+			if (m_updateRanges[rangeIndex].m_vertexCount != 0)
 			{
-				glm::mat4 m;
-				switch (vtxInfo->m_skinningType)
-				{
-				case SkinningType::Weight1:
-				{
-					const auto& m0 = inTransforms[vtxInfo->m_boneIndex.x];
-					m = m0;
-					break;
-				}
-				case SkinningType::Weight2:
-				{
-					auto w0 = vtxInfo->m_boneWeight.x;
-					auto w1 = vtxInfo->m_boneWeight.y;
-					const auto& m0 = inTransforms[vtxInfo->m_boneIndex.x];
-					const auto& m1 = inTransforms[vtxInfo->m_boneIndex.y];
-					m = m0 * w0 + m1 * w1;
-					break;
-				}
-				case SkinningType::Weight4:
-				{
-					auto w0 = vtxInfo->m_boneWeight.x;
-					auto w1 = vtxInfo->m_boneWeight.y;
-					auto w2 = vtxInfo->m_boneWeight.z;
-					auto w3 = vtxInfo->m_boneWeight.w;
-					const auto& m0 = inTransforms[vtxInfo->m_boneIndex.x];
-					const auto& m1 = inTransforms[vtxInfo->m_boneIndex.y];
-					const auto& m2 = inTransforms[vtxInfo->m_boneIndex.z];
-					const auto& m3 = inTransforms[vtxInfo->m_boneIndex.w];
-					m = m0 * w0 + m1 * w1 + m2 * w2 + m3 * w3;
-					break;
-				}
-				default:
-					break;
-				}
-
-				*updatePosition = glm::vec3(m * glm::vec4(*position + *morphPos, 1));
-				*updateNormal = glm::normalize(glm::mat3(m) * *normal);
-				*updateUV = *uv + glm::vec2((*morphUV).x, (*morphUV).y);
-
-				vtxInfo++;
-				position++;
-				normal++;
-				uv++;
-				updatePosition++;
-				updateNormal++;
-				updateUV++;
-				morphPos++;
-				morphUV++;
+				m_parallelUpdateFutures[i] = std::async(
+					std::launch::async,
+					[this, rangeIndex]() { this->Update(this->m_updateRanges[rangeIndex]); }
+				);
 			}
-		};
+		}
 
-		size_t futureCount = m_updateFutures.size();
+		Update(m_updateRanges[0]);
+
 		for (size_t i = 0; i < futureCount; i++)
 		{
-			m_updateFutures[i] = std::async(
-				std::launch::async,
-				UpdateVertex,
-				updatePosition,
-				updateNormal,
-				updateUV,
-				position,
-				normal,
-				uv,
-				morphPos,
-				morphUV,
-				vtxInfo,
-				m_transforms.data(),
-				m_updatePartitions[i].m_vertexOffset,
-				m_updatePartitions[i].m_vertexCount
-			);
+			size_t rangeIndex = i + 1;
+			if (m_updateRanges[rangeIndex].m_vertexCount != 0)
+			{
+				m_parallelUpdateFutures[i].wait();
+			}
 		}
-		{
-			// 最後のパートはこのスレッドで行う
-			size_t partCount = m_updatePartitions.size();
-			UpdateVertex(
-				updatePosition,
-				updateNormal,
-				updateUV,
-				position,
-				normal,
-				uv,
-				morphPos,
-				morphUV,
-				vtxInfo,
-				m_transforms.data(),
-				m_updatePartitions[partCount - 1].m_vertexOffset,
-				m_updatePartitions[partCount - 1].m_vertexCount
-			);
-		}
-		for (size_t i = 0; i < futureCount; i++)
-		{
-			m_updateFutures[i].wait();
-		}
+	}
 
-		//for (size_t i = 0; i < numVertices; i++)
-		//{
-		//	glm::mat4 m;
-		//	switch (vtxInfo->m_skinningType)
-		//	{
-		//	case SkinningType::Weight1:
-		//	{
-		//		const auto& m0 = m_transforms[vtxInfo->m_boneIndex.x];
-		//		m = m0;
-		//		break;
-		//	}
-		//	case SkinningType::Weight2:
-		//	{
-		//		auto w0 = vtxInfo->m_boneWeight.x;
-		//		auto w1 = vtxInfo->m_boneWeight.y;
-		//		const auto& m0 = m_transforms[vtxInfo->m_boneIndex.x];
-		//		const auto& m1 = m_transforms[vtxInfo->m_boneIndex.y];
-		//		m = m0 * w0 + m1 * w1;
-		//		break;
-		//	}
-		//	case SkinningType::Weight4:
-		//	{
-		//		auto w0 = vtxInfo->m_boneWeight.x;
-		//		auto w1 = vtxInfo->m_boneWeight.y;
-		//		auto w2 = vtxInfo->m_boneWeight.z;
-		//		auto w3 = vtxInfo->m_boneWeight.w;
-		//		const auto& m0 = m_transforms[vtxInfo->m_boneIndex.x];
-		//		const auto& m1 = m_transforms[vtxInfo->m_boneIndex.y];
-		//		const auto& m2 = m_transforms[vtxInfo->m_boneIndex.z];
-		//		const auto& m3 = m_transforms[vtxInfo->m_boneIndex.w];
-		//		m = m0 * w0 + m1 * w1 + m2 * w2 + m3 * w3;
-		//		break;
-		//	}
-		//	default:
-		//		break;
-		//	}
-
-		//	*updatePosition = glm::vec3(m * glm::vec4(*position + *morphPos, 1));
-		//	*updateNormal = glm::normalize(glm::mat3(m) * *normal);
-		//	*updateUV = *uv + glm::vec2((*morphUV).x, (*morphUV).y);
-
-		//	vtxInfo++;
-		//	position++;
-		//	normal++;
-		//	uv++;
-		//	updatePosition++;
-		//	updateNormal++;
-		//	updateUV++;
-		//	morphPos++;
-		//	morphUV++;
-		//}
+	void PMXModel::SetParallelUpdateHint(uint32_t parallelCount)
+	{
+		m_parallelUpdateCount = parallelCount;
 	}
 
 	bool PMXModel::Load(const std::string& filepath, const std::string& mmdDataDir)
@@ -899,38 +763,9 @@ namespace saba
 			}
 		}
 
-		size_t asyncCount = m_asyncUpdateCount;
-		if (asyncCount == 0)
-		{
-			asyncCount = std::thread::hardware_concurrency();
-		}
-		if (m_positions.size() < asyncCount)
-		{
-			asyncCount = 1;
-		}
-		SABA_INFO("Select PMX Async Update Count : {}", asyncCount);
-		m_updateFutures.clear();
-		if (asyncCount > 1)
-		{
-			m_updateFutures.resize(asyncCount - 1);
-		}
-		m_updatePartitions.resize(m_updateFutures.size() + 1);
-		size_t partVertexOffset = 0;
-		size_t partVertexCount = m_positions.size() / m_updatePartitions.size();
-		for (size_t i = 0; i < m_updatePartitions.size(); i++)
-		{
-			VertexUpdatePartition part;
-			part.m_vertexOffset = partVertexOffset;
-			part.m_vertexCount = partVertexCount;
-			if (i == 0)
-			{
-				part.m_vertexCount += m_positions.size() % m_updatePartitions.size();
-			}
-			m_updatePartitions[i] = part;
-			partVertexOffset += part.m_vertexCount;
-		}
-
 		ResetPhysics();
+
+		SetupParallelUpdate();
 
 		return true;
 	}
@@ -948,18 +783,133 @@ namespace saba
 		m_indices.clear();
 
 		m_nodeMan.GetNodes()->clear();
+
+		m_updateRanges.clear();
 	}
 
-	void PMXModel::SetAsyncUpdate(uint32_t asyncCount)
+	void PMXModel::SetupParallelUpdate()
 	{
-		if (asyncCount <= 16)
+		if (m_parallelUpdateCount == 0)
 		{
-			m_asyncUpdateCount = asyncCount;
+			m_parallelUpdateCount = std::thread::hardware_concurrency();
+		}
+		size_t maxParallelCount = std::max(size_t(16), size_t(std::thread::hardware_concurrency()));
+		if (m_parallelUpdateCount <= maxParallelCount)
+		{
+			m_parallelUpdateCount = m_parallelUpdateCount;
 		}
 		else
 		{
-			SABA_WARN("PMXModel::SetAsyncUpdate asyncCount > 16");
-			m_asyncUpdateCount = 0;
+			SABA_WARN("PMXModel::SetParallelUpdateCount parallelCount > {}", maxParallelCount);
+			m_parallelUpdateCount = 16;
+		}
+
+		SABA_INFO("Select PMX Parallel Update Count : {}", m_parallelUpdateCount);
+
+		m_updateRanges.resize(m_parallelUpdateCount);
+		m_parallelUpdateFutures.resize(m_parallelUpdateCount - 1);
+
+		const size_t vertexCount = m_positions.size();
+		const size_t LowerVertexCount = 1000;
+		if (vertexCount < m_updateRanges.size() * LowerVertexCount)
+		{
+			size_t numRanges = (vertexCount + LowerVertexCount - 1) / LowerVertexCount;
+			for (size_t rangeIdx = 0; rangeIdx < m_updateRanges.size(); rangeIdx++)
+			{
+				auto& range = m_updateRanges[rangeIdx];
+				if (rangeIdx < numRanges)
+				{
+					range.m_vertexOffset = rangeIdx * LowerVertexCount;
+					range.m_vertexCount = std::min(LowerVertexCount, vertexCount - range.m_vertexOffset);
+				}
+				else
+				{
+					range.m_vertexOffset = 0;
+					range.m_vertexCount = 0;
+				}
+			}
+		}
+		else
+		{
+			size_t numVertexCount = vertexCount / m_updateRanges.size();
+			size_t offset = 0;
+			for (size_t rangeIdx = 0; rangeIdx < m_updateRanges.size(); rangeIdx++)
+			{
+				auto& range = m_updateRanges[rangeIdx];
+				range.m_vertexOffset = offset;
+				range.m_vertexCount = numVertexCount;
+				if (rangeIdx == 0)
+				{
+					range.m_vertexCount += vertexCount % m_updateRanges.size();
+				}
+				offset = range.m_vertexOffset + range.m_vertexCount;
+			}
+		}
+	}
+
+	void PMXModel::Update(const UpdateRange & range)
+	{
+		const auto* position = m_positions.data() + range.m_vertexOffset;
+		const auto* normal = m_normals.data() + range.m_vertexOffset;
+		const auto* uv = m_uvs.data() + range.m_vertexOffset;
+		const auto* morphPos = m_morphPositions.data() + range.m_vertexOffset;
+		const auto* morphUV = m_morphUVs.data() + range.m_vertexOffset;
+		const auto* vtxInfo = m_vertexBoneInfos.data() + range.m_vertexOffset;
+		const auto* transforms = m_transforms.data();
+		auto* updatePosition = m_updatePositions.data() + range.m_vertexOffset;
+		auto* updateNormal = m_updateNormals.data() + range.m_vertexOffset;
+		auto* updateUV = m_updateUVs.data() + range.m_vertexOffset;
+
+		for (size_t i = 0; i < range.m_vertexCount; i++)
+		{
+			glm::mat4 m;
+			switch (vtxInfo->m_skinningType)
+			{
+			case PMXModel::SkinningType::Weight1:
+			{
+				const auto& m0 = transforms[vtxInfo->m_boneIndex.x];
+				m = m0;
+				break;
+			}
+			case PMXModel::SkinningType::Weight2:
+			{
+				auto w0 = vtxInfo->m_boneWeight.x;
+				auto w1 = vtxInfo->m_boneWeight.y;
+				const auto& m0 = transforms[vtxInfo->m_boneIndex.x];
+				const auto& m1 = transforms[vtxInfo->m_boneIndex.y];
+				m = m0 * w0 + m1 * w1;
+				break;
+			}
+			case PMXModel::SkinningType::Weight4:
+			{
+				auto w0 = vtxInfo->m_boneWeight.x;
+				auto w1 = vtxInfo->m_boneWeight.y;
+				auto w2 = vtxInfo->m_boneWeight.z;
+				auto w3 = vtxInfo->m_boneWeight.w;
+				const auto& m0 = transforms[vtxInfo->m_boneIndex.x];
+				const auto& m1 = transforms[vtxInfo->m_boneIndex.y];
+				const auto& m2 = transforms[vtxInfo->m_boneIndex.z];
+				const auto& m3 = transforms[vtxInfo->m_boneIndex.w];
+				m = m0 * w0 + m1 * w1 + m2 * w2 + m3 * w3;
+				break;
+			}
+			default:
+				break;
+			}
+
+			*updatePosition = glm::vec3(m * glm::vec4(*position + *morphPos, 1));
+			*updateNormal = glm::normalize(glm::mat3(m) * *normal);
+			*updateUV = *uv + glm::vec2((*morphUV).x, (*morphUV).y);
+
+			vtxInfo++;
+			position++;
+			normal++;
+			uv++;
+			updatePosition++;
+			updateNormal++;
+			updateUV++;
+			morphPos++;
+			morphUV++;
 		}
 	}
 

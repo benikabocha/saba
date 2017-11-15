@@ -166,6 +166,7 @@ namespace saba
 		virtual void UpdatePhysics(float elapsed) = 0;
 		// 頂点を更新する
 		virtual void Update() = 0;
+		virtual void SetParallelUpdateHint(uint32_t parallelCount) = 0;
 
 		void LoadPose(const VPDFile& vpd, int frameCount = 30);
 

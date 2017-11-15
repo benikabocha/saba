@@ -71,6 +71,9 @@ namespace saba
 	class PMXModel : public MMDModel
 	{
 	public:
+		PMXModel();
+		~PMXModel();
+
 		MMDNodeManager* GetNodeManager() override { return &m_nodeMan; }
 		MMDIKManager* GetIKManager() override { return &m_ikSolverMan; }
 		MMDMorphManager* GetMorphManager() override { return &m_morphMan; };
@@ -107,6 +110,7 @@ namespace saba
 		void UpdatePhysics(float elapsed) override;
 		// 頂点データーを更新する
 		void Update() override;
+		void SetParallelUpdateHint(uint32_t parallelCount) override;
 
 		bool Load(const std::string& filepath, const std::string& mmdDataDir);
 		void Destroy();
@@ -114,10 +118,7 @@ namespace saba
 		const glm::vec3& GetBBoxMin() const { return m_bboxMin; }
 		const glm::vec3& GetBBoxMax() const { return m_bboxMax; }
 
-		// Load前に設定しておくと、頂点の非同期更新を行える
-		void SetAsyncUpdate(uint32_t asyncCount);
-
-	private:
+	public:
 		enum class SkinningType
 		{
 			Weight1,
@@ -131,6 +132,7 @@ namespace saba
 			glm::vec4		m_boneWeight;
 		};
 
+	private:
 		struct PositionMorph
 		{
 			uint32_t	m_index;
@@ -212,7 +214,16 @@ namespace saba
 			size_t		m_dataIndex;
 		};
 
+		struct UpdateRange
+		{
+			size_t	m_vertexOffset;
+			size_t	m_vertexCount;
+		};
+
 	private:
+		void SetupParallelUpdate();
+		void Update(const UpdateRange& range);
+
 		void Morph(PMXMorph* morph, float weight);
 
 		void MorphPosition(const PositionMorphData& morphData, float weight);
@@ -224,12 +235,6 @@ namespace saba
 		void MorphMaterial(const MaterialMorphData& morphData, float weight);
 
 		void MorphBone(const BoneMorphData& morphData, float weight);
-
-		struct VertexUpdatePartition
-		{
-			size_t	m_vertexOffset;
-			size_t	m_vertexCount;
-		};
 
 	private:
 		std::vector<glm::vec3>	m_positions;
@@ -272,9 +277,9 @@ namespace saba
 		MMDMorphManagerT<PMXMorph>	m_morphMan;
 		MMDPhysicsManager			m_physicsMan;
 
-		uint32_t							m_asyncUpdateCount;
-		std::vector<std::future<void>>		m_updateFutures;
-		std::vector<VertexUpdatePartition>	m_updatePartitions;
+		uint32_t							m_parallelUpdateCount;
+		std::vector<UpdateRange>			m_updateRanges;
+		std::vector<std::future<void>>		m_parallelUpdateFutures;
 	};
 }
 

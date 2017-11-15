@@ -142,7 +142,7 @@ namespace saba
 		bool CmdEnableUI(const std::vector<std::string>& args);
 		bool CmdClearAnimation(const std::vector<std::string>& args);
 		bool CmdClearSceneAnimation(const std::vector<std::string>& args);
-		bool CmdConfigPMXSetting(const std::vector<std::string>& args);
+		bool CmdSetMMDConfig(const std::vector<std::string>& args);
 		bool CmdSetMSAA(const std::vector<std::string>& args);
 
 		bool LoadOBJFile(const std::string& filename);
@@ -210,10 +210,10 @@ namespace saba
 			}
 		};
 
-		struct PMXConfig
+		struct MMDModelConfig
 		{
-			PMXConfig();
-			uint32_t	m_asyncCount;	//!< 0 - 16 (0:auto)
+			MMDModelConfig();
+			uint32_t	m_parallelUpdateCount;	//!< 0 - 16 (0:auto)
 		};
 
 	private:
@@ -259,8 +259,8 @@ namespace saba
 		std::vector<CustomCommandPtr>	m_customCommands;
 		CustomCommandMenuItem			m_customCommandMenuItemRoot;
 
-		// PMXConfig
-		PMXConfig	m_pmxConfig;
+		// MMDModelConfig
+		MMDModelConfig	m_mmdModelConfig;
 
 		// Performance
 		std::deque<float>	m_perfFramerateLap;
