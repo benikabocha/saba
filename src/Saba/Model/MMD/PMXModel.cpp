@@ -794,11 +794,7 @@ namespace saba
 			m_parallelUpdateCount = std::thread::hardware_concurrency();
 		}
 		size_t maxParallelCount = std::max(size_t(16), size_t(std::thread::hardware_concurrency()));
-		if (m_parallelUpdateCount <= maxParallelCount)
-		{
-			m_parallelUpdateCount = m_parallelUpdateCount;
-		}
-		else
+		if (m_parallelUpdateCount > maxParallelCount)
 		{
 			SABA_WARN("PMXModel::SetParallelUpdateCount parallelCount > {}", maxParallelCount);
 			m_parallelUpdateCount = 16;
