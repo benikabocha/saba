@@ -35,7 +35,11 @@ namespace saba
 		{
 			return false;
 		}
-		std::wstring wMode = ToWString(mode);
+		std::wstring wMode;
+		if (!TryToWString(mode, wMode))
+		{
+			return false;
+		}
 		auto err = _wfopen_s(&m_fp, wFilepath.c_str(), wMode.c_str());
 		if (err != 0)
 		{

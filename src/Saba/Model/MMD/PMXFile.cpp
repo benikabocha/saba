@@ -7,9 +7,8 @@
 
 #include <Saba/Base/Log.h>
 #include <Saba/Base/File.h>
+#include <Saba/Base/UnicodeUtil.h>
 
-#include <codecvt>
-#include <locale>
 #include <vector>
 
 namespace saba
@@ -41,31 +40,20 @@ namespace saba
 			{
 				if (pmx->m_header.m_encode == 0)
 				{
-					// UTF16
-					// wchat_t は 16bitとは限らないので注意（MacやLinuxでは32bit）
-#if _WIN32
-					// Visual C++ では、u16string ではリンクできないという問題がある
-					std::vector<uint16_t> buffer(bufSize / 2);
-					if (!file.Read(buffer.data(), buffer.size()))
-					{
-						return false;
-					}
-
-					std::wstring_convert<std::codecvt_utf8<uint16_t>, uint16_t> utf8Conv;
-					*val = utf8Conv.to_bytes(&buffer[0], &buffer[0] + buffer.size());
-#else
+					// UTF-16
 					std::u16string utf16Str(bufSize / 2, u'\0');
 					if (!file.Read(&utf16Str[0], utf16Str.size()))
 					{
 						return false;
 					}
-
-					std::wstring_convert<std::codecvt_utf8<char16_t>, char16_t> utf8Conv;
-					*val = utf8Conv.to_bytes(utf16Str);
-#endif
+					if (!ConvU16ToU8(utf16Str, *val))
+					{
+						return false;
+					}
 				}
 				else if (pmx->m_header.m_encode == 1)
 				{
+					// UTF-8
 					std::string utf8Str(bufSize, '\0');
 					file.Read(&utf8Str[0], bufSize);
 

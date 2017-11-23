@@ -85,9 +85,12 @@ namespace saba
 		{
 			FILE* fp = NULL;
 #if _WIN32
-			std::wstring wFilepath = ToWString(filename);
-			std::wstring wMode = ToWString("r");
-			auto err = _wfopen_s(&fp, wFilepath.c_str(), wMode.c_str());
+			std::wstring wFilepath;
+			if (!TryToWString(filename, wFilepath))
+			{
+				return nullptr;
+			}
+			auto err = _wfopen_s(&fp, wFilepath.c_str(), L"r");
 			if (err != 0)
 			{
 				return nullptr;

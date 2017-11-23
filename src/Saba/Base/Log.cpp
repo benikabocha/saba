@@ -25,7 +25,7 @@ namespace saba
 	{
 #if _WIN32
 		auto utf8Message = msg.raw.str();
-		std::wstring wMessage = ToWString(utf8Message);
+		std::wstring wMessage;
 		if (!TryToWString(utf8Message, wMessage))
 		{
 			m_defaultLogger->log(msg.level, "Failed to convert message.");
