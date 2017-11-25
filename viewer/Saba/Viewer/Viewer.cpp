@@ -623,7 +623,7 @@ namespace saba
 		DrawBegin();
 
 		glViewport(0, 0, m_context.GetFrameBufferWidth(), m_context.GetFrameBufferHeight());
-		glClear(GL_DEPTH_BUFFER_BIT);
+		glClear(GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 
 		glDisable(GL_DEPTH_TEST);
 		glBindVertexArray(m_bgVAO);
@@ -746,6 +746,9 @@ namespace saba
 				glFramebufferRenderbuffer(
 					GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, m_currentDepthTarget
 				);
+				glFramebufferRenderbuffer(
+					GL_FRAMEBUFFER, GL_STENCIL_ATTACHMENT, GL_RENDERBUFFER, m_currentDepthTarget
+				);
 				auto status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
 				if (GL_FRAMEBUFFER_COMPLETE != status)
 				{
@@ -795,6 +798,10 @@ namespace saba
 				);
 				glFramebufferRenderbuffer(
 					GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT,
+					GL_RENDERBUFFER, m_currentDepthTarget
+				);
+				glFramebufferRenderbuffer(
+					GL_FRAMEBUFFER, GL_STENCIL_ATTACHMENT,
 					GL_RENDERBUFFER, m_currentDepthTarget
 				);
 				auto status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
@@ -1382,6 +1389,12 @@ namespace saba
 			texSize = glm::max(glm::ivec2(1), texSize);
 			texSize = glm::min(glm::ivec2(8192), texSize);
 			shadowMap->Setup(texSize.x, texSize.y, 4);
+		}
+
+		auto mmdShadowColor = m_context.GetMMDGroundShadowColor();
+		if (ImGui::ColorEdit4("MMD Ground Shadow Color", &mmdShadowColor[0]))
+		{
+			m_context.SetMMDGroundShadowColor(mmdShadowColor);
 		}
 	}
 

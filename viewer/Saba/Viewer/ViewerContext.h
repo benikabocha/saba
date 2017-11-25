@@ -64,6 +64,8 @@ namespace saba
 		GLTextureRef GetDummyShadowDepthTexture() const { return m_dummyShadowDepthTexture; }
 		GLTextureRef GetCaptureTexture() const { return m_captureTex; }
 
+		const glm::vec4& GetMMDGroundShadowColor() const { return m_mmdGroundShadowColor; };
+
 	private:
 		void EnableUI(bool enable) { m_uiEnable = enable; }
 		void EnableCameraOverride(bool enable) { m_cameraOverride = enable; }
@@ -79,6 +81,8 @@ namespace saba
 
 		void SetCamera(const Camera& cam) { m_camera = cam; }
 		void SetLight(const Light& light) { m_light = light; }
+
+		void SetMMDGroundShadowColor(const glm::vec4& shadowColor) { m_mmdGroundShadowColor = shadowColor; }
 
 		bool ResizeCaptureTexture();
 
@@ -113,6 +117,8 @@ namespace saba
 		PlayMode	m_playMode;
 
 		bool	m_shadowEnabled;
+
+		glm::vec4	m_mmdGroundShadowColor;
 	};
 }
 

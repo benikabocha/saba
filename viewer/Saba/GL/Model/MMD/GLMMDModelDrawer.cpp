@@ -665,6 +665,22 @@ namespace saba
 
 			auto wsvp = proj * view * shadow * world;
 
+			auto shadowColor = ctxt->GetMMDGroundShadowColor();
+			if (shadowColor.a < 1.0f)
+			{
+				glEnable(GL_BLEND);
+				glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+				glStencilFuncSeparate(GL_FRONT_AND_BACK, GL_NOTEQUAL, 1, 1);
+				glStencilOp(GL_KEEP, GL_KEEP, GL_REPLACE);
+				glEnable(GL_STENCIL_TEST);
+			}
+			else
+			{
+				glDisable(GL_BLEND);
+			}
+			glDisable(GL_CULL_FACE);
+
 			for (const auto& subMesh : m_mmdModel->GetSubMeshes())
 			{
 				int matID = subMesh.m_materialID;
@@ -680,12 +696,8 @@ namespace saba
 				glUseProgram(shader->m_prog);
 				glBindVertexArray(matShader.m_mmdGroundShadowVao);
 
-				auto shadowColor = glm::vec4(0, 0, 0, 1);
-
 				SetUniform(shader->m_uWVP, wsvp);
 				SetUniform(shader->m_uShadowColor, shadowColor);
-
-				glDisable(GL_CULL_FACE);
 
 				size_t offset = subMesh.m_beginIndex * m_mmdModel->GetIndexTypeSize();
 				glDrawElements(
@@ -700,6 +712,8 @@ namespace saba
 			}
 
 			glDisable(GL_POLYGON_OFFSET_FILL);
+			glDisable(GL_STENCIL_TEST);
+			glDisable(GL_BLEND);
 		}
 
 		glBindVertexArray(0);
