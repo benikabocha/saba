@@ -1213,8 +1213,36 @@ namespace saba
 				m_selectedModelDrawer = modelDrawer;
 			}
 		}
-
 		ImGui::EndChild();
+
+		if (ImGui::Button("up"))
+		{
+			if (m_selectedModelDrawer != nullptr)
+			{
+				auto findIt = std::find(m_modelDrawers.begin(), m_modelDrawers.end(), m_selectedModelDrawer);
+				if (findIt != m_modelDrawers.end())
+				{
+					if (m_modelDrawers.begin() != findIt)
+					{
+						std::iter_swap((findIt - 1), findIt);
+					}
+				}
+			}
+		}
+		if (ImGui::Button("down"))
+		{
+			if (m_selectedModelDrawer != nullptr)
+			{
+				auto findIt = std::find(m_modelDrawers.begin(), m_modelDrawers.end(), m_selectedModelDrawer);
+				if (findIt != m_modelDrawers.end())
+				{
+					if (m_modelDrawers.end() != (findIt + 1))
+					{
+						std::iter_swap((findIt + 1), findIt);
+					}
+				}
+			}
+		}
 	}
 
 	void Viewer::DrawTransformCtrl()
