@@ -27,7 +27,7 @@ namespace saba
 		m_perfInfo.m_updateGLBufferTime = 0;
 		m_enablePhysics = true;
 		m_enableEdge = true;
-		m_enablePlaneShadow = true;
+		m_enableGroundShadow = true;
 	}
 
 	GLMMDModel::~GLMMDModel()

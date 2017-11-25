@@ -70,7 +70,7 @@ namespace saba
 		m_uEdgeColor = glGetUniformLocation(m_prog, "u_EdgeColor");
 	}
 
-	void GLMMDPlaneShadoShader::Initialize()
+	void GLMMDGroundShadoShader::Initialize()
 	{
 		// attribute
 		m_inPos = glGetAttribLocation(m_prog, "in_Pos");
@@ -182,7 +182,7 @@ namespace saba
 		return m_edgeShaders[shaderIndex].get();
 	}
 
-	int GLMMDModelDrawContext::GetPlaneShadowShaderIndex(const GLSLDefine & define)
+	int GLMMDModelDrawContext::GetGroundShadowShaderIndex(const GLSLDefine & define)
 	{
 		if (m_viewerContext == nullptr)
 		{
@@ -190,19 +190,19 @@ namespace saba
 		}
 
 		auto findIt = std::find_if(
-			m_planeShadowShaders.begin(),
-			m_planeShadowShaders.end(),
-			[&define](const MMDPlaneShadowShaderPtr& shader) {return shader->m_define == define; }
+			m_groundShadowShaders.begin(),
+			m_groundShadowShaders.end(),
+			[&define](const MMDGroundShadowShaderPtr& shader) {return shader->m_define == define; }
 		);
 
-		if (findIt == m_planeShadowShaders.end())
+		if (findIt == m_groundShadowShaders.end())
 		{
-			MMDPlaneShadowShaderPtr shader = std::make_unique<GLMMDPlaneShadoShader>();
+			MMDGroundShadowShaderPtr shader = std::make_unique<GLMMDGroundShadoShader>();
 			shader->m_define = std::move(define);
 			GLSLShaderUtil glslShaderUtil;
 			glslShaderUtil.SetShaderDir(m_viewerContext->GetShaderDir());
 			glslShaderUtil.SetGLSLDefine(define);
-			shader->m_prog = glslShaderUtil.CreateProgram("mmd_plane_shadow");
+			shader->m_prog = glslShaderUtil.CreateProgram("mmd_ground_shadow");
 			if (shader->m_prog == 0)
 			{
 				SABA_ERROR("Shader Create fail.");
@@ -210,25 +210,25 @@ namespace saba
 			}
 
 			shader->Initialize();
-			m_planeShadowShaders.emplace_back(std::move(shader));
-			return (int)(m_planeShadowShaders.size() - 1);
+			m_groundShadowShaders.emplace_back(std::move(shader));
+			return (int)(m_groundShadowShaders.size() - 1);
 		}
 		else
 		{
-			return (int)(findIt - m_planeShadowShaders.begin());
+			return (int)(findIt - m_groundShadowShaders.begin());
 		}
 		return 0;
 	}
 
-	GLMMDPlaneShadoShader * GLMMDModelDrawContext::GetPlaneShadowShader(int planeShadowShaderIndex) const
+	GLMMDGroundShadoShader * GLMMDModelDrawContext::GetGroundShadowShader(int groundShadowShaderIndex) const
 	{
-		if (planeShadowShaderIndex < 0)
+		if (groundShadowShaderIndex < 0)
 		{
 			SABA_ERROR("shaderIndex < 0");
 			return nullptr;
 		}
 
-		return m_planeShadowShaders[planeShadowShaderIndex].get();
+		return m_groundShadowShaders[groundShadowShaderIndex].get();
 	}
 
 	ViewerContext * GLMMDModelDrawContext::GetViewerContext() const

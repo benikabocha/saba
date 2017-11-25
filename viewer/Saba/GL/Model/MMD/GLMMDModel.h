@@ -106,8 +106,8 @@ namespace saba
 		void EnableEdge(bool enable) { m_enableEdge = enable; }
 		bool IsEnabledEdge() const { return m_enableEdge; }
 
-		void EnablePlaneShadow(bool enable) { m_enablePlaneShadow = enable; }
-		bool IsEnablePlaneShadow() const { return m_enablePlaneShadow; }
+		void EnableGroundShadow(bool enable) { m_enableGroundShadow = enable; }
+		bool IsEnableGroundShadow() const { return m_enableGroundShadow; }
 
 	private:
 		std::shared_ptr<MMDModel>		m_mmdModel;
@@ -137,7 +137,7 @@ namespace saba
 
 		bool	m_enablePhysics;
 		bool	m_enableEdge;
-		bool	m_enablePlaneShadow;
+		bool	m_enableGroundShadow;
 	};
 }
 

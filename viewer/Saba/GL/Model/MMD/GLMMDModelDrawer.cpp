@@ -118,27 +118,27 @@ namespace saba
 
 			glBindVertexArray(0);
 
-			// Plane Shadow
-			matShader.m_mmdPlaneShadowShaderIndex = m_drawContext->GetPlaneShadowShaderIndex(define);
-			if (matShader.m_mmdPlaneShadowShaderIndex == -1)
+			// Ground Shadow
+			matShader.m_mmdGroundShadowShaderIndex = m_drawContext->GetGroundShadowShaderIndex(define);
+			if (matShader.m_mmdGroundShadowShaderIndex == -1)
 			{
-				SABA_ERROR("MMD Plane Shadow Material Shader not found.");
+				SABA_ERROR("MMD Ground Shadow Material Shader not found.");
 				return false;
 			}
-			if (!matShader.m_mmdPlaneShadowVao.Create())
+			if (!matShader.m_mmdGroundShadowVao.Create())
 			{
 				SABA_ERROR("Vertex Array Object Create fail.");
 				return false;
 			}
 
-			auto planeShadowShader = m_drawContext->GetPlaneShadowShader(
-				matShader.m_mmdPlaneShadowShaderIndex
+			auto groundShadowShader = m_drawContext->GetGroundShadowShader(
+				matShader.m_mmdGroundShadowShaderIndex
 			);
 
-			glBindVertexArray(matShader.m_mmdPlaneShadowVao);
+			glBindVertexArray(matShader.m_mmdGroundShadowVao);
 
 			m_mmdModel->GetPositionBinder().Bind(edgeShader->m_inPos, m_mmdModel->GetPositionVBO());
-			glEnableVertexAttribArray(planeShadowShader->m_inPos);
+			glEnableVertexAttribArray(groundShadowShader->m_inPos);
 
 			glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_mmdModel->GetIBO());
 
@@ -278,6 +278,15 @@ namespace saba
 			if (ImGui::Checkbox("Enable", &enableEdge))
 			{
 				m_mmdModel->EnableEdge(enableEdge);
+			}
+			ImGui::TreePop();
+		}
+		if (ImGui::TreeNode("GraoundShadow"))
+		{
+			bool enableGroundShadow = m_mmdModel->IsEnableGroundShadow();
+			if (ImGui::Checkbox("Enable", &enableGroundShadow))
+			{
+				m_mmdModel->EnableGroundShadow(enableGroundShadow);
 			}
 			ImGui::TreePop();
 		}
@@ -626,35 +635,35 @@ namespace saba
 			}
 		}
 
-		if (m_mmdModel->IsEnablePlaneShadow())
+		if (m_mmdModel->IsEnableGroundShadow())
 		{
 			glEnable(GL_POLYGON_OFFSET_FILL);
 			glPolygonOffset(-1, -1);
 			auto plane = glm::vec4(0, 1, 0, 0);
 			auto light = -ctxt->GetLight()->GetLightDirection();
-			auto planeShadow = glm::mat4();
+			auto shadow = glm::mat4();
 
-			planeShadow[0][0] = plane.y * light.y + plane.z * light.z;
-			planeShadow[0][1] = -plane.x * light.y;
-			planeShadow[0][2] = -plane.x * light.z;
-			planeShadow[0][3] = 0;
+			shadow[0][0] = plane.y * light.y + plane.z * light.z;
+			shadow[0][1] = -plane.x * light.y;
+			shadow[0][2] = -plane.x * light.z;
+			shadow[0][3] = 0;
 
-			planeShadow[1][0] = -plane.y * light.x;
-			planeShadow[1][1] = plane.x * light.x + plane.z * light.z;
-			planeShadow[1][2] = -plane.y * light.z;
-			planeShadow[1][3] = 0;
+			shadow[1][0] = -plane.y * light.x;
+			shadow[1][1] = plane.x * light.x + plane.z * light.z;
+			shadow[1][2] = -plane.y * light.z;
+			shadow[1][3] = 0;
 
-			planeShadow[2][0] = -plane.z * light.x;
-			planeShadow[2][1] = -plane.z * light.y;
-			planeShadow[2][2] = plane.x * light.x + plane.y * light.y;
-			planeShadow[2][3] = 0;
+			shadow[2][0] = -plane.z * light.x;
+			shadow[2][1] = -plane.z * light.y;
+			shadow[2][2] = plane.x * light.x + plane.y * light.y;
+			shadow[2][3] = 0;
 
-			planeShadow[3][0] = -plane.w * light.x;
-			planeShadow[3][1] = -plane.w * light.y;
-			planeShadow[3][2] = -plane.w * light.z;
-			planeShadow[3][3] = plane.x * light.x + plane.y * light.y + plane.z * light.z;
+			shadow[3][0] = -plane.w * light.x;
+			shadow[3][1] = -plane.w * light.y;
+			shadow[3][2] = -plane.w * light.z;
+			shadow[3][3] = plane.x * light.x + plane.y * light.y + plane.z * light.z;
 
-			auto wsvp = proj * view * planeShadow * world;
+			auto wsvp = proj * view * shadow * world;
 
 			for (const auto& subMesh : m_mmdModel->GetSubMeshes())
 			{
@@ -666,10 +675,10 @@ namespace saba
 					continue;
 				}
 
-				auto shader = m_drawContext->GetPlaneShadowShader(matShader.m_mmdPlaneShadowShaderIndex);
+				auto shader = m_drawContext->GetGroundShadowShader(matShader.m_mmdGroundShadowShaderIndex);
 
 				glUseProgram(shader->m_prog);
-				glBindVertexArray(matShader.m_mmdPlaneShadowVao);
+				glBindVertexArray(matShader.m_mmdGroundShadowVao);
 
 				auto shadowColor = glm::vec4(0, 0, 0, 1);
 

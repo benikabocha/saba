@@ -54,8 +54,8 @@ namespace saba
 
 			GLVertexArrayObject	m_shadowVao;
 
-			int					m_mmdPlaneShadowShaderIndex;
-			GLVertexArrayObject	m_mmdPlaneShadowVao;
+			int					m_mmdGroundShadowShaderIndex;
+			GLVertexArrayObject	m_mmdGroundShadowVao;
 		};
 
 	private:
