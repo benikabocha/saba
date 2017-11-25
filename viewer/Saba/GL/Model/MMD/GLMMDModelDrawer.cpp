@@ -118,6 +118,32 @@ namespace saba
 
 			glBindVertexArray(0);
 
+			// Plane Shadow
+			matShader.m_mmdPlaneShadowShaderIndex = m_drawContext->GetPlaneShadowShaderIndex(define);
+			if (matShader.m_mmdPlaneShadowShaderIndex == -1)
+			{
+				SABA_ERROR("MMD Plane Shadow Material Shader not found.");
+				return false;
+			}
+			if (!matShader.m_mmdPlaneShadowVao.Create())
+			{
+				SABA_ERROR("Vertex Array Object Create fail.");
+				return false;
+			}
+
+			auto planeShadowShader = m_drawContext->GetPlaneShadowShader(
+				matShader.m_mmdPlaneShadowShaderIndex
+			);
+
+			glBindVertexArray(matShader.m_mmdPlaneShadowVao);
+
+			m_mmdModel->GetPositionBinder().Bind(edgeShader->m_inPos, m_mmdModel->GetPositionVBO());
+			glEnableVertexAttribArray(planeShadowShader->m_inPos);
+
+			glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_mmdModel->GetIBO());
+
+			glBindVertexArray(0);
+
 			// Add
 			m_materialShaders.emplace_back(std::move(matShader));
 
@@ -598,6 +624,73 @@ namespace saba
 				glBindVertexArray(0);
 				glUseProgram(0);
 			}
+		}
+
+		if (m_mmdModel->IsEnablePlaneShadow())
+		{
+			glEnable(GL_POLYGON_OFFSET_FILL);
+			glPolygonOffset(-1, -1);
+			auto plane = glm::vec4(0, 1, 0, 0);
+			auto light = -ctxt->GetLight()->GetLightDirection();
+			auto planeShadow = glm::mat4();
+
+			planeShadow[0][0] = plane.y * light.y + plane.z * light.z;
+			planeShadow[0][1] = -plane.x * light.y;
+			planeShadow[0][2] = -plane.x * light.z;
+			planeShadow[0][3] = 0;
+
+			planeShadow[1][0] = -plane.y * light.x;
+			planeShadow[1][1] = plane.x * light.x + plane.z * light.z;
+			planeShadow[1][2] = -plane.y * light.z;
+			planeShadow[1][3] = 0;
+
+			planeShadow[2][0] = -plane.z * light.x;
+			planeShadow[2][1] = -plane.z * light.y;
+			planeShadow[2][2] = plane.x * light.x + plane.y * light.y;
+			planeShadow[2][3] = 0;
+
+			planeShadow[3][0] = -plane.w * light.x;
+			planeShadow[3][1] = -plane.w * light.y;
+			planeShadow[3][2] = -plane.w * light.z;
+			planeShadow[3][3] = plane.x * light.x + plane.y * light.y + plane.z * light.z;
+
+			auto wsvp = proj * view * planeShadow * world;
+
+			for (const auto& subMesh : m_mmdModel->GetSubMeshes())
+			{
+				int matID = subMesh.m_materialID;
+				const auto& matShader = m_materialShaders[matID];
+				const auto& mmdMat = m_mmdModel->GetMaterials()[matID];
+				if (!mmdMat.m_groundShadow)
+				{
+					continue;
+				}
+
+				auto shader = m_drawContext->GetPlaneShadowShader(matShader.m_mmdPlaneShadowShaderIndex);
+
+				glUseProgram(shader->m_prog);
+				glBindVertexArray(matShader.m_mmdPlaneShadowVao);
+
+				auto shadowColor = glm::vec4(0, 0, 0, 1);
+
+				SetUniform(shader->m_uWVP, wsvp);
+				SetUniform(shader->m_uShadowColor, shadowColor);
+
+				glDisable(GL_CULL_FACE);
+
+				size_t offset = subMesh.m_beginIndex * m_mmdModel->GetIndexTypeSize();
+				glDrawElements(
+					GL_TRIANGLES,
+					subMesh.m_vertexCount,
+					m_mmdModel->GetIndexType(),
+					(GLvoid*)offset
+				);
+
+				glBindVertexArray(0);
+				glUseProgram(0);
+			}
+
+			glDisable(GL_POLYGON_OFFSET_FILL);
 		}
 
 		glBindVertexArray(0);

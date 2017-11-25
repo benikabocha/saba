@@ -40,6 +40,7 @@ namespace saba
 		glm::vec4		m_spTextureAddFactor;
 		glm::vec4		m_toonTextureAddFactor;
 		bool			m_bothFace;
+		bool			m_groundShadow;
 		bool			m_shadowCaster;
 		bool			m_shadowReceiver;
 	};
@@ -105,6 +106,9 @@ namespace saba
 		void EnableEdge(bool enable) { m_enableEdge = enable; }
 		bool IsEnabledEdge() const { return m_enableEdge; }
 
+		void EnablePlaneShadow(bool enable) { m_enablePlaneShadow = enable; }
+		bool IsEnablePlaneShadow() const { return m_enablePlaneShadow; }
+
 	private:
 		std::shared_ptr<MMDModel>		m_mmdModel;
 
@@ -133,6 +137,7 @@ namespace saba
 
 		bool	m_enablePhysics;
 		bool	m_enableEdge;
+		bool	m_enablePlaneShadow;
 	};
 }
 

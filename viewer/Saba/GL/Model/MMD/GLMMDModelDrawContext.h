@@ -85,6 +85,21 @@ namespace saba
 		void Initialize();
 	};
 
+	struct GLMMDPlaneShadoShader
+	{
+		GLSLDefine		m_define;
+		GLProgramObject	m_prog;
+
+		// attribute
+		GLint	m_inPos;
+
+		// uniform
+		GLint	m_uWVP;
+		GLint	m_uShadowColor;
+
+		void Initialize();
+	};
+
 	class GLMMDModelDrawContext
 	{
 	public:
@@ -99,14 +114,20 @@ namespace saba
 		int GetEdgeShaderIndex(const GLSLDefine& define);
 		GLMMDEdgeShader* GetEdgeShader(int edgeShaderIndex) const;
 
+		int GetPlaneShadowShaderIndex(const GLSLDefine& define);
+		GLMMDPlaneShadoShader* GetPlaneShadowShader(int planeShadowShaderIndex) const;
+
+
 		ViewerContext* GetViewerContext() const;
 
 	private:
 		using MMDShaderPtr = std::unique_ptr<GLMMDShader>;
 		using MMDEdgeShaderPtr = std::unique_ptr<GLMMDEdgeShader>;
+		using MMDPlaneShadowShaderPtr = std::unique_ptr<GLMMDPlaneShadoShader>;
 		ViewerContext*				m_viewerContext;
 		std::vector<MMDShaderPtr>	m_shaders;
 		std::vector<MMDEdgeShaderPtr>	m_edgeShaders;
+		std::vector<MMDPlaneShadowShaderPtr>	m_planeShadowShaders;
 	};
 }
 

@@ -27,6 +27,7 @@ namespace saba
 		m_perfInfo.m_updateGLBufferTime = 0;
 		m_enablePhysics = true;
 		m_enableEdge = true;
+		m_enablePlaneShadow = true;
 	}
 
 	GLMMDModel::~GLMMDModel()
@@ -144,6 +145,7 @@ namespace saba
 			dest.m_toonTextureAddFactor = src.m_toonTextureAddFactor;
 
 			dest.m_bothFace = src.m_bothFace;
+			dest.m_groundShadow = src.m_groundShadow;
 			dest.m_shadowCaster = src.m_shadowCaster;
 			dest.m_shadowReceiver = src.m_shadowReceiver;
 		}

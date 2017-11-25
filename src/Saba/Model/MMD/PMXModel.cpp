@@ -464,6 +464,7 @@ namespace saba
 			mat.m_spTextureMode = MMDMaterial::SphereTextureMode::None;
 			mat.m_bothFace = !!((uint8_t)pmxMat.m_drawMode & (uint8_t)PMXDrawModeFlags::BothFace);
 			mat.m_edgeFlag = ((uint8_t)pmxMat.m_drawMode & (uint8_t)PMXDrawModeFlags::DrawEdge) == 0 ? 0 : 1;
+			mat.m_groundShadow = !!((uint8_t)pmxMat.m_drawMode & (uint8_t)PMXDrawModeFlags::GroundShadow);
 			mat.m_shadowCaster = !!((uint8_t)pmxMat.m_drawMode & (uint8_t)PMXDrawModeFlags::CastSelfShadow);
 			mat.m_shadowReceiver = !!((uint8_t)pmxMat.m_drawMode & (uint8_t)PMXDrawModeFlags::RecieveSelfShadow);
 			mat.m_edgeSize = pmxMat.m_edgeSize;

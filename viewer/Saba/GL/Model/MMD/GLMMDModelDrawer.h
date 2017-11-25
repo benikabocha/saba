@@ -48,9 +48,14 @@ namespace saba
 			int					m_mmdMaterialIndex;
 			int					m_mmdShaderIndex;
 			GLVertexArrayObject	m_mmdVao;
+
 			int					m_mmdEdgeShaderIndex;
 			GLVertexArrayObject	m_mmdEdgeVao;
+
 			GLVertexArrayObject	m_shadowVao;
+
+			int					m_mmdPlaneShadowShaderIndex;
+			GLVertexArrayObject	m_mmdPlaneShadowVao;
 		};
 
 	private:

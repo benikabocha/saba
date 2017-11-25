@@ -70,6 +70,16 @@ namespace saba
 		m_uEdgeColor = glGetUniformLocation(m_prog, "u_EdgeColor");
 	}
 
+	void GLMMDPlaneShadoShader::Initialize()
+	{
+		// attribute
+		m_inPos = glGetAttribLocation(m_prog, "in_Pos");
+
+		// uniform
+		m_uWVP = glGetUniformLocation(m_prog, "u_WVP");
+		m_uShadowColor = glGetUniformLocation(m_prog, "u_ShadowColor");
+	}
+
 	GLMMDModelDrawContext::GLMMDModelDrawContext(ViewerContext * ctxt)
 		: m_viewerContext(ctxt)
 	{
@@ -170,6 +180,55 @@ namespace saba
 		}
 
 		return m_edgeShaders[shaderIndex].get();
+	}
+
+	int GLMMDModelDrawContext::GetPlaneShadowShaderIndex(const GLSLDefine & define)
+	{
+		if (m_viewerContext == nullptr)
+		{
+			return -1;
+		}
+
+		auto findIt = std::find_if(
+			m_planeShadowShaders.begin(),
+			m_planeShadowShaders.end(),
+			[&define](const MMDPlaneShadowShaderPtr& shader) {return shader->m_define == define; }
+		);
+
+		if (findIt == m_planeShadowShaders.end())
+		{
+			MMDPlaneShadowShaderPtr shader = std::make_unique<GLMMDPlaneShadoShader>();
+			shader->m_define = std::move(define);
+			GLSLShaderUtil glslShaderUtil;
+			glslShaderUtil.SetShaderDir(m_viewerContext->GetShaderDir());
+			glslShaderUtil.SetGLSLDefine(define);
+			shader->m_prog = glslShaderUtil.CreateProgram("mmd_plane_shadow");
+			if (shader->m_prog == 0)
+			{
+				SABA_ERROR("Shader Create fail.");
+				return -1;
+			}
+
+			shader->Initialize();
+			m_planeShadowShaders.emplace_back(std::move(shader));
+			return (int)(m_planeShadowShaders.size() - 1);
+		}
+		else
+		{
+			return (int)(findIt - m_planeShadowShaders.begin());
+		}
+		return 0;
+	}
+
+	GLMMDPlaneShadoShader * GLMMDModelDrawContext::GetPlaneShadowShader(int planeShadowShaderIndex) const
+	{
+		if (planeShadowShaderIndex < 0)
+		{
+			SABA_ERROR("shaderIndex < 0");
+			return nullptr;
+		}
+
+		return m_planeShadowShaders[planeShadowShaderIndex].get();
 	}
 
 	ViewerContext * GLMMDModelDrawContext::GetViewerContext() const
