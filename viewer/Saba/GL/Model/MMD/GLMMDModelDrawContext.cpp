@@ -70,7 +70,7 @@ namespace saba
 		m_uEdgeColor = glGetUniformLocation(m_prog, "u_EdgeColor");
 	}
 
-	void GLMMDGroundShadoShader::Initialize()
+	void GLMMDGroundShadowShader::Initialize()
 	{
 		// attribute
 		m_inPos = glGetAttribLocation(m_prog, "in_Pos");
@@ -197,7 +197,7 @@ namespace saba
 
 		if (findIt == m_groundShadowShaders.end())
 		{
-			MMDGroundShadowShaderPtr shader = std::make_unique<GLMMDGroundShadoShader>();
+			MMDGroundShadowShaderPtr shader = std::make_unique<GLMMDGroundShadowShader>();
 			shader->m_define = std::move(define);
 			GLSLShaderUtil glslShaderUtil;
 			glslShaderUtil.SetShaderDir(m_viewerContext->GetShaderDir());
@@ -220,7 +220,7 @@ namespace saba
 		return 0;
 	}
 
-	GLMMDGroundShadoShader * GLMMDModelDrawContext::GetGroundShadowShader(int groundShadowShaderIndex) const
+	GLMMDGroundShadowShader * GLMMDModelDrawContext::GetGroundShadowShader(int groundShadowShaderIndex) const
 	{
 		if (groundShadowShaderIndex < 0)
 		{

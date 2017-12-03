@@ -85,7 +85,7 @@ namespace saba
 		void Initialize();
 	};
 
-	struct GLMMDGroundShadoShader
+	struct GLMMDGroundShadowShader
 	{
 		GLSLDefine		m_define;
 		GLProgramObject	m_prog;
@@ -115,14 +115,14 @@ namespace saba
 		GLMMDEdgeShader* GetEdgeShader(int edgeShaderIndex) const;
 
 		int GetGroundShadowShaderIndex(const GLSLDefine& define);
-		GLMMDGroundShadoShader* GetGroundShadowShader(int groundShadowShaderIndex) const;
+		GLMMDGroundShadowShader* GetGroundShadowShader(int groundShadowShaderIndex) const;
 
 		ViewerContext* GetViewerContext() const;
 
 	private:
 		using MMDShaderPtr = std::unique_ptr<GLMMDShader>;
 		using MMDEdgeShaderPtr = std::unique_ptr<GLMMDEdgeShader>;
-		using MMDGroundShadowShaderPtr = std::unique_ptr<GLMMDGroundShadoShader>;
+		using MMDGroundShadowShaderPtr = std::unique_ptr<GLMMDGroundShadowShader>;
 		ViewerContext*				m_viewerContext;
 		std::vector<MMDShaderPtr>	m_shaders;
 		std::vector<MMDEdgeShaderPtr>	m_edgeShaders;
