@@ -162,6 +162,8 @@ namespace saba
 
 	bool Viewer::Initialize(const InitializeParameter& initParam)
 	{
+		SABA_INFO("Execute Path = {}", PathUtil::GetExecutablePath());
+
 		m_initParam = initParam;
 
 		auto logger = Singleton<saba::Logger>::Get();

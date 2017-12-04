@@ -81,6 +81,8 @@ add_custom_command(TARGET saba_viewer POST_BUILD
 add_executable(mmd2obj mmd2obj.cpp)
 target_link_libraries(mmd2obj Saba)
 
+add_subdirectory(example)
+
 # Install
 if (SABA_INSTALL)
     install (DIRECTORY src/Saba DESTINATION include  FILES_MATCHING PATTERN "*.h")

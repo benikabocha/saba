@@ -7,6 +7,17 @@
 
 #include <algorithm>
 
+#if _WIN32
+#include <Windows.h>
+#elif __APPLE__
+#include <mach-o/dyld.h>
+#include <unistd.h>
+#elif __linux
+#include <unistd.h>
+#endif
+
+#include "UnicodeUtil.h"
+
 namespace saba
 {
 	namespace
@@ -17,6 +28,56 @@ namespace saba
 #else
 		const char PathDelimiter = '/';
 		const char* PathDelimiters = "/";
+#endif
+	}
+
+	std::string PathUtil::GetCWD()
+	{
+		std::string workDir;
+#if _WIN32
+		DWORD sz = GetCurrentDirectoryW(0, nullptr);
+		std::vector<wchar_t> buffer(sz);
+		GetCurrentDirectory(sz, &buffer[0]);
+		workDir = ToUtf8String(&buffer[0]);
+#else // _WIN32
+		char* buffer = getcwd(nullptr, 0);
+		workDir = buffer;
+		free(buffer);
+#endif // _WIN32
+		return workDir;
+	}
+
+	std::string PathUtil::GetExecutablePath()
+	{
+#if _WIN32
+		std::vector<wchar_t> modulePath(MAX_PATH);
+		if (GetModuleFileNameW(NULL, modulePath.data(), (DWORD)modulePath.size()) == 0)
+		{
+			return "";
+		}
+		return ToUtf8String(modulePath.data());
+#elif __APPLE__
+		char pathbuf[PATH_MAX + 1];
+		uint32_t bufsize = sizeof(pathbuf);
+		if (_NSGetExecutablePath(pathbuf, &bufsize) != 0)
+		{
+			return "";
+		}
+		return pathbuf;
+#elif __linux
+		char pathbuf[1024 + 1] = {};
+		ssize_t sz = readlink("/proc/self/exe", pathbuf, sizeof(pathbuf) - 1);
+		if (sz == -1)
+		{
+			return "";
+		}
+		else
+		{
+			pathbuf[sz] = '\0';
+		}
+		return pathbuf;
+#else
+		return "";
 #endif
 	}
 
