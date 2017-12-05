@@ -12,6 +12,7 @@
 #elif __APPLE__
 #include <mach-o/dyld.h>
 #include <unistd.h>
+#include <cstdlib>
 #elif __linux
 #include <unistd.h>
 #endif
