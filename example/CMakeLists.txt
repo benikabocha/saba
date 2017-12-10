@@ -25,3 +25,14 @@ add_custom_command(TARGET simple_mmd_viewer_glfw POST_BUILD
     ${CMAKE_CURRENT_SOURCE_DIR}/../viewer/Saba/Viewer/resource
     $<TARGET_FILE_DIR:simple_mmd_viewer_glfw>/resource
 )
+
+# simple_mmd_viewer_dx11
+if(WIN32)
+    add_executable(simple_mmd_viewer_dx11
+        simple_mmd_viewer_dx11.cpp
+    )
+    target_link_libraries(simple_mmd_viewer_dx11
+        D3D11
+        Saba
+    )
+endif()
