@@ -30,6 +30,8 @@
 
 #include "./resource_dx/mmd.vso.h"
 #include "./resource_dx/mmd.pso.h"
+#include "./resource_dx/mmd_edge.vso.h"
+#include "./resource_dx/mmd_edge.pso.h"
 
 void Usage()
 {
@@ -37,12 +39,16 @@ void Usage()
 	std::cout << "e.g. app -model model1.pmx -vmd anim1_1.vmd -vmd anim1_2.vmd  -model model2.pmx\n";
 }
 
+// vertex
+
 struct Vertex
 {
 	glm::vec3	m_position;
 	glm::vec3	m_normal;
 	glm::vec2	m_uv;
 };
+
+// mmd shader constant buffer
 
 struct MMDVertexShaderCB
 {
@@ -75,6 +81,28 @@ struct MMDPixelShaderCB
 	glm::ivec4	m_textureModes;
 
 };
+
+// mmd edge shader constant buffer
+
+struct MMDEdgeVertexShaderCB
+{
+	glm::mat4	m_wv;
+	glm::mat4	m_wvp;
+	glm::vec2	m_screenSize;
+	float		m_dummy[2];
+};
+
+struct MMDEdgeSizeVertexShaderCB
+{
+	float		m_edgeSize;
+	float		m_dummy[3];
+};
+
+struct MMDEdgePixelShaderCB
+{
+	glm::vec4	m_edgeColor;
+};
+
 
 struct Texture
 {
@@ -114,13 +142,19 @@ struct AppContext
 
 	ComPtr<ID3D11VertexShader>	m_mmdVS;
 	ComPtr<ID3D11PixelShader>	m_mmdPS;
-	ComPtr<ID3D11InputLayout>	m_mmdVSInput;
+	ComPtr<ID3D11InputLayout>	m_mmdInputLayout;
 	ComPtr<ID3D11SamplerState>	m_textureSampler;
 	ComPtr<ID3D11SamplerState>	m_toonTextureSampler;
 	ComPtr<ID3D11SamplerState>	m_sphereTextureSampler;
 	ComPtr<ID3D11BlendState>	m_mmdBlendState;
 	ComPtr<ID3D11RasterizerState>	m_mmdFrontFaceRS;
 	ComPtr<ID3D11RasterizerState>	m_mmdBothFaceRS;
+
+	ComPtr<ID3D11VertexShader>	m_mmdEdgeVS;
+	ComPtr<ID3D11PixelShader>	m_mmdEdgePS;
+	ComPtr<ID3D11InputLayout>	m_mmdEdgeInputLayout;
+	ComPtr<ID3D11BlendState>	m_mmdEdgeBlendState;
+	ComPtr<ID3D11RasterizerState>	m_mmdEdgeRS;
 
 	ComPtr<ID3D11Texture2D>				m_dummyTexture;
 	ComPtr<ID3D11ShaderResourceView>	m_dummyTextureView;
@@ -153,6 +187,8 @@ bool AppContext::Setup(ComPtr<ID3D11Device> device)
 bool AppContext::CreateShaders()
 {
 	HRESULT hr;
+
+	// mmd shader
 	hr = m_device->CreateVertexShader(mmd_vso_data, sizeof(mmd_vso_data), nullptr, &m_mmdVS);
 	if (FAILED(hr))
 	{
@@ -165,21 +201,22 @@ bool AppContext::CreateShaders()
 		return false;
 	}
 
-	D3D11_INPUT_ELEMENT_DESC mmdVSLayoutDesc[] = {
+	D3D11_INPUT_ELEMENT_DESC mmdInputElementDesc[] = {
 		{ "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D11_INPUT_PER_VERTEX_DATA, 0},
 		{ "NORMAL", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0 },
 		{ "TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0 },
 	};
 	hr = m_device->CreateInputLayout(
-		mmdVSLayoutDesc, 3,
+		mmdInputElementDesc, 3,
 		mmd_vso_data, sizeof(mmd_vso_data),
-		&m_mmdVSInput
+		&m_mmdInputLayout
 	);
 	if (FAILED(hr))
 	{
 		return false;
 	}
 
+	// Texture sampler
 	{
 		D3D11_SAMPLER_DESC samplerDesc = {};
 		samplerDesc.Filter = D3D11_FILTER_MIN_MAG_MIP_LINEAR;
@@ -197,6 +234,7 @@ bool AppContext::CreateShaders()
 		}
 	}
 
+	// ToonTexture sampler
 	{
 		D3D11_SAMPLER_DESC samplerDesc = {};
 		samplerDesc.Filter = D3D11_FILTER_MIN_MAG_MIP_LINEAR;
@@ -214,6 +252,7 @@ bool AppContext::CreateShaders()
 		}
 	}
 
+	// SphereTexture sampler
 	{
 		D3D11_SAMPLER_DESC samplerDesc = {};
 		samplerDesc.Filter = D3D11_FILTER_MIN_MAG_MIP_LINEAR;
@@ -231,6 +270,7 @@ bool AppContext::CreateShaders()
 		}
 	}
 
+	// Blend State
 	{
 		D3D11_BLEND_DESC blendDesc = {};
 		blendDesc.AlphaToCoverageEnable = false;
@@ -250,6 +290,7 @@ bool AppContext::CreateShaders()
 		}
 	}
 
+	// Rasterizer State (Front face)
 	{
 		D3D11_RASTERIZER_DESC rsDesc = {};
 		rsDesc.FillMode = D3D11_FILL_SOLID;
@@ -269,6 +310,7 @@ bool AppContext::CreateShaders()
 		}
 	}
 
+	// Rasterizer State (Both face)
 	{
 		D3D11_RASTERIZER_DESC rsDesc = {};
 		rsDesc.FillMode = D3D11_FILL_SOLID;
@@ -282,6 +324,73 @@ bool AppContext::CreateShaders()
 		rsDesc.MultisampleEnable = false;
 		rsDesc.AntialiasedLineEnable = false;
 		hr = m_device->CreateRasterizerState(&rsDesc, &m_mmdBothFaceRS);
+		if (FAILED(hr))
+		{
+			return false;
+		}
+	}
+
+	// mmd edge shader
+	hr = m_device->CreateVertexShader(mmd_edge_vso_data, sizeof(mmd_edge_vso_data), nullptr, &m_mmdEdgeVS);
+	if (FAILED(hr))
+	{
+		return false;
+	}
+
+	hr = m_device->CreatePixelShader(mmd_edge_pso_data, sizeof(mmd_edge_pso_data), nullptr, &m_mmdEdgePS);
+	if (FAILED(hr))
+	{
+		return false;
+	}
+
+	D3D11_INPUT_ELEMENT_DESC mmdEdgeInputElementDesc[] = {
+		{ "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D11_INPUT_PER_VERTEX_DATA, 0 },
+		{ "NORMAL", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0 },
+	};
+	hr = m_device->CreateInputLayout(
+		mmdEdgeInputElementDesc, 2,
+		mmd_edge_vso_data, sizeof(mmd_edge_vso_data),
+		&m_mmdEdgeInputLayout
+	);
+	if (FAILED(hr))
+	{
+		return false;
+	}
+
+	// Blend State
+	{
+		D3D11_BLEND_DESC blendDesc = {};
+		blendDesc.AlphaToCoverageEnable = false;
+		blendDesc.IndependentBlendEnable = false;
+		blendDesc.RenderTarget[0].BlendEnable = true;
+		blendDesc.RenderTarget[0].SrcBlend = D3D11_BLEND_SRC_ALPHA;
+		blendDesc.RenderTarget[0].DestBlend = D3D11_BLEND_INV_SRC_ALPHA;
+		blendDesc.RenderTarget[0].BlendOp = D3D11_BLEND_OP_ADD;
+		blendDesc.RenderTarget[0].SrcBlendAlpha = D3D11_BLEND_SRC_ALPHA;
+		blendDesc.RenderTarget[0].DestBlendAlpha = D3D11_BLEND_INV_SRC_ALPHA;
+		blendDesc.RenderTarget[0].BlendOpAlpha = D3D11_BLEND_OP_ADD;
+		blendDesc.RenderTarget[0].RenderTargetWriteMask = D3D11_COLOR_WRITE_ENABLE_ALL;
+		hr = m_device->CreateBlendState(&blendDesc, &m_mmdEdgeBlendState);
+		if (FAILED(hr))
+		{
+			return false;
+		}
+	}
+
+	// Rasterizer State
+	{
+		D3D11_RASTERIZER_DESC rsDesc = {};
+		rsDesc.FillMode = D3D11_FILL_SOLID;
+		rsDesc.CullMode = D3D11_CULL_FRONT;
+		rsDesc.FrontCounterClockwise = true;
+		rsDesc.DepthBias = 0;
+		rsDesc.SlopeScaledDepthBias = 0;
+		rsDesc.DepthBiasClamp = 0;
+		rsDesc.DepthClipEnable = false;
+		rsDesc.ScissorEnable = false;
+		rsDesc.MultisampleEnable = false;
+		rsDesc.AntialiasedLineEnable = false;
+		hr = m_device->CreateRasterizerState(&rsDesc, &m_mmdEdgeRS);
 		if (FAILED(hr))
 		{
 			return false;
@@ -448,6 +557,10 @@ struct Model
 	ComPtr<ID3D11Buffer>		m_mmdVSConstantBuffer;
 	ComPtr<ID3D11Buffer>		m_mmdPSConstantBuffer;
 
+	ComPtr<ID3D11Buffer>		m_mmdEdgeVSConstantBuffer;
+	ComPtr<ID3D11Buffer>		m_mmdEdgeSizeVSConstantBuffer;
+	ComPtr<ID3D11Buffer>		m_mmdEdgePSConstantBuffer;
+
 	bool Setup(AppContext& appContext);
 
 	void Update(const AppContext& appContext);
@@ -516,7 +629,7 @@ bool Model::Setup(AppContext& appContext)
 		}
 	}
 
-	// Setup MMD vertex shader constant buffer
+	// Setup mmd vertex shader constant buffer
 	{
 		D3D11_BUFFER_DESC bufDesc = {};
 		bufDesc.Usage = D3D11_USAGE_DEFAULT;
@@ -531,7 +644,7 @@ bool Model::Setup(AppContext& appContext)
 		}
 	}
 
-	// Setup MMD pixel shader constant buffer
+	// Setup mmd pixel shader constant buffer
 	{
 		D3D11_BUFFER_DESC bufDesc = {};
 		bufDesc.Usage = D3D11_USAGE_DEFAULT;
@@ -540,6 +653,51 @@ bool Model::Setup(AppContext& appContext)
 		bufDesc.CPUAccessFlags = 0;
 
 		hr = appContext.m_device->CreateBuffer(&bufDesc, nullptr, &m_mmdPSConstantBuffer);
+		if (FAILED(hr))
+		{
+			return false;
+		}
+	}
+
+	// Setup mmd edge vertex shader constant buffer (VSData)
+	{
+		D3D11_BUFFER_DESC bufDesc = {};
+		bufDesc.Usage = D3D11_USAGE_DEFAULT;
+		bufDesc.ByteWidth = sizeof(MMDEdgeVertexShaderCB);
+		bufDesc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
+		bufDesc.CPUAccessFlags = 0;
+
+		hr = appContext.m_device->CreateBuffer(&bufDesc, nullptr, &m_mmdEdgeVSConstantBuffer);
+		if (FAILED(hr))
+		{
+			return false;
+		}
+	}
+
+	// Setup mmd edge vertex shader constant buffer (VSEdgeData)
+	{
+		D3D11_BUFFER_DESC bufDesc = {};
+		bufDesc.Usage = D3D11_USAGE_DEFAULT;
+		bufDesc.ByteWidth = sizeof(MMDEdgeSizeVertexShaderCB);
+		bufDesc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
+		bufDesc.CPUAccessFlags = 0;
+
+		hr = appContext.m_device->CreateBuffer(&bufDesc, nullptr, &m_mmdEdgeSizeVSConstantBuffer);
+		if (FAILED(hr))
+		{
+			return false;
+		}
+	}
+
+	// Setup mmd edge pixel shader constant buffer
+	{
+		D3D11_BUFFER_DESC bufDesc = {};
+		bufDesc.Usage = D3D11_USAGE_DEFAULT;
+		bufDesc.ByteWidth = sizeof(MMDEdgePixelShaderCB);
+		bufDesc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
+		bufDesc.CPUAccessFlags = 0;
+
+		hr = appContext.m_device->CreateBuffer(&bufDesc, nullptr, &m_mmdEdgePSConstantBuffer);
 		if (FAILED(hr))
 		{
 			return false;
@@ -623,9 +781,20 @@ void Model::Draw(const AppContext& appContext)
 		appContext.m_depthStencilView.Get()
 	);
 
+	// Setup input assembler
+	{
+		UINT strides[] = { sizeof(Vertex) };
+		UINT offsets[] = { 0 };
+		m_context->IASetInputLayout(appContext.m_mmdInputLayout.Get());
+		ID3D11Buffer* vbs[] = { m_vertexBuffer.Get() };
+		m_context->IASetVertexBuffers(0, 1, vbs, strides, offsets);
+		m_context->IASetIndexBuffer(m_indexBuffer.Get(), m_indexBufferFormat, 0);
+		m_context->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+	}
+
 	// Draw model
 
-	// Setup vertex shader and input assembler
+	// Setup vertex shader
 	{
 		MMDVertexShaderCB vsCB;
 		vsCB.m_wv = wv;
@@ -636,15 +805,6 @@ void Model::Draw(const AppContext& appContext)
 		m_context->VSSetShader(appContext.m_mmdVS.Get(), nullptr, 0);
 		ID3D11Buffer* cbs[] = { m_mmdVSConstantBuffer.Get() };
 		m_context->VSSetConstantBuffers(0, 1, cbs);
-
-		// Input aseembler
-		UINT strides[] = { sizeof(Vertex) };
-		UINT offsets[] = { 0 };
-		m_context->IASetInputLayout(appContext.m_mmdVSInput.Get());
-		ID3D11Buffer* vbs[] = { m_vertexBuffer.Get() };
-		m_context->IASetVertexBuffers(0, 1, vbs, strides, offsets);
-		m_context->IASetIndexBuffer(m_indexBuffer.Get(), m_indexBufferFormat, 0);
-		m_context->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 	}
 	size_t subMeshCount = m_mmdModel->GetSubMeshCount();
 	for (size_t i = 0; i < subMeshCount; i++)
@@ -652,8 +812,6 @@ void Model::Draw(const AppContext& appContext)
 		const auto& subMesh = m_mmdModel->GetSubMeshes()[i];
 		const auto& mat = m_materials[subMesh.m_materialID];
 		const auto& mmdMat = mat.m_mmdMat;
-
-
 
 		if (mat.m_mmdMat.m_alpha == 0)
 		{
@@ -763,6 +921,72 @@ void Model::Draw(const AppContext& appContext)
 		}
 
 		m_context->OMSetBlendState(appContext.m_mmdBlendState.Get(), nullptr, 0xffffffff);
+
+		m_context->DrawIndexed(subMesh.m_vertexCount, subMesh.m_beginIndex, 0);
+	}
+
+	{
+		ID3D11ShaderResourceView* views[] = { nullptr, nullptr, nullptr };
+		ID3D11SamplerState* samplers[] = { nullptr, nullptr, nullptr };
+		m_context->PSSetShaderResources(0, 3, views);
+		m_context->PSSetSamplers(0, 3, samplers); 
+	}
+
+	// Draw edge
+
+	// Setup vertex shader (VSData)
+	{
+		MMDEdgeVertexShaderCB vsCB;
+		vsCB.m_wv = wv;
+		vsCB.m_wvp = wvp;
+		vsCB.m_screenSize = glm::vec2(float(appContext.m_screenWidth), float(appContext.m_screenHeight));
+		m_context->UpdateSubresource(m_mmdEdgeVSConstantBuffer.Get(), 0, nullptr, &vsCB, 0, 0);
+
+		// Vertex shader
+		m_context->VSSetShader(appContext.m_mmdEdgeVS.Get(), nullptr, 0);
+		ID3D11Buffer* cbs[] = { m_mmdEdgeVSConstantBuffer.Get() };
+		m_context->VSSetConstantBuffers(0, 1, cbs);
+	}
+
+	for (size_t i = 0; i < subMeshCount; i++)
+	{
+		const auto& subMesh = m_mmdModel->GetSubMeshes()[i];
+		const auto& mat = m_materials[subMesh.m_materialID];
+		const auto& mmdMat = mat.m_mmdMat;
+
+		if (!mmdMat.m_edgeFlag)
+		{
+			continue;
+		}
+		if (mmdMat.m_alpha == 0.0f)
+		{
+			continue;
+		}
+
+		// Edge size constant buffer
+		{
+			MMDEdgeSizeVertexShaderCB vsCB;
+			vsCB.m_edgeSize = mmdMat.m_edgeSize;
+			m_context->UpdateSubresource(m_mmdEdgeSizeVSConstantBuffer.Get(), 0, nullptr, &vsCB, 0, 0);
+
+			ID3D11Buffer* cbs[] = { m_mmdEdgeSizeVSConstantBuffer.Get() };
+			m_context->VSSetConstantBuffers(1, 1, cbs);
+		}
+
+		// Pixel shader
+		m_context->PSSetShader(appContext.m_mmdEdgePS.Get(), nullptr, 0);
+		{
+			MMDEdgePixelShaderCB psCB;
+			psCB.m_edgeColor = mmdMat.m_edgeColor;
+			m_context->UpdateSubresource(m_mmdEdgePSConstantBuffer.Get(), 0, nullptr, &psCB, 0, 0);
+
+			ID3D11Buffer* pscbs[] = { m_mmdEdgePSConstantBuffer.Get() };
+			m_context->PSSetConstantBuffers(2, 1, pscbs);
+		}
+
+		m_context->RSSetState(appContext.m_mmdEdgeRS.Get());
+
+		m_context->OMSetBlendState(appContext.m_mmdEdgeBlendState.Get(), nullptr, 0xffffffff);
 
 		m_context->DrawIndexed(subMesh.m_vertexCount, subMesh.m_beginIndex, 0);
 	}
