@@ -16,6 +16,7 @@
 #include <Saba/Base/Path.h>
 #include <Saba/Base/File.h>
 #include <Saba/Base/UnicodeUtil.h>
+#include <Saba/Base/Time.h>
 #include <Saba/Model/MMD/PMDModel.h>
 #include <Saba/Model/MMD/PMXModel.h>
 #include <Saba/Model/MMD/VMDFile.h>
@@ -1190,10 +1191,12 @@ bool SampleMain(std::vector<std::string>& args)
 		models.emplace_back(std::move(model));
 	}
 
-	double saveTime = glfwGetTime();
+	double fpsTime = saba::GetTime();
+	int fpsFrame = 0;
+	double saveTime = saba::GetTime();
 	while (!glfwWindowShouldClose(window))
 	{
-		double time = glfwGetTime();
+		double time = saba::GetTime();
 		double elapsed = time - saveTime;
 		if (elapsed > 1.0 / 30.0)
 		{
@@ -1245,6 +1248,20 @@ bool SampleMain(std::vector<std::string>& args)
 
 		glfwSwapBuffers(window);
 		glfwPollEvents();
+
+		//FPS
+		{
+			fpsFrame++;
+			double time = saba::GetTime();
+			double deltaTime = time - fpsTime;
+			if (deltaTime > 1.0)
+			{
+				double fps = double(fpsFrame) / deltaTime;
+				std::cout << fps << " fps\n";
+				fpsFrame = 0;
+				fpsTime = time;
+			}
+		}
 	}
 
 	appContext.Clear();
