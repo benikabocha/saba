@@ -1108,6 +1108,7 @@ bool SampleMain(std::vector<std::string>& args)
 		return false;
 	}
 
+	glfwSwapInterval(0);
 	glEnable(GL_MULTISAMPLE);
 
 	// Initialize application
