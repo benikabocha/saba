@@ -32,6 +32,8 @@
 #include "./resource_dx/mmd.pso.h"
 #include "./resource_dx/mmd_edge.vso.h"
 #include "./resource_dx/mmd_edge.pso.h"
+#include "./resource_dx/mmd_ground_shadow.vso.h"
+#include "./resource_dx/mmd_ground_shadow.pso.h"
 
 void Usage()
 {
@@ -104,6 +106,18 @@ struct MMDEdgePixelShaderCB
 };
 
 
+// mmd ground shadow shader constant buffer
+
+struct MMDGroundShadowVertexShaderCB
+{
+	glm::mat4	m_wvp;
+};
+
+struct MMDGroundShadowPixelShaderCB
+{
+	glm::vec4	m_shadowColor;
+};
+
 struct Texture
 {
 	template <typename T>
@@ -155,6 +169,15 @@ struct AppContext
 	ComPtr<ID3D11InputLayout>	m_mmdEdgeInputLayout;
 	ComPtr<ID3D11BlendState>	m_mmdEdgeBlendState;
 	ComPtr<ID3D11RasterizerState>	m_mmdEdgeRS;
+
+	ComPtr<ID3D11VertexShader>	m_mmdGroundShadowVS;
+	ComPtr<ID3D11PixelShader>	m_mmdGroundShadowPS;
+	ComPtr<ID3D11InputLayout>	m_mmdGroundShadowInputLayout;
+	ComPtr<ID3D11BlendState>	m_mmdGroundShadowBlendState;
+	ComPtr<ID3D11RasterizerState>	m_mmdGroundShadowRS;
+	ComPtr<ID3D11DepthStencilState>	m_mmdGroundShadowDSS;
+
+	ComPtr<ID3D11DepthStencilState>	m_defaultDSS;
 
 	ComPtr<ID3D11Texture2D>				m_dummyTexture;
 	ComPtr<ID3D11ShaderResourceView>	m_dummyTextureView;
@@ -397,6 +420,120 @@ bool AppContext::CreateShaders()
 		}
 	}
 
+	// mmd ground shadow shader
+	hr = m_device->CreateVertexShader(mmd_ground_shadow_vso_data, sizeof(mmd_ground_shadow_vso_data), nullptr, &m_mmdGroundShadowVS);
+	if (FAILED(hr))
+	{
+		return false;
+	}
+
+	hr = m_device->CreatePixelShader(mmd_ground_shadow_pso_data, sizeof(mmd_ground_shadow_pso_data), nullptr, &m_mmdGroundShadowPS);
+	if (FAILED(hr))
+	{
+		return false;
+	}
+
+	D3D11_INPUT_ELEMENT_DESC mmdGroundShadowInputElementDesc[] = {
+		{ "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D11_INPUT_PER_VERTEX_DATA, 0 },
+	};
+	hr = m_device->CreateInputLayout(
+		mmdGroundShadowInputElementDesc, 1,
+		mmd_ground_shadow_vso_data, sizeof(mmd_ground_shadow_vso_data),
+		&m_mmdGroundShadowInputLayout
+	);
+	if (FAILED(hr))
+	{
+		return false;
+	}
+
+	// Blend State
+	{
+		D3D11_BLEND_DESC blendDesc = {};
+		blendDesc.AlphaToCoverageEnable = false;
+		blendDesc.IndependentBlendEnable = false;
+		blendDesc.RenderTarget[0].BlendEnable = true;
+		blendDesc.RenderTarget[0].SrcBlend = D3D11_BLEND_SRC_ALPHA;
+		blendDesc.RenderTarget[0].DestBlend = D3D11_BLEND_INV_SRC_ALPHA;
+		blendDesc.RenderTarget[0].BlendOp = D3D11_BLEND_OP_ADD;
+		blendDesc.RenderTarget[0].SrcBlendAlpha = D3D11_BLEND_SRC_ALPHA;
+		blendDesc.RenderTarget[0].DestBlendAlpha = D3D11_BLEND_INV_SRC_ALPHA;
+		blendDesc.RenderTarget[0].BlendOpAlpha = D3D11_BLEND_OP_ADD;
+		blendDesc.RenderTarget[0].RenderTargetWriteMask = D3D11_COLOR_WRITE_ENABLE_ALL;
+		hr = m_device->CreateBlendState(&blendDesc, &m_mmdGroundShadowBlendState);
+		if (FAILED(hr))
+		{
+			return false;
+		}
+	}
+
+	// Rasterizer State
+	{
+		D3D11_RASTERIZER_DESC rsDesc = {};
+		rsDesc.FillMode = D3D11_FILL_SOLID;
+		rsDesc.CullMode = D3D11_CULL_FRONT;
+		rsDesc.FrontCounterClockwise = true;
+		rsDesc.DepthBias = 0;
+		rsDesc.SlopeScaledDepthBias = -1.0f;
+		rsDesc.DepthBiasClamp = -1.0f;
+		rsDesc.DepthClipEnable = false;
+		rsDesc.ScissorEnable = false;
+		rsDesc.MultisampleEnable = false;
+		rsDesc.AntialiasedLineEnable = false;
+		hr = m_device->CreateRasterizerState(&rsDesc, &m_mmdGroundShadowRS);
+		if (FAILED(hr))
+		{
+			return false;
+		}
+	}
+
+	// Depth Stencil State
+	{
+		D3D11_DEPTH_STENCIL_DESC dsDesc = {};
+		dsDesc.DepthEnable = true;
+		dsDesc.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ALL;
+		dsDesc.DepthFunc = D3D11_COMPARISON_LESS;
+		dsDesc.StencilEnable = true;
+		dsDesc.StencilReadMask = 0x01;
+		dsDesc.StencilWriteMask = 0xFF;
+		dsDesc.FrontFace.StencilFunc = D3D11_COMPARISON_NOT_EQUAL;
+		dsDesc.FrontFace.StencilFailOp = D3D11_STENCIL_OP_KEEP;
+		dsDesc.FrontFace.StencilDepthFailOp = D3D11_STENCIL_OP_KEEP;
+		dsDesc.FrontFace.StencilPassOp = D3D11_STENCIL_OP_REPLACE;
+		dsDesc.BackFace.StencilFunc = D3D11_COMPARISON_NOT_EQUAL;
+		dsDesc.BackFace.StencilFailOp = D3D11_STENCIL_OP_KEEP;
+		dsDesc.BackFace.StencilDepthFailOp = D3D11_STENCIL_OP_KEEP;
+		dsDesc.BackFace.StencilPassOp = D3D11_STENCIL_OP_REPLACE;
+		hr = m_device->CreateDepthStencilState(&dsDesc, &m_mmdGroundShadowDSS);
+		if (FAILED(hr))
+		{
+			return false;
+		}
+	}
+
+	// Default Depth Stencil State
+	{
+		D3D11_DEPTH_STENCIL_DESC dsDesc = {};
+		dsDesc.DepthEnable = true;
+		dsDesc.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ALL;
+		dsDesc.DepthFunc = D3D11_COMPARISON_LESS;
+		dsDesc.StencilEnable = false;
+		dsDesc.StencilReadMask = D3D11_DEFAULT_STENCIL_READ_MASK;
+		dsDesc.StencilWriteMask = D3D11_DEFAULT_STENCIL_WRITE_MASK;
+		dsDesc.FrontFace.StencilFunc = D3D11_COMPARISON_ALWAYS;
+		dsDesc.FrontFace.StencilFailOp = D3D11_STENCIL_OP_KEEP;
+		dsDesc.FrontFace.StencilDepthFailOp = D3D11_STENCIL_OP_KEEP;
+		dsDesc.FrontFace.StencilPassOp = D3D11_STENCIL_OP_KEEP;
+		dsDesc.BackFace.StencilFunc = D3D11_COMPARISON_ALWAYS;
+		dsDesc.BackFace.StencilFailOp = D3D11_STENCIL_OP_KEEP;
+		dsDesc.BackFace.StencilDepthFailOp = D3D11_STENCIL_OP_KEEP;
+		dsDesc.BackFace.StencilPassOp = D3D11_STENCIL_OP_KEEP;
+		hr = m_device->CreateDepthStencilState(&dsDesc, &m_defaultDSS);
+		if (FAILED(hr))
+		{
+			return false;
+		}
+	}
+
 	// Dummy texture
 	{
 		D3D11_TEXTURE2D_DESC tex2dDesc = {};
@@ -561,6 +698,9 @@ struct Model
 	ComPtr<ID3D11Buffer>		m_mmdEdgeSizeVSConstantBuffer;
 	ComPtr<ID3D11Buffer>		m_mmdEdgePSConstantBuffer;
 
+	ComPtr<ID3D11Buffer>		m_mmdGroundShadowVSConstantBuffer;
+	ComPtr<ID3D11Buffer>		m_mmdGroundShadowPSConstantBuffer;
+
 	bool Setup(AppContext& appContext);
 
 	void Update(const AppContext& appContext);
@@ -629,7 +769,7 @@ bool Model::Setup(AppContext& appContext)
 		}
 	}
 
-	// Setup mmd vertex shader constant buffer
+	// Setup mmd vertex shader constant buffer (VSData)
 	{
 		D3D11_BUFFER_DESC bufDesc = {};
 		bufDesc.Usage = D3D11_USAGE_DEFAULT;
@@ -644,7 +784,7 @@ bool Model::Setup(AppContext& appContext)
 		}
 	}
 
-	// Setup mmd pixel shader constant buffer
+	// Setup mmd pixel shader constant buffer (PSData)
 	{
 		D3D11_BUFFER_DESC bufDesc = {};
 		bufDesc.Usage = D3D11_USAGE_DEFAULT;
@@ -689,7 +829,7 @@ bool Model::Setup(AppContext& appContext)
 		}
 	}
 
-	// Setup mmd edge pixel shader constant buffer
+	// Setup mmd edge pixel shader constant buffer (PSData)
 	{
 		D3D11_BUFFER_DESC bufDesc = {};
 		bufDesc.Usage = D3D11_USAGE_DEFAULT;
@@ -698,6 +838,36 @@ bool Model::Setup(AppContext& appContext)
 		bufDesc.CPUAccessFlags = 0;
 
 		hr = appContext.m_device->CreateBuffer(&bufDesc, nullptr, &m_mmdEdgePSConstantBuffer);
+		if (FAILED(hr))
+		{
+			return false;
+		}
+	}
+
+	// Setup mmd ground shadow vertex shader constant buffer (VSData)
+	{
+		D3D11_BUFFER_DESC bufDesc = {};
+		bufDesc.Usage = D3D11_USAGE_DEFAULT;
+		bufDesc.ByteWidth = sizeof(MMDGroundShadowVertexShaderCB);
+		bufDesc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
+		bufDesc.CPUAccessFlags = 0;
+
+		hr = appContext.m_device->CreateBuffer(&bufDesc, nullptr, &m_mmdGroundShadowVSConstantBuffer);
+		if (FAILED(hr))
+		{
+			return false;
+		}
+	}
+
+	// Setup mmd ground shadow pixel shader constant buffer (PSData)
+	{
+		D3D11_BUFFER_DESC bufDesc = {};
+		bufDesc.Usage = D3D11_USAGE_DEFAULT;
+		bufDesc.ByteWidth = sizeof(MMDGroundShadowPixelShaderCB);
+		bufDesc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
+		bufDesc.CPUAccessFlags = 0;
+
+		hr = appContext.m_device->CreateBuffer(&bufDesc, nullptr, &m_mmdGroundShadowPSConstantBuffer);
 		if (FAILED(hr))
 		{
 			return false;
@@ -780,6 +950,8 @@ void Model::Draw(const AppContext& appContext)
 	m_context->OMSetRenderTargets(1, rtvs,
 		appContext.m_depthStencilView.Get()
 	);
+
+	m_context->OMSetDepthStencilState(appContext.m_defaultDSS.Get(), 0x00);
 
 	// Setup input assembler
 	{
@@ -934,6 +1106,11 @@ void Model::Draw(const AppContext& appContext)
 
 	// Draw edge
 
+	// Setup input assembler
+	{
+		m_context->IASetInputLayout(appContext.m_mmdEdgeInputLayout.Get());
+	}
+
 	// Setup vertex shader (VSData)
 	{
 		MMDEdgeVertexShaderCB vsCB;
@@ -982,6 +1159,87 @@ void Model::Draw(const AppContext& appContext)
 
 			ID3D11Buffer* pscbs[] = { m_mmdEdgePSConstantBuffer.Get() };
 			m_context->PSSetConstantBuffers(2, 1, pscbs);
+		}
+
+		m_context->RSSetState(appContext.m_mmdEdgeRS.Get());
+
+		m_context->OMSetBlendState(appContext.m_mmdEdgeBlendState.Get(), nullptr, 0xffffffff);
+
+		m_context->DrawIndexed(subMesh.m_vertexCount, subMesh.m_beginIndex, 0);
+	}
+
+	// Draw ground shadow
+
+	// Setup input assembler
+	{
+		m_context->IASetInputLayout(appContext.m_mmdGroundShadowInputLayout.Get());
+	}
+
+	// Setup vertex shader (VSData)
+	{
+		auto plane = glm::vec4(0, 1, 0, 0);
+		auto light = -appContext.m_lightDir;
+		auto shadow = glm::mat4();
+
+		shadow[0][0] = plane.y * light.y + plane.z * light.z;
+		shadow[0][1] = -plane.x * light.y;
+		shadow[0][2] = -plane.x * light.z;
+		shadow[0][3] = 0;
+
+		shadow[1][0] = -plane.y * light.x;
+		shadow[1][1] = plane.x * light.x + plane.z * light.z;
+		shadow[1][2] = -plane.y * light.z;
+		shadow[1][3] = 0;
+
+		shadow[2][0] = -plane.z * light.x;
+		shadow[2][1] = -plane.z * light.y;
+		shadow[2][2] = plane.x * light.x + plane.y * light.y;
+		shadow[2][3] = 0;
+
+		shadow[3][0] = -plane.w * light.x;
+		shadow[3][1] = -plane.w * light.y;
+		shadow[3][2] = -plane.w * light.z;
+		shadow[3][3] = plane.x * light.x + plane.y * light.y + plane.z * light.z;
+
+		auto wsvp = proj * view * shadow * world;
+
+		MMDGroundShadowVertexShaderCB vsCB;
+		vsCB.m_wvp = wsvp;
+		m_context->UpdateSubresource(m_mmdGroundShadowVSConstantBuffer.Get(), 0, nullptr, &vsCB, 0, 0);
+
+		// Vertex shader
+		m_context->VSSetShader(appContext.m_mmdGroundShadowVS.Get(), nullptr, 0);
+		ID3D11Buffer* cbs[] = { m_mmdGroundShadowVSConstantBuffer.Get() };
+		m_context->VSSetConstantBuffers(0, 1, cbs);
+	}
+
+	// Setup state
+	{
+		m_context->RSSetState(appContext.m_mmdGroundShadowRS.Get());
+		m_context->OMSetBlendState(appContext.m_mmdGroundShadowBlendState.Get(), nullptr, 0xffffffff);
+		m_context->OMSetDepthStencilState(appContext.m_mmdGroundShadowDSS.Get(), 0x01);
+	}
+
+	for (size_t i = 0; i < subMeshCount; i++)
+	{
+		const auto& subMesh = m_mmdModel->GetSubMeshes()[i];
+		const auto& mat = m_materials[subMesh.m_materialID];
+		const auto& mmdMat = mat.m_mmdMat;
+
+		if (!mmdMat.m_groundShadow)
+		{
+			continue;
+		}
+
+		// Pixel shader
+		m_context->PSSetShader(appContext.m_mmdGroundShadowPS.Get(), nullptr, 0);
+		{
+			MMDGroundShadowPixelShaderCB psCB;
+			psCB.m_shadowColor = glm::vec4(0.4f, 0.2f, 0.2f, 0.7f);
+			m_context->UpdateSubresource(m_mmdGroundShadowPSConstantBuffer.Get(), 0, nullptr, &psCB, 0, 0);
+
+			ID3D11Buffer* pscbs[] = { m_mmdGroundShadowPSConstantBuffer.Get() };
+			m_context->PSSetConstantBuffers(1, 1, pscbs);
 		}
 
 		m_context->RSSetState(appContext.m_mmdEdgeRS.Get());
