@@ -139,6 +139,9 @@ struct AppContext
 	int			m_screenWidth = 0;
 	int			m_screenHeight = 0;
 
+	UINT		m_multiSampleCount = 1;
+	UINT		m_multiSampleQuality = 0;
+
 	glm::vec3	m_lightColor = glm::vec3(1, 1, 1);
 	glm::vec3	m_lightDir = glm::vec3(-0.5f, -1.0f, -0.5f);
 
@@ -324,7 +327,7 @@ bool AppContext::CreateShaders()
 		rsDesc.DepthBiasClamp = 0;
 		rsDesc.DepthClipEnable = false;
 		rsDesc.ScissorEnable = false;
-		rsDesc.MultisampleEnable = false;
+		rsDesc.MultisampleEnable = true;
 		rsDesc.AntialiasedLineEnable = false;
 		hr = m_device->CreateRasterizerState(&rsDesc, &m_mmdFrontFaceRS);
 		if (FAILED(hr))
@@ -344,7 +347,7 @@ bool AppContext::CreateShaders()
 		rsDesc.DepthBiasClamp = 0;
 		rsDesc.DepthClipEnable = false;
 		rsDesc.ScissorEnable = false;
-		rsDesc.MultisampleEnable = false;
+		rsDesc.MultisampleEnable = true;
 		rsDesc.AntialiasedLineEnable = false;
 		hr = m_device->CreateRasterizerState(&rsDesc, &m_mmdBothFaceRS);
 		if (FAILED(hr))
@@ -411,7 +414,7 @@ bool AppContext::CreateShaders()
 		rsDesc.DepthBiasClamp = 0;
 		rsDesc.DepthClipEnable = false;
 		rsDesc.ScissorEnable = false;
-		rsDesc.MultisampleEnable = false;
+		rsDesc.MultisampleEnable = true;
 		rsDesc.AntialiasedLineEnable = false;
 		hr = m_device->CreateRasterizerState(&rsDesc, &m_mmdEdgeRS);
 		if (FAILED(hr))
@@ -477,7 +480,7 @@ bool AppContext::CreateShaders()
 		rsDesc.DepthBiasClamp = -1.0f;
 		rsDesc.DepthClipEnable = false;
 		rsDesc.ScissorEnable = false;
-		rsDesc.MultisampleEnable = false;
+		rsDesc.MultisampleEnable = true;
 		rsDesc.AntialiasedLineEnable = false;
 		hr = m_device->CreateRasterizerState(&rsDesc, &m_mmdGroundShadowRS);
 		if (FAILED(hr))
@@ -1272,6 +1275,9 @@ private:
 	int					m_width;
 	int					m_height;
 
+	UINT				m_multiSampleCount = 1;
+	UINT				m_multiSampleQuality = 0;
+
 	ComPtr<ID3D11Device>	m_device;
 	ComPtr<IDXGISwapChain>	m_swapChain;
 	ComPtr<ID3D11DeviceContext>	m_deviceContext;
@@ -1339,6 +1345,51 @@ bool App::Run(const std::vector<std::string>& args)
 	}
 
 	// Setup DirectX 11
+
+	UINT createDeviceFlags = 0;
+#if defined(_DEBUG)
+	createDeviceFlags |= D3D11_CREATE_DEVICE_DEBUG;
+#endif
+	D3D_FEATURE_LEVEL featureLevel;
+	const D3D_FEATURE_LEVEL featureLevels[] = { D3D_FEATURE_LEVEL_11_0 };
+
+	HRESULT hr = D3D11CreateDevice(
+		nullptr, D3D_DRIVER_TYPE_HARDWARE, nullptr, createDeviceFlags, featureLevels, 1,
+		D3D11_SDK_VERSION, &m_device, &featureLevel, &m_deviceContext
+	);
+	if (FAILED(hr))
+	{
+		return false;
+	}
+
+	m_multiSampleCount = 4;
+	UINT quality;
+	hr = m_device->CheckMultisampleQualityLevels(DXGI_FORMAT_R8G8B8A8_UNORM, 4, &quality);
+	if (FAILED(hr))
+	{
+		return false;
+	}
+	m_multiSampleQuality = quality - 1;
+
+	ComPtr<IDXGIDevice1> dxgi;
+	hr = m_device->QueryInterface<IDXGIDevice1>(&dxgi);
+	if (FAILED(hr))
+	{
+		return false;
+	}
+	ComPtr<IDXGIAdapter> adapter;
+	hr = dxgi->GetAdapter(&adapter);
+	if (FAILED(hr))
+	{
+		return false;
+	}
+	ComPtr<IDXGIFactory> dxgiFactory;
+	hr = adapter->GetParent(__uuidof(IDXGIFactory), &dxgiFactory);
+	if (FAILED(hr))
+	{
+		return false;
+	}
+
 	DXGI_SWAP_CHAIN_DESC sd = {};
 	sd.BufferCount = 2;
 	sd.BufferDesc.Width = 0;
@@ -1349,21 +1400,12 @@ bool App::Run(const std::vector<std::string>& args)
 	sd.Flags = DXGI_SWAP_CHAIN_FLAG_ALLOW_MODE_SWITCH;
 	sd.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;
 	sd.OutputWindow = m_hwnd;
-	sd.SampleDesc.Count = 1;
-	sd.SampleDesc.Quality = 0;
+	sd.SampleDesc.Count = m_multiSampleCount;
+	sd.SampleDesc.Quality = m_multiSampleQuality;
 	sd.Windowed = TRUE;
 	sd.SwapEffect = DXGI_SWAP_EFFECT_DISCARD;
 
-	UINT createDeviceFlags = 0;
-#if defined(_DEBUG)
-	createDeviceFlags |= D3D11_CREATE_DEVICE_DEBUG;
-#endif
-	D3D_FEATURE_LEVEL featureLevel;
-	const D3D_FEATURE_LEVEL featureLevels[] = { D3D_FEATURE_LEVEL_11_0 };
-	HRESULT hr = D3D11CreateDeviceAndSwapChain(
-		nullptr, D3D_DRIVER_TYPE_HARDWARE, nullptr, createDeviceFlags, featureLevels, 1,
-		D3D11_SDK_VERSION, &sd, &m_swapChain, &m_device, &featureLevel, &m_deviceContext
-	);
+	hr = dxgiFactory->CreateSwapChain(m_device.Get(), &sd, &m_swapChain);
 	if (FAILED(hr))
 	{
 		return false;
@@ -1374,6 +1416,8 @@ bool App::Run(const std::vector<std::string>& args)
 		return false;
 	}
 
+	m_appContext.m_multiSampleCount = m_multiSampleCount;
+	m_appContext.m_multiSampleQuality = m_multiSampleQuality;
 	if (!m_appContext.Setup(m_device))
 	{
 		return false;
@@ -1589,7 +1633,7 @@ bool App::CreateRenderTarget()
 	ComPtr<ID3D11Texture2D> backBuffer;
 	D3D11_RENDER_TARGET_VIEW_DESC rtvDesc = {};
 	rtvDesc.Format = sd.BufferDesc.Format;
-	rtvDesc.ViewDimension = D3D11_RTV_DIMENSION_TEXTURE2D;
+	rtvDesc.ViewDimension = D3D11_RTV_DIMENSION_TEXTURE2DMS;
 	m_swapChain->GetBuffer(0, __uuidof(ID3D11Texture2D), (LPVOID*)&backBuffer);
 	HRESULT hr = m_device->CreateRenderTargetView(backBuffer.Get(), &rtvDesc, &m_renderTargetView);
 	if (FAILED(hr))
@@ -1604,8 +1648,8 @@ bool App::CreateRenderTarget()
 	tex2dDesc.MipLevels = 1;
 	tex2dDesc.ArraySize = 1;
 	tex2dDesc.Format = DXGI_FORMAT_R24G8_TYPELESS;
-	tex2dDesc.SampleDesc.Count = 1;
-	tex2dDesc.SampleDesc.Quality = 0;
+	tex2dDesc.SampleDesc.Count = m_multiSampleCount;
+	tex2dDesc.SampleDesc.Quality = m_multiSampleQuality;
 	tex2dDesc.Usage = D3D11_USAGE_DEFAULT;
 	tex2dDesc.BindFlags = D3D11_BIND_DEPTH_STENCIL | D3D11_BIND_SHADER_RESOURCE;
 	tex2dDesc.CPUAccessFlags = 0;
@@ -1618,7 +1662,7 @@ bool App::CreateRenderTarget()
 
 	D3D11_DEPTH_STENCIL_VIEW_DESC dsvDesc = {};
 	dsvDesc.Format = DXGI_FORMAT_D24_UNORM_S8_UINT;
-	dsvDesc.ViewDimension = D3D11_DSV_DIMENSION_TEXTURE2D;
+	dsvDesc.ViewDimension = D3D11_DSV_DIMENSION_TEXTURE2DMS;
 	dsvDesc.Texture2D.MipSlice = 0;
 	hr = m_device->CreateDepthStencilView(m_depthStencilTex.Get(), &dsvDesc, &m_depthStencilView);
 	if (FAILED(hr))
