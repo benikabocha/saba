@@ -473,9 +473,9 @@ bool AppContext::CreateShaders()
 	{
 		D3D11_RASTERIZER_DESC rsDesc = {};
 		rsDesc.FillMode = D3D11_FILL_SOLID;
-		rsDesc.CullMode = D3D11_CULL_FRONT;
+		rsDesc.CullMode = D3D11_CULL_NONE;
 		rsDesc.FrontCounterClockwise = true;
-		rsDesc.DepthBias = 0;
+		rsDesc.DepthBias = -1;
 		rsDesc.SlopeScaledDepthBias = -1.0f;
 		rsDesc.DepthBiasClamp = -1.0f;
 		rsDesc.DepthClipEnable = false;
@@ -1244,8 +1244,6 @@ void Model::Draw(const AppContext& appContext)
 			ID3D11Buffer* pscbs[] = { m_mmdGroundShadowPSConstantBuffer.Get() };
 			m_context->PSSetConstantBuffers(1, 1, pscbs);
 		}
-
-		m_context->RSSetState(appContext.m_mmdEdgeRS.Get());
 
 		m_context->OMSetBlendState(appContext.m_mmdEdgeBlendState.Get(), nullptr, 0xffffffff);
 
