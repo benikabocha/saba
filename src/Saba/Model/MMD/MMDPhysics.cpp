@@ -777,12 +777,12 @@ namespace saba
 			constraint->enableSpring(3, true);
 			constraint->setStiffness(3, pmdJoint.m_springRot.x);
 		}
-		if (pmdJoint.m_springRot.x != 0)
+		if (pmdJoint.m_springRot.y != 0)
 		{
 			constraint->enableSpring(4, true);
 			constraint->setStiffness(4, pmdJoint.m_springRot.y);
 		}
-		if (pmdJoint.m_springRot.x != 0)
+		if (pmdJoint.m_springRot.z != 0)
 		{
 			constraint->enableSpring(5, true);
 			constraint->setStiffness(5, pmdJoint.m_springRot.z);
