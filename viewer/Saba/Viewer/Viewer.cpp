@@ -1155,12 +1155,15 @@ namespace saba
 			return;
 		}
 
+
 		float width = 300;
 		float height = 250;
 
 		ImGui::SetNextWindowSize(ImVec2(width, height), ImGuiSetCond_Once);
 		ImGui::SetNextWindowPos(ImVec2(0, 100 + 20), ImGuiSetCond_Once);
 		ImGui::Begin("Control", &m_enableCtrlUI);
+
+		ImGui::PushID("Control UI");
 
 		if (ImGui::CollapsingHeader("Animation"))
 		{
@@ -1200,11 +1203,15 @@ namespace saba
 			DrawBGCtrl();
 		}
 
+		ImGui::PopID();
+
 		ImGui::End();
 	}
 
 	void Viewer::DrawModelListCrtl()
 	{
+		ImGui::PushID("Model List Control");
+
 		ImGui::BeginChild("models", ImVec2(0, 80), true);
 
 		for (const auto& modelDrawer : m_modelDrawers)
@@ -1245,10 +1252,14 @@ namespace saba
 				}
 			}
 		}
+
+		ImGui::PopID();
 	}
 
 	void Viewer::DrawTransformCtrl()
 	{
+		ImGui::PushID("Transform Control");
+
 		if (ImGui::Checkbox("Manipulator", &m_enableManip))
 		{
 			if (m_enableManip)
@@ -1289,10 +1300,14 @@ namespace saba
 			m_selectedModelDrawer->SetRotate(glm::radians(r));
 			m_selectedModelDrawer->SetScale(s);
 		}
+
+		ImGui::PopID();
 	}
 
 	void Viewer::DrawAnimCtrl()
 	{
+		ImGui::PushID("Animation Control");
+
 		float animFrame = float(m_context.GetAnimationTime() * m_animCtrlEditFPS);
 		if (ImGui::InputFloat("Frame", &animFrame))
 		{
@@ -1347,10 +1362,14 @@ namespace saba
 			InitializeAnimation();
 			InitializeScene();
 		}
+
+		ImGui::PopID();
 	}
 
 	void Viewer::DrawCameraCtrl()
 	{
+		ImGui::PushID("Camera Control");
+
 		auto cam = &m_context.m_camera;
 		auto eyePos = cam->GetEyePostion();
 		auto up = cam->GetUp();
@@ -1374,10 +1393,14 @@ namespace saba
 		{
 			cam->SetClip(nearClip, farClip);
 		}
+
+		ImGui::PopID();
 	}
 
 	void Viewer::DrawShadowCtrl()
 	{
+		ImGui::PushID("Shadow Control");
+
 		bool shadowEnable = m_context.IsShadowEnabled();
 		if (ImGui::Checkbox("Use Shadow", &shadowEnable))
 		{
@@ -1389,14 +1412,14 @@ namespace saba
 
 		float nearClip = shadowMap->GetNearClip();
 		float farClip = shadowMap->GetFarClip();
-		if (ImGui::InputFloat("Shadow:Near Clip", &nearClip, cam->GetNearClip(), cam->GetFarClip()))
+		if (ImGui::InputFloat("Near Clip", &nearClip, cam->GetNearClip(), cam->GetFarClip()))
 		{
 			if (nearClip < farClip)
 			{
 				shadowMap->SetClip(nearClip, farClip);
 			}
 		}
-		if (ImGui::InputFloat("Shadow:Far Clip", &farClip, cam->GetNearClip(), cam->GetFarClip()))
+		if (ImGui::InputFloat("Far Clip", &farClip, cam->GetNearClip(), cam->GetFarClip()))
 		{
 			if (nearClip < farClip)
 			{
@@ -1405,7 +1428,7 @@ namespace saba
 		}
 
 		float bias = shadowMap->GetBias();
-		if (ImGui::SliderFloat("Shadow:Bias", &bias, 0.0f, 1.0f))
+		if (ImGui::SliderFloat("Bias", &bias, 0.0f, 1.0f))
 		{
 			shadowMap->SetBias(bias);
 		}
@@ -1413,7 +1436,7 @@ namespace saba
 		int width = shadowMap->GetWidth();
 		int height = shadowMap->GetHeight();
 		int size[2] = { width, height };
-		if (ImGui::InputInt2("Shadow:Texture Size", size))
+		if (ImGui::InputInt2("Texture Size", size))
 		{
 			glm::ivec2 texSize(size[0], size[1]);
 			texSize = glm::max(glm::ivec2(1), texSize);
@@ -1426,6 +1449,8 @@ namespace saba
 		{
 			m_context.SetMMDGroundShadowColor(mmdShadowColor);
 		}
+
+		ImGui::PopID();
 	}
 
 	namespace
@@ -1446,6 +1471,8 @@ namespace saba
 
 	void Viewer::DrawLightCtrl()
 	{
+		ImGui::PushID("Light Control");
+
 		glm::vec3 lightDir = m_context.GetLight()->GetLightDirection();
 		glm::vec3 lightColor = m_context.GetLight()->GetLightColor();
 		if (ImGui::InputFloat3("Direction", &lightDir[0]))
@@ -1509,6 +1536,8 @@ namespace saba
 		light.SetLightDirection(lightDir);
 		light.SetLightColor(lightColor);
 		m_context.SetLight(light);
+
+		ImGui::PopID();
 	}
 
 	void Viewer::DrawLightGuide()
@@ -1536,14 +1565,20 @@ namespace saba
 
 	void Viewer::DrawModelCtrl()
 	{
+		ImGui::PushID("Model Control");
+
 		if (m_selectedModelDrawer != nullptr)
 		{
 			m_selectedModelDrawer->DrawUI(&m_context);
 		}
+
+		ImGui::PopID();
 	}
 
 	void Viewer::DrawBGCtrl()
 	{
+		ImGui::PushID("BG Control");
+
 		ImGui::ColorEdit3("BG Color1", &m_bgColor1[0]);
 		ImGui::ColorEdit3("BG Color2", &m_bgColor2[0]);
 		if (ImGui::Button("Reset BG Color"))
@@ -1551,6 +1586,8 @@ namespace saba
 			m_bgColor1 = DefaultBGColor1;
 			m_bgColor2 = DefaultBGColor2;
 		}
+
+		ImGui::PopID();
 	}
 
 	void Viewer::UpdateAnimation()
