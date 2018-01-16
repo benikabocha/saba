@@ -36,3 +36,16 @@ if(WIN32)
         Saba
     )
 endif()
+
+# simple_mmd_viewer_vulkan
+if(SABA_ENABLE_EXAMPLE_VULKAN)
+    include_directories(${Vulkan_INCLUDE_DIR})
+    add_executable(simple_mmd_viewer_vulkan
+        simple_mmd_viewer_vulkan.cpp
+    )
+    target_link_libraries(simple_mmd_viewer_vulkan
+        ${Vulkan_LIBRARY}
+        ${simple_mmd_viewer_glfw_LIBRARIES}
+        Saba
+    )
+endif()

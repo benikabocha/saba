@@ -12,6 +12,7 @@ option (SABA_USE_GLSLANG "glsl Preprocessor : glslang lib" off)
 option (SABA_INSTALL "Saba install." off)
 option (SABA_GLFW_ROOT "GLFW Root Directory" "")
 option (SABA_FORCE_GLFW_BUILD "Force glfw build." off)
+option (SABA_ENABLE_EXAMPLE_VULKAN "Build vulakn's example." off)
 
 set (BULLET_ROOT ${SABA_BULLET_ROOT})
 
@@ -35,6 +36,10 @@ endif ()
 
 if (SABA_ENABLE_TEST)
     enable_testing()
+endif()
+
+if (SABA_ENABLE_EXAMPLE_VULKAN)
+    find_package(Vulkan REQUIRED)
 endif()
 
 set(CMAKE_CXX_STANDARD 14)
