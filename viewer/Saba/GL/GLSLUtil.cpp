@@ -634,7 +634,7 @@ namespace saba
 
 		std::string fsCode;
 		{
-			SABA_INFO("Fragment Shader File Open. {}", vsFilePath);
+			SABA_INFO("Fragment Shader File Open. {}", fsFilePath);
 			TextFileReader glslFile(fsFilePath);
 			if (!glslFile.IsOpen())
 			{
