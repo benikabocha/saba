@@ -10,7 +10,6 @@
 #include <vector>
 #include <cstdint>
 #include <string>
-#include <fstream>
 
 namespace saba
 {
@@ -40,6 +39,7 @@ namespace saba
 		Offset GetSize() const;
 		bool IsBad() const;
 		void ClearBadFlag();
+		bool IsEOF();
 
 		FILE* GetFilePointer() const;
 
@@ -66,19 +66,19 @@ namespace saba
 			{
 				return false;
 			}
-#if _WIN32
+#if _MSC_VER
 			if (fread_s(buffer, sizeof(T) * count, sizeof(T), count, m_fp) != count)
 			{
 				m_badFlag = true;
 				return false;
 			}
-#else // !_WIN32
+#else // !_MSC_VER
 			if (fread(buffer, sizeof(T), count, m_fp) != count)
 			{
 				m_badFlag = true;
 				return false;
 			}
-#endif //!_WIN32
+#endif //!_MSC_VER
 			return true;
 		}
 
@@ -133,14 +133,8 @@ namespace saba
 		bool IsEof();
 
 	private:
-		std::ifstream	m_ifs;
+		saba::File	m_file;
 	};
-
-	bool OpenFromUtf8Path(
-		const std::string& filepath,
-		std::ifstream& ifs,
-		std::ios_base::openmode mode = std::ios_base::in
-	);
 }
 
 #endif // !BASE_FILE_H_

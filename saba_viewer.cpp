@@ -247,31 +247,34 @@ int SabaViewerMain(const std::vector<std::string>& args)
 	return ret;
 }
 
-#if _WIN32
-int wmain(int argc, wchar_t** argv)
-{
-	std::vector<std::string> args(argc);
-	for (int i = 0; i < argc; i++)
-	{
-		args[i] = saba::ToUtf8String(argv[i]);
-	}
 
-	auto ret = SabaViewerMain(args);
-	saba::SingletonFinalizer::Finalize();
-	return ret;
-}
-#else // _WIN32
+#if _WIN32
+#include <Windows.h>
+#include <shellapi.h>
+#endif
+
 int main(int argc, char** argv)
 {
 	std::vector<std::string> args(argc);
+#if _WIN32
+	{
+		WCHAR* cmdline = GetCommandLineW();
+		int wArgc;
+		WCHAR** wArgs = CommandLineToArgvW(cmdline, &wArgc);
+		for (int i = 0; i < argc; i++)
+		{
+			args[i] = saba::ToUtf8String(wArgs[i]);
+		}
+	}
+#else // _WIN32
 	for (int i = 0; i < argc; i++)
 	{
 		args[i] = argv[i];
 	}
+#endif
 
 	auto ret = SabaViewerMain(args);
 	saba::SingletonFinalizer::Finalize();
 	return ret;
 }
-#endif
 

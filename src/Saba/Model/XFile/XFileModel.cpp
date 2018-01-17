@@ -4,6 +4,7 @@
 #include <tinyxfileloader.h>
 
 #include <map>
+#include <sstream>
 #include <glm/gtc/matrix_transform.hpp>
 
 #include "../../Base/Path.h"
@@ -25,16 +26,18 @@ namespace saba
 	{
 		Destroy();
 
-		std::ifstream ifs;
-		if (!OpenFromUtf8Path(filepath, ifs))
+		TextFileReader textReader;
+		if (!textReader.Open(filepath))
 		{
 			SABA_WARN("Failed to open file.[{}]", filepath);
 			return false;
 		}
+		std::string text = textReader.ReadAll();
+		std::stringstream ss(text);
 
 		tinyxfile::XFile xfile;
 		tinyxfile::XFileLoader loader;
-		if (!loader.Load(ifs, &xfile))
+		if (!loader.Load(ss, &xfile))
 		{
 			SABA_WARN("Failed to open file.[{}]", filepath);
 			SABA_WARN("XFileLoader message : {}", loader.GetErrorMessage());

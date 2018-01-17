@@ -1273,29 +1273,10 @@ bool SampleMain(std::vector<std::string>& args)
 }
 
 #if _WIN32
-int wmain(int argc, wchar_t** argv)
-{
-	if (argc < 2)
-	{
-		Usage();
-		return 1;
-	}
+#include <Windows.h>
+#include <shellapi.h>
+#endif
 
-	std::vector<std::string> args;
-	for (int i = 1; i < argc; i++)
-	{
-		args.emplace_back(saba::ToUtf8String(argv[i]));
-	}
-
-	if (!SampleMain(args))
-	{
-		std::cout << "Failed to run.\n";
-		return 1;
-	}
-
-	return 0;
-}
-#else // _WIN32
 int main(int argc, char** argv)
 {
 	if (argc < 2)
@@ -1304,11 +1285,23 @@ int main(int argc, char** argv)
 		return 1;
 	}
 
-	std::vector<std::string> args;
-	for (int i = 1; i < argc; i++)
+	std::vector<std::string> args(argc);
+#if _WIN32
 	{
-		args.emplace_back(argv[i]);
+		WCHAR* cmdline = GetCommandLineW();
+		int wArgc;
+		WCHAR** wArgs = CommandLineToArgvW(cmdline, &wArgc);
+		for (int i = 0; i < argc; i++)
+		{
+			args[i] = saba::ToUtf8String(wArgs[i]);
+		}
 	}
+#else // _WIN32
+	for (int i = 0; i < argc; i++)
+	{
+		args[i] = argv[i];
+	}
+#endif
 
 	if (!SampleMain(args))
 	{
@@ -1318,4 +1311,3 @@ int main(int argc, char** argv)
 
 	return 0;
 }
-#endif // _WIN32

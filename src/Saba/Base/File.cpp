@@ -6,9 +6,6 @@
 #include "File.h"
 #include "UnicodeUtil.h"
 
-#include <streambuf>
-#include <iterator>
-
 namespace saba
 {
 	saba::File::File()
@@ -117,6 +114,11 @@ namespace saba
 		m_badFlag = false;
 	}
 
+	bool File::IsEOF()
+	{
+		return feof(m_fp) != 0;
+	}
+
 	FILE * saba::File::GetFilePointer() const
 	{
 		return m_fp;
@@ -201,17 +203,7 @@ namespace saba
 
 	bool TextFileReader::Open(const char * filepath)
 	{
-#if _WIN32
-		std::wstring wFilepath;
-		if (!TryToWString(filepath, wFilepath))
-		{
-			return false;
-		}
-		m_ifs.open(wFilepath);
-#else
-		m_ifs.open(filepath, std::ios::binary);
-#endif
-		return m_ifs.is_open();
+		return m_file.OpenText(filepath);
 	}
 
 	bool TextFileReader::Open(const std::string & filepath)
@@ -221,12 +213,12 @@ namespace saba
 
 	void TextFileReader::Close()
 	{
-		m_ifs.close();
+		m_file.Close();
 	}
 
 	bool TextFileReader::IsOpen()
 	{
-		return m_ifs.is_open();
+		return m_file.IsOpen();
 	}
 
 	std::string TextFileReader::ReadLine()
@@ -235,23 +227,33 @@ namespace saba
 		{
 			return "";
 		}
-		std::istreambuf_iterator<char> it(m_ifs);
-		std::istreambuf_iterator<char> end;
+
 		std::string line;
 		auto outputIt = std::back_inserter(line);
-		while (it != end && (*it) != '\r' && (*it) != '\n')
+		int ch;
+		ch = fgetc(m_file.GetFilePointer());
+		while (ch != EOF && ch != '\r' && ch != '\n')
 		{
-			(*outputIt) = (*it);
-			++outputIt;
-			++it;
+			line.push_back(ch);
+			ch = fgetc(m_file.GetFilePointer());
 		}
-		if (it != end)
+		if (ch != EOF)
 		{
-			auto ch = *it;
-			++it;
-			if (it != end && ch == '\r' && (*it) == '\n')
+			if (ch == '\r')
 			{
-				++it;
+				ch = fgetc(m_file.GetFilePointer());
+				if (ch != EOF && ch != '\n')
+				{
+					ungetc(ch, m_file.GetFilePointer());
+				}
+			}
+			else
+			{
+				ch = fgetc(m_file.GetFilePointer());
+				if (ch != EOF)
+				{
+					ungetc(ch, m_file.GetFilePointer());
+				}
 			}
 		}
 
@@ -273,44 +275,27 @@ namespace saba
 
 	std::string TextFileReader::ReadAll()
 	{
-		std::istreambuf_iterator<char> begin(m_ifs);
-		std::istreambuf_iterator<char> end;
-		return std::string(begin, end);
+		std::string all;
+
+		if (m_file.IsOpen())
+		{
+			int ch = fgetc(m_file.GetFilePointer());
+			while (ch != EOF)
+			{
+				all.push_back(ch);
+				ch = fgetc(m_file.GetFilePointer());
+			}
+		}
+		return all;
 	}
 
 	bool TextFileReader::IsEof()
 	{
-		if (!m_ifs.is_open())
-		{
-			return m_ifs.eof();
-		}
-
-		if (m_ifs.eof())
-		{
-			return true;
-		}
-		int ch = m_ifs.peek();
-		if (ch == std::ifstream::traits_type::eof())
-		{
-			return true;
-		}
-
-		return false;
-	}
-
-	bool OpenFromUtf8Path(const std::string & filepath, std::ifstream & ifs, std::ios_base::openmode mode)
-	{
-#if _WIN32
-		std::wstring wFilepath;
-		if (!TryToWString(filepath, wFilepath))
+		if (!m_file.IsOpen())
 		{
 			return false;
 		}
-		ifs.open(wFilepath, mode);
-#else
-		ifs.open(filepath, mode);
-#endif
-		return ifs.is_open();
+		return m_file.IsEOF();
 	}
 }
 

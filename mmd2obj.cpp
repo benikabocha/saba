@@ -13,6 +13,7 @@
 #include <Saba/Model/MMD/VPDFile.h>
 
 #include <iostream>
+#include <fstream>
 #include <vector>
 #include <string>
 #include <memory>
@@ -300,30 +301,29 @@ bool MMD2Obj(const std::vector<std::string>& args)
 }
 
 #if _WIN32
-int wmain(int argc, wchar_t** argv)
-{
-	std::vector<std::string> args(argc);
-	for (int i = 0; i < argc; i++)
-	{
-		args[i] = saba::ToUtf8String(argv[i]);
-	}
+#include <Windows.h>
+#include <shellapi.h>
+#endif
 
-	if (!MMD2Obj(args))
-	{
-		std::cout << "Failed to convert model data.\n";
-		return 1;
-	}
-
-	return 0;
-}
-#else // _WIN32
 int main(int argc, char** argv)
 {
 	std::vector<std::string> args(argc);
+#if _WIN32
+	{
+		WCHAR* cmdline = GetCommandLineW();
+		int wArgc;
+		WCHAR** wArgs = CommandLineToArgvW(cmdline, &wArgc);
+		for (int i = 0; i < argc; i++)
+		{
+			args[i] = saba::ToUtf8String(wArgs[i]);
+		}
+	}
+#else // _WIN32
 	for (int i = 0; i < argc; i++)
 	{
 		args[i] = argv[i];
 	}
+#endif
 
 	if (!MMD2Obj(args))
 	{
@@ -333,4 +333,3 @@ int main(int argc, char** argv)
 
 	return 0;
 }
-#endif // _WIN32

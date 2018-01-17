@@ -1,4 +1,5 @@
 ﻿#include <Windows.h>
+#include <shellapi.h>
 #include <tchar.h>
 #include <wrl.h>
 #include <d3d11.h>
@@ -1688,7 +1689,7 @@ LRESULT WINAPI WndProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
 	return DefWindowProc(hwnd, msg, wparam, lparam);
 }
 
-int wmain(int argc, wchar_t** argv)
+int main(int argc, char** argv)
 {
 	if (argc < 2)
 	{
@@ -1697,9 +1698,14 @@ int wmain(int argc, wchar_t** argv)
 	}
 
 	std::vector<std::string> args;
-	for (int i = 1; i < argc; i++)
 	{
-		args.emplace_back(saba::ToUtf8String(argv[i]));
+		WCHAR* cmdline = GetCommandLineW();
+		int wArgc;
+		WCHAR** wArgs = CommandLineToArgvW(cmdline, &wArgc);
+		for (int i = 0; i < argc; i++)
+		{
+			args[i] = saba::ToUtf8String(wArgs[i]);
+		}
 	}
 
 	WNDCLASSEX wc = {
