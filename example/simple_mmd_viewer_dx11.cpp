@@ -1697,7 +1697,7 @@ int main(int argc, char** argv)
 		return 1;
 	}
 
-	std::vector<std::string> args;
+	std::vector<std::string> args(argc);
 	{
 		WCHAR* cmdline = GetCommandLineW();
 		int wArgc;
