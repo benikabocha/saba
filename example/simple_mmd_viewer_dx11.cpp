@@ -146,6 +146,7 @@ struct AppContext
 	glm::vec3	m_lightColor = glm::vec3(1, 1, 1);
 	glm::vec3	m_lightDir = glm::vec3(-0.5f, -1.0f, -0.5f);
 
+	float	m_elapsed = 0.0f;
 	float	m_animTime = 0.0f;
 	std::unique_ptr<saba::VMDCameraAnimation>	m_vmdCameraAnim;
 
@@ -707,6 +708,7 @@ struct Model
 
 	bool Setup(AppContext& appContext);
 
+	void UpdateAnimation(const AppContext& appContext);
 	void Update(const AppContext& appContext);
 	void Draw(const AppContext& appContext);
 };
@@ -902,6 +904,13 @@ bool Model::Setup(AppContext& appContext)
 	}
 
 	return true;
+}
+
+void Model::UpdateAnimation(const AppContext& appContext)
+{
+	m_mmdModel->BeginAnimation();
+	m_mmdModel->UpdateAllAnimation(m_vmdAnim.get(), appContext.m_animTime * 30.0f, appContext.m_elapsed);
+	m_mmdModel->EndAnimation();
 }
 
 void Model::Update(const AppContext& appContext)
@@ -1565,6 +1574,7 @@ void App::MainLoop()
 			elapsed = 1.0 / 30.0;
 		}
 		saveTime = time;
+		m_appContext.m_elapsed = float(elapsed);
 		m_appContext.m_animTime += float(elapsed);
 
 		m_appContext.m_screenWidth = m_width;
@@ -1587,17 +1597,13 @@ void App::MainLoop()
 
 		for (auto& model : m_models)
 		{
-			// Update bone animation.
-			model.m_mmdModel->BeginAnimation();
-			model.m_vmdAnim->Evaluate(m_appContext.m_animTime * 30.0f);
-			model.m_mmdModel->UpdateAnimation();
-			model.m_mmdModel->EndAnimation();
+			// Update Animation
+			model.UpdateAnimation(m_appContext);
 
-			// Update physics animation.
-			model.m_mmdModel->UpdatePhysics(float(elapsed));
+			// Update Vertices
+			model.Update(m_appContext);
 
 			// Draw
-			model.Update(m_appContext);
 			model.Draw(m_appContext);
 
 			ComPtr<ID3D11CommandList> cmdList;

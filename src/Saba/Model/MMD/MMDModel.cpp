@@ -6,6 +6,7 @@
 #include "MMDModel.h"
 #include "MMDPhysics.h"
 #include "VPDFile.h"
+#include "VMDAnimation.h"
 
 #include <glm/gtc/matrix_transform.hpp>
 
@@ -152,6 +153,22 @@ namespace saba
 		}
 	}
 
+	void MMDModel::UpdateAllAnimation(VMDAnimation * vmdAnim, float vmdFrame, float physicsElapsed)
+	{
+		if (vmdAnim != nullptr)
+		{
+			vmdAnim->Evaluate(vmdFrame);
+		}
+
+		UpdateMorphAnimation();
+
+		UpdateNodeAnimation(false);
+
+		UpdatePhysicsAnimation(physicsElapsed);
+
+		UpdateNodeAnimation(true);
+	}
+
 	void MMDModel::LoadPose(const VPDFile & vpd, int frameCount)
 	{
 		struct Pose
@@ -219,13 +236,25 @@ namespace saba
 				morph.m_morph->SetWeight(weight);
 			}
 
-			UpdateAnimation();
+			UpdateMorphAnimation();
+			UpdateNodeAnimation(false);
+			UpdatePhysicsAnimation(1.0f / 30.0f);
+			UpdateNodeAnimation(true);
 
 			EndAnimation();
-
-			UpdatePhysics(1.0f / 30.0f);
 		}
 
 		//SaveBaseAnimation();
+	}
+
+	void MMDModel::UpdateAnimation()
+	{
+		UpdateMorphAnimation();
+		UpdateNodeAnimation(false);
+	}
+
+	void MMDModel::UpdatePhysics(float elapsed)
+	{
+		UpdatePhysicsAnimation(elapsed);
 	}
 }

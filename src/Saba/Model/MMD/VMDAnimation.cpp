@@ -389,11 +389,15 @@ namespace saba
 
 			Evaluate((float)t, float(1 + i) / float(frameCount));
 
-			m_model->UpdateAnimation();
+			m_model->UpdateMorphAnimation();
+
+			m_model->UpdateNodeAnimation(false);
+
+			m_model->UpdatePhysicsAnimation(1.0f / 30.0f);
+
+			m_model->UpdateNodeAnimation(true);
 
 			m_model->EndAnimation();
-
-			m_model->UpdatePhysics(1.0f / 30.0f);
 		}
 	}
 

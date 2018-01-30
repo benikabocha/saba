@@ -17,14 +17,7 @@ namespace saba
 {
 	GLMMDModel::GLMMDModel()
 	{
-		m_animTime = 0;
-		m_updateAnimTime = 0;
-		m_updatePhysicsTime = 0;
-		m_updateTime = 0;
-		m_perfInfo.m_updateAnimTime = 0;
-		m_perfInfo.m_updatePhysicsTime = 0;
-		m_perfInfo.m_updateModelTime = 0;
-		m_perfInfo.m_updateGLBufferTime = 0;
+		m_perfInfo.Clear();
 		m_enablePhysics = true;
 		m_enableEdge = true;
 		m_enableGroundShadow = true;
@@ -253,51 +246,165 @@ namespace saba
 		}
 	}
 
-	void GLMMDModel::UpdateAnimation(double animTime, bool evaluateAnim)
+	namespace
 	{
-		double startTime = GetTime();
-
-		if (!evaluateAnim)
+		class Perf
 		{
-			m_mmdModel->SaveBaseAnimation();
+		public:
+			void Start()
+			{
+				m_startTime = GetTime();
+			}
+
+			void Stop()
+			{
+				m_perfTime += GetTime() - m_startTime;
+			}
+
+			double GetPerfTime() const
+			{
+				return m_perfTime;
+			}
+
+		private:
+			double	m_perfTime = 0;
+			double	m_startTime;
+		};
+	}
+	void GLMMDModel::UpdateAnimation(double animTime, double elapsed)
+	{
+		Perf setupAnimPerf;
+		Perf updateMorphAnimPerf;
+		Perf updateNodeAnimPerf;
+		Perf updatePhysicsAnimPerf;
+
+		// Begin animation
+		setupAnimPerf.Start();
+		m_mmdModel->BeginAnimation();
+		setupAnimPerf.Stop();
+
+		// Evaluate VMD aniamtion (update morph and node parameter)
+		setupAnimPerf.Start();
+		EvaluateAnimation(animTime);
+		setupAnimPerf.Stop();
+
+		// Update morph animation
+		updateMorphAnimPerf.Start();
+		m_mmdModel->UpdateMorphAnimation();
+		updateMorphAnimPerf.Stop();
+
+		// Update node animation (before physics animation)
+		updateNodeAnimPerf.Start();
+		m_mmdModel->UpdateNodeAnimation(false);
+		updateNodeAnimPerf.Stop();;
+
+		if (m_enablePhysics)
+		{
+			// Update physics animation
+			updatePhysicsAnimPerf.Start();
+			m_mmdModel->UpdatePhysicsAnimation((float)elapsed);
+			updatePhysicsAnimPerf.Stop();
 		}
+
+		// Update node animation (after physics animation)
+		updateNodeAnimPerf.Start();
+		m_mmdModel->UpdateNodeAnimation(true);
+		updateNodeAnimPerf.Stop();
+
+		// End animation
+		setupAnimPerf.Start();
+		m_mmdModel->EndAnimation();
+		setupAnimPerf.Stop();
+
+		m_perfInfo.m_setupAnimTime = setupAnimPerf.GetPerfTime();
+		m_perfInfo.m_updateMorphAnimTime = updateMorphAnimPerf.GetPerfTime();
+		m_perfInfo.m_updateNodeAnimTime = updateNodeAnimPerf.GetPerfTime();
+		m_perfInfo.m_updatePhysicsAnimTime = updatePhysicsAnimPerf.GetPerfTime();
+	}
+
+	void GLMMDModel::UpdateAnimationIgnoreVMD(double elapsed)
+	{
+		Perf setupAnimPerf;
+		Perf updateMorphAnimPerf;
+		Perf updateNodeAnimPerf;
+		Perf updatePhysicsAnimPerf;
+
+		// Save animation (save node TRS)
+		setupAnimPerf.Start();
+		m_mmdModel->SaveBaseAnimation();
+		setupAnimPerf.Stop();
+
+		// Begin animation (initialize node TRS)
+		setupAnimPerf.Start();
+		m_mmdModel->BeginAnimation();
+		setupAnimPerf.Stop();
+
+		// Load animation (load node TRS)
+		setupAnimPerf.Start();
+		m_mmdModel->LoadBaseAnimation();
+		setupAnimPerf.Stop();
+
+		// Update morph animation
+		updateMorphAnimPerf.Start();
+		m_mmdModel->UpdateMorphAnimation();
+		updateMorphAnimPerf.Stop();
+
+		// Update node animation (before physics animation)
+		updateNodeAnimPerf.Start();
+		m_mmdModel->UpdateNodeAnimation(false);
+		updateNodeAnimPerf.Stop();
+
+		if (m_enablePhysics)
+		{
+			// Update physics animation
+			updatePhysicsAnimPerf.Start();
+			m_mmdModel->UpdatePhysicsAnimation((float)elapsed);
+			updatePhysicsAnimPerf.Stop();
+		}
+
+		// Update node animation (after physics animation)
+		updateNodeAnimPerf.Start();
+		m_mmdModel->UpdateNodeAnimation(true);
+		updateNodeAnimPerf.Stop();
+
+		// End animation
+		setupAnimPerf.Start();
+		m_mmdModel->EndAnimation();
+		setupAnimPerf.Stop();
+
+		m_perfInfo.m_setupAnimTime = setupAnimPerf.GetPerfTime();
+		m_perfInfo.m_updateMorphAnimTime = updateMorphAnimPerf.GetPerfTime();
+		m_perfInfo.m_updateNodeAnimTime = updateNodeAnimPerf.GetPerfTime();
+		m_perfInfo.m_updatePhysicsAnimTime = updatePhysicsAnimPerf.GetPerfTime();
+	}
+
+	void GLMMDModel::UpdateMorph()
+	{
+		m_mmdModel->SaveBaseAnimation();
 
 		m_mmdModel->BeginAnimation();
 
-		if (evaluateAnim)
-		{
-			EvaluateAnimation(animTime);
-		}
-		else
-		{
-			m_mmdModel->LoadBaseAnimation();
-		}
+		m_mmdModel->LoadBaseAnimation();
 
-		m_mmdModel->UpdateAnimation();
+		m_mmdModel->UpdateMorphAnimation();
+		m_mmdModel->UpdateNodeAnimation(false);
+		m_mmdModel->UpdatePhysicsAnimation(0.0f);
+		m_mmdModel->UpdateNodeAnimation(true);
 
 		m_mmdModel->EndAnimation();
-
-		double endTime = GetTime();
-		m_updateAnimTime = endTime - startTime;
 	}
 
-	void GLMMDModel::Update(double elapsed)
+	void GLMMDModel::Update()
 	{
-		m_updateTime = 0;
 		if (m_mmdModel == nullptr)
 		{
 			return;
 		}
 
-		if (m_enablePhysics)
-		{
-			double startTime = GetTime();
-			m_mmdModel->UpdatePhysics((float)elapsed);
-			double endTime = GetTime();
-			m_updatePhysicsTime = endTime - startTime;
-		}
+		Perf updateModelPerf;
+		Perf updateGLBufferPerf;
 
-		double startTime = GetTime();
+		updateModelPerf.Start();
 		m_mmdModel->Update();
 
 		size_t matCount = m_mmdModel->GetMaterialCount();
@@ -316,25 +423,38 @@ namespace saba
 			m_materials[mi].m_toonTextureMulFactor = mmdMat.m_toonTextureMulFactor;
 			m_materials[mi].m_toonTextureAddFactor = mmdMat.m_toonTextureAddFactor;
 		}
-		double endTime = GetTime();
-		double updateModelTime = endTime - startTime;
+		updateModelPerf.Stop();
 
-		startTime = GetTime();
+		updateGLBufferPerf.Start();
 		size_t vtxCount = m_mmdModel->GetVertexCount();
 		UpdateVBO(m_posVBO, m_mmdModel->GetUpdatePositions(), vtxCount);
 		UpdateVBO(m_norVBO, m_mmdModel->GetUpdateNormals(), vtxCount);
 		UpdateVBO(m_uvVBO, m_mmdModel->GetUpdateUVs(), vtxCount);
-		endTime = GetTime();
-		double updateGLBufferTime = endTime - startTime;
+		updateGLBufferPerf.Stop();
 
-		m_perfInfo.m_updateAnimTime = m_updateAnimTime;
-		m_perfInfo.m_updatePhysicsTime = m_updatePhysicsTime;
-		m_perfInfo.m_updateModelTime = updateModelTime;
-		m_perfInfo.m_updateGLBufferTime = updateGLBufferTime;
+		m_perfInfo.m_updateModelTime = updateModelPerf.GetPerfTime();
+		m_perfInfo.m_updateGLBufferTime = updateGLBufferPerf.GetPerfTime();
+	}
 
-		m_updateTime = updateGLBufferTime + updateModelTime + m_updateAnimTime + m_updatePhysicsTime;
-		m_updateAnimTime = 0;
-		m_updatePhysicsTime = 0;
+	void GLMMDModel::PerfInfo::Clear()
+	{
+		m_setupAnimTime = 0;
+		m_updateMorphAnimTime = 0;
+		m_updateNodeAnimTime = 0;
+		m_updatePhysicsAnimTime = 0;
+
+		m_updateModelTime = 0;
+		m_updateGLBufferTime = 0;
+	}
+
+	double GLMMDModel::PerfInfo::GetUpdateTime() const
+	{
+		return m_setupAnimTime
+			+ m_updateMorphAnimTime
+			+ m_updateNodeAnimTime
+			+ m_updatePhysicsAnimTime
+			+ m_updateModelTime
+			+ m_updateGLBufferTime;
 	}
 
 }

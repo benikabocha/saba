@@ -50,11 +50,13 @@ namespace saba
 		// アニメーションの前後で呼ぶ (VMDアニメーションの前後)
 		void BeginAnimation() override;
 		void EndAnimation() override;
+		// Morph
+		void UpdateMorphAnimation() override;
 		// ノードを更新する
-		void UpdateAnimation() override;
+		void UpdateNodeAnimation(bool afterPhysicsAnim) override;
 		// Physicsを更新する
 		void ResetPhysics() override;
-		void UpdatePhysics(float elapsed) override;
+		void UpdatePhysicsAnimation(float elapsed) override;
 		// 頂点データーを更新する
 		void Update() override;
 		void SetParallelUpdateHint(uint32_t) override {}

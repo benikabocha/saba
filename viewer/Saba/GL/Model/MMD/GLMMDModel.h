@@ -69,8 +69,10 @@ namespace saba
 		void SetAnimationTime(double time);
 		double GetAnimationTime() const;
 		void EvaluateAnimation(double animTime);
-		void UpdateAnimation(double animTime, bool evalateAnim = true);
-		void Update(double elapsed);
+		void UpdateAnimation(double animTime, double elapsed);
+		void UpdateAnimationIgnoreVMD(double elapsed);
+		void UpdateMorph();
+		void Update();
 
 		const GLBufferObject& GetPositionVBO() const { return m_posVBO; }
 		const GLBufferObject& GetNormalVBO() const { return m_norVBO; }
@@ -90,13 +92,22 @@ namespace saba
 
 		struct PerfInfo
 		{
-			double	m_updateAnimTime;
-			double	m_updatePhysicsTime;
+			// Update animation
+			double	m_setupAnimTime;
+			double	m_updateMorphAnimTime;
+			double	m_updateNodeAnimTime;
+			double	m_updatePhysicsAnimTime;
+
+			// Update vertices
 			double	m_updateModelTime;
 			double	m_updateGLBufferTime;
+
+			void Clear();
+			double GetUpdateTime() const;
 		};
-		const PerfInfo GetPerfInfo() { return m_perfInfo; }
-		double GetUpdateTime() const { return m_updateTime; }
+		const PerfInfo& GetPerfInfo() { return m_perfInfo; }
+		void ClearPerfInfo() { m_perfInfo.Clear(); }
+		double GetUpdateTime() const { return m_perfInfo.GetUpdateTime(); }
 
 		VMDAnimation* GetVMDAnimation() const { return m_vmdAnim.get(); }
 
@@ -130,9 +141,11 @@ namespace saba
 		std::vector<GLMMDMaterial>	m_materials;
 		std::vector<MMDSubMesh>		m_subMeshes;
 
-		double						m_updateAnimTime;
-		double						m_updatePhysicsTime;
-		double						m_updateTime;
+		//double						m_setupAnimTime;
+		//double						m_updateMorphAnimTime;
+		//double						m_updateNodeAnimTime;
+		//double						m_updatePhysicsAnimTime;
+		//double						m_updateTime;
 		PerfInfo					m_perfInfo;
 
 		bool	m_enablePhysics;

@@ -120,6 +120,8 @@ namespace saba
 		int	m_materialID;
 	};
 
+	class VMDAnimation;
+
 	class MMDModel
 	{
 	public:
@@ -159,15 +161,22 @@ namespace saba
 		// アニメーションの前後で呼ぶ (VMDアニメーションの前後)
 		virtual void BeginAnimation() = 0;
 		virtual void EndAnimation() = 0;
+		// Morph
+		virtual void UpdateMorphAnimation() = 0;
 		// ノードを更新する
-		virtual void UpdateAnimation() = 0;
+		[[deprecated("Please use UpdateAllAnimation() function")]]
+		void UpdateAnimation();
+		virtual void UpdateNodeAnimation(bool afterPhysicsAnim) = 0;
 		// Physicsを更新する
 		virtual void ResetPhysics() = 0;
-		virtual void UpdatePhysics(float elapsed) = 0;
+		[[deprecated("Please use UpdateAllAnimation() function")]]
+		void UpdatePhysics(float elapsed);
+		virtual void UpdatePhysicsAnimation(float elapsed) = 0;
 		// 頂点を更新する
 		virtual void Update() = 0;
 		virtual void SetParallelUpdateHint(uint32_t parallelCount) = 0;
 
+		void UpdateAllAnimation(VMDAnimation* vmdAnim, float vmdFrame, float physicsElapsed);
 		void LoadPose(const VPDFile& vpd, int frameCount = 30);
 
 	protected:

@@ -267,7 +267,7 @@ namespace saba
 				{
 					morph->SetWeight(weight);
 					auto animTime = ctxt->GetAnimationTime();
-					m_mmdModel->UpdateAnimation(animTime, false);
+					m_mmdModel->UpdateMorph();
 				}
 			}
 			ImGui::TreePop();
@@ -357,13 +357,20 @@ namespace saba
 
 	void GLMMDModelDrawer::Update(ViewerContext * ctxt)
 	{
+		m_mmdModel->ClearPerfInfo();
+
+		double animTime = ctxt->GetAnimationTime();
+		double elapsed = ctxt->GetElapsed();
 		if (ctxt->GetPlayMode() != ViewerContext::PlayMode::Stop)
 		{
-			double animTime = ctxt->GetAnimationTime();
-			m_mmdModel->UpdateAnimation(animTime);
+			m_mmdModel->UpdateAnimation(animTime, elapsed);
 		}
-		double elapsed = ctxt->GetElapsed();
-		m_mmdModel->Update(elapsed);
+		else
+		{
+			m_mmdModel->UpdateAnimationIgnoreVMD(elapsed);
+		}
+
+		m_mmdModel->Update();
 	}
 
 

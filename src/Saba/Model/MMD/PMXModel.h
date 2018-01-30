@@ -29,6 +29,9 @@ namespace saba
 		void SetDeformDepth(int32_t depth) { m_deformDepth = depth; }
 		int32_t GetDeformdepth() const { return m_deformDepth; }
 
+		void EnableDeformAfterPhysics(bool enable) { m_isDeformAfterPhysics = enable; }
+		bool IsDeformAfterPhysics() { return m_isDeformAfterPhysics; }
+
 		void SetAppendNode(PMXNode* node) { m_appendNode = node; }
 		PMXNode* GetAppendNode() const { return m_appendNode; }
 
@@ -54,6 +57,7 @@ namespace saba
 
 	private:
 		int32_t		m_deformDepth;
+		bool		m_isDeformAfterPhysics;
 
 		PMXNode*	m_appendNode;
 		bool		m_isAppendRotate;
@@ -103,11 +107,13 @@ namespace saba
 		// アニメーションの前後で呼ぶ (VMDアニメーションの前後)
 		void BeginAnimation() override;
 		void EndAnimation() override;
+		// Morph
+		void UpdateMorphAnimation() override;
 		// ノードを更新する
-		void UpdateAnimation() override;
+		void UpdateNodeAnimation(bool afterPhysicsAnim) override;
 		// Physicsを更新する
 		void ResetPhysics() override;
-		void UpdatePhysics(float elapsed) override;
+		void UpdatePhysicsAnimation(float elapsed) override;
 		// 頂点データーを更新する
 		void Update() override;
 		void SetParallelUpdateHint(uint32_t parallelCount) override;

@@ -99,8 +99,17 @@ namespace saba
 		}
 	}
 
-	void PMDModel::UpdateAnimation()
+	void PMDModel::UpdateMorphAnimation()
 	{
+	}
+
+	void PMDModel::UpdateNodeAnimation(bool afterPhysicsAnim)
+	{
+		if (afterPhysicsAnim)
+		{
+			return;
+		}
+
 		for (auto& node : (*m_nodeMan.GetNodes()))
 		{
 			node->UpdateLocalTransform();
@@ -163,7 +172,7 @@ namespace saba
 		}
 	}
 
-	void PMDModel::UpdatePhysics(float elapsed)
+	void PMDModel::UpdatePhysicsAnimation(float elapsed)
 	{
 		MMDPhysicsManager* physicsMan = GetPhysicsManager();
 		auto physics = physicsMan->GetMMDPhysics();
@@ -198,7 +207,6 @@ namespace saba
 				node->UpdateGlobalTransform();
 			}
 		}
-
 	}
 
 	void PMDModel::Update()

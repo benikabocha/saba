@@ -280,6 +280,7 @@ struct AppContext
 	GLuint	m_dummyColorTex = 0;
 	GLuint	m_dummyShadowDepthTex = 0;
 
+	float	m_elapsed = 0.0f;
 	float	m_animTime = 0.0f;
 	std::unique_ptr<saba::VMDCameraAnimation>	m_vmdCameraAnim;
 
@@ -322,6 +323,7 @@ struct Model
 	bool Setup(AppContext& appContext);
 	void Clear();
 
+	void UpdateAnimation(const AppContext& appContext);
 	void Update(const AppContext& appContext);
 	void Draw(const AppContext& appContext);
 };
@@ -723,6 +725,13 @@ void Model::Clear()
 	m_mmdVAO = 0;
 	m_mmdEdgeVAO = 0;
 	m_mmdGroundShadowVAO = 0;
+}
+
+void Model::UpdateAnimation(const AppContext& appContext)
+{
+	m_mmdModel->BeginAnimation();
+	m_mmdModel->UpdateAllAnimation(m_vmdAnim.get(), appContext.m_animTime * 30.0f, appContext.m_elapsed);
+	m_mmdModel->EndAnimation();
 }
 
 void Model::Update(const AppContext& appContext)
@@ -1204,6 +1213,7 @@ bool SampleMain(std::vector<std::string>& args)
 			elapsed = 1.0 / 30.0;
 		}
 		saveTime = time;
+		appContext.m_elapsed = float(elapsed);
 		appContext.m_animTime += float(elapsed);
 
 		glClearColor(1.0f, 0.8f, 0.75f, 1);
@@ -1233,17 +1243,13 @@ bool SampleMain(std::vector<std::string>& args)
 
 		for (auto& model : models)
 		{
-			// Update bone animation.
-			model.m_mmdModel->BeginAnimation();
-			model.m_vmdAnim->Evaluate(appContext.m_animTime * 30.0f);
-			model.m_mmdModel->UpdateAnimation();
-			model.m_mmdModel->EndAnimation();
+			// Update Animation
+			model.UpdateAnimation(appContext);
 
-			// Update physics animation.
-			model.m_mmdModel->UpdatePhysics(float(elapsed));
+			// Update Vertices
+			model.Update(appContext);
 
 			// Draw
-			model.Update(appContext);
 			model.Draw(appContext);
 		}
 

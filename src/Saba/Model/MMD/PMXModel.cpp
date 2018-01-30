@@ -122,7 +122,7 @@ namespace saba
 		}
 	}
 
-	void PMXModel::UpdateAnimation()
+	void PMXModel::UpdateMorphAnimation()
 	{
 		// Morph の処理
 		BeginMorphMaterial();
@@ -133,23 +133,42 @@ namespace saba
 			const auto& morph = morphs[i];
 			Morph(morph.get(), morph->GetWeight());
 		}
-		EndMorphMaterial();
 
-		for (auto& node : (*m_nodeMan.GetNodes()))
+		EndMorphMaterial();
+	}
+
+	void PMXModel::UpdateNodeAnimation(bool afterPhysicsAnim)
+	{
+		for (auto pmxNode : m_sortedNodes)
 		{
-			node->UpdateLocalTransform();
+			if (pmxNode->IsDeformAfterPhysics() != afterPhysicsAnim)
+			{
+				continue;
+			}
+
+			pmxNode->UpdateLocalTransform();
 		}
 
-		for (const auto& node : (*m_nodeMan.GetNodes()))
+		for (auto pmxNode : m_sortedNodes)
 		{
-			if (node->GetParent() == nullptr)
+			if (pmxNode->IsDeformAfterPhysics() != afterPhysicsAnim)
 			{
-				node->UpdateGlobalTransform();
+				continue;
+			}
+
+			if (pmxNode->GetParent() == nullptr)
+			{
+				pmxNode->UpdateGlobalTransform();
 			}
 		}
 
 		for (auto pmxNode : m_sortedNodes)
 		{
+			if (pmxNode->IsDeformAfterPhysics() != afterPhysicsAnim)
+			{
+				continue;
+			}
+
 			if (pmxNode->GetAppendNode() != nullptr)
 			{
 				pmxNode->UpdateAppendTransform();
@@ -163,11 +182,16 @@ namespace saba
 			}
 		}
 
-		for (const auto& node : (*m_nodeMan.GetNodes()))
+		for (auto pmxNode : m_sortedNodes)
 		{
-			if (node->GetParent() == nullptr)
+			if (pmxNode->IsDeformAfterPhysics() != afterPhysicsAnim)
 			{
-				node->UpdateGlobalTransform();
+				continue;
+			}
+
+			if (pmxNode->GetParent() == nullptr)
+			{
+				pmxNode->UpdateGlobalTransform();
 			}
 		}
 	}
@@ -215,7 +239,7 @@ namespace saba
 		}
 	}
 
-	void PMXModel::UpdatePhysics(float elapsed)
+	void PMXModel::UpdatePhysicsAnimation(float elapsed)
 	{
 		MMDPhysicsManager* physicsMan = GetPhysicsManager();
 		auto physics = physicsMan->GetMMDPhysics();
@@ -561,6 +585,8 @@ namespace saba
 			node->CalculateInverseInitTransform();
 
 			node->SetDeformDepth(bone.m_deformDepth);
+			bool deformAfterPhysics = !!((uint16_t)bone.m_boneFlag & (uint16_t)PMXBoneFlags::DeformAfterPhysics);
+			node->EnableDeformAfterPhysics(deformAfterPhysics);
 			bool appendRotate = ((uint16_t)bone.m_boneFlag & (uint16_t)PMXBoneFlags::AppendRotate) != 0;
 			bool appendTranslate = ((uint16_t)bone.m_boneFlag & (uint16_t)PMXBoneFlags::AppendTranslate) != 0;
 			node->EnableAppendRotate(appendRotate);
@@ -1110,6 +1136,7 @@ namespace saba
 
 	PMXNode::PMXNode()
 		: m_deformDepth(-1)
+		, m_isDeformAfterPhysics(false)
 		, m_appendNode(nullptr)
 		, m_isAppendRotate(false)
 		, m_isAppendTranslate(false)

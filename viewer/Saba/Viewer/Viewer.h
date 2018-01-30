@@ -264,8 +264,10 @@ namespace saba
 
 		// Performance
 		std::deque<float>	m_perfFramerateLap;
-		std::deque<double>	m_perfMMDUpdateAnimTimeLap;
-		std::deque<double>	m_perfMMDUpdatePhysicsTimeLap;
+		std::deque<double>	m_perfMMDSetupAnimTimeLap;
+		std::deque<double>	m_perfMMDUpdateMorphAnimTimeLap;
+		std::deque<double>	m_perfMMDUpdateNodeAnimTimeLap;
+		std::deque<double>	m_perfMMDUpdatePhysicsAnimTimeLap;
 		std::deque<double>	m_perfMMDUpdateModelTimeLap;
 		std::deque<double>	m_perfMMDUpdateGLBufferTimeLap;
 

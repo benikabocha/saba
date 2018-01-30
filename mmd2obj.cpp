@@ -173,19 +173,19 @@ bool MMD2Obj(const std::vector<std::string>& args)
 
 	// Update animation(animation loop).
 	{
-		// Update bone animation.
+		// Update animation.
 		mmdModel->BeginAnimation();
 		if (useVMDAnimation)
 		{
-			vmdAnim->Evaluate((float)animTime * 30.0f);
+			mmdModel->UpdateAllAnimation(vmdAnim.get(), (float)animTime * 30.0f, 1.0f / 60.0f);
 		}
-		mmdModel->UpdateAnimation();
+		else
+		{
+			mmdModel->UpdateAllAnimation(nullptr, 0, 1.0f / 60.0f);
+		}
 		mmdModel->EndAnimation();
 
-		// Update physics animation.
-		mmdModel->UpdatePhysics(1.0f / 60.0f);
-
-		// Update vertex.
+		// Update vertices.
 		mmdModel->Update();
 	}
 

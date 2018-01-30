@@ -979,28 +979,51 @@ namespace saba
 				ImGui::Text("MMD Model Update Time %.3f ms", mmdModel->GetUpdateTime() * 1000.0);
 				const auto& perfInfo = mmdModel->GetPerfInfo();
 
-				PushPerfLap(m_perfMMDUpdateAnimTimeLap, perfInfo.m_updateAnimTime);
-				PushPerfLap(m_perfMMDUpdatePhysicsTimeLap, perfInfo.m_updatePhysicsTime);
+				PushPerfLap(m_perfMMDSetupAnimTimeLap, perfInfo.m_setupAnimTime);
+				PushPerfLap(m_perfMMDUpdateMorphAnimTimeLap, perfInfo.m_updateMorphAnimTime);
+				PushPerfLap(m_perfMMDUpdateNodeAnimTimeLap, perfInfo.m_updateNodeAnimTime);
+				PushPerfLap(m_perfMMDUpdatePhysicsAnimTimeLap, perfInfo.m_updatePhysicsAnimTime);
 				PushPerfLap(m_perfMMDUpdateModelTimeLap, perfInfo.m_updateModelTime);
 				PushPerfLap(m_perfMMDUpdateGLBufferTimeLap, perfInfo.m_updateGLBufferTime);
 
 				if (m_enableMoreInfoUI)
 				{
-					ImGui::Text("Anim   ave:%.2f max:%.2f now:%.2f [ms]",
-						float(GetPerfLapAve(m_perfMMDUpdateAnimTimeLap) * 1000.0),
-						float(GetPerfLapMax(m_perfMMDUpdateAnimTimeLap) * 1000.0),
-						float(perfInfo.m_updateAnimTime * 1000.0)
+					// Setup animation
+					ImGui::Text("Setup  ave:%.2f max:%.2f now:%.2f [ms]",
+						float(GetPerfLapAve(m_perfMMDSetupAnimTimeLap) * 1000.0),
+						float(GetPerfLapMax(m_perfMMDSetupAnimTimeLap) * 1000.0),
+						float(perfInfo.m_setupAnimTime * 1000.0)
 					);
+
+					// Morph animation
+					ImGui::Text("Morph  ave:%.2f max:%.2f now:%.2f [ms]",
+						float(GetPerfLapAve(m_perfMMDUpdateMorphAnimTimeLap) * 1000.0),
+						float(GetPerfLapMax(m_perfMMDUpdateMorphAnimTimeLap) * 1000.0),
+						float(perfInfo.m_updateMorphAnimTime * 1000.0)
+					);
+
+					// Node animation
+					ImGui::Text("Node   ave:%.2f max:%.2f now:%.2f [ms]",
+						float(GetPerfLapAve(m_perfMMDUpdateNodeAnimTimeLap) * 1000.0),
+						float(GetPerfLapMax(m_perfMMDUpdateNodeAnimTimeLap) * 1000.0),
+						float(perfInfo.m_updateNodeAnimTime * 1000.0)
+					);
+
+					// Physics animation
 					ImGui::Text("Phyics ave:%.2f max:%.2f now:%.2f [ms]",
-						float(GetPerfLapAve(m_perfMMDUpdatePhysicsTimeLap) * 1000.0),
-						float(GetPerfLapMax(m_perfMMDUpdatePhysicsTimeLap) * 1000.0),
-						float(perfInfo.m_updatePhysicsTime * 1000.0)
+						float(GetPerfLapAve(m_perfMMDUpdatePhysicsAnimTimeLap) * 1000.0),
+						float(GetPerfLapMax(m_perfMMDUpdatePhysicsAnimTimeLap) * 1000.0),
+						float(perfInfo.m_updatePhysicsAnimTime * 1000.0)
 					);
+
+					// Update model
 					ImGui::Text("Model  ave:%.2f max:%.2f now:%.2f [ms]",
 						float(GetPerfLapAve(m_perfMMDUpdateModelTimeLap) * 1000.0),
 						float(GetPerfLapMax(m_perfMMDUpdateModelTimeLap) * 1000.0),
 						float(perfInfo.m_updateModelTime * 1000.0)
 					);
+
+					// Update GLBuffer
 					ImGui::Text("Buffer ave:%.2f max:%.2f now:%.2f [ms]",
 						float(GetPerfLapAve(m_perfMMDUpdateGLBufferTimeLap) * 1000.0),
 						float(GetPerfLapMax(m_perfMMDUpdateGLBufferTimeLap) * 1000.0),
