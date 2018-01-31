@@ -2533,7 +2533,7 @@ private:
 	GLFWwindow*			m_window = nullptr;
 	std::thread			m_mainThread;
 	std::atomic<bool>	m_runable;
-	std::atomic<uint32_t>	m_newSize = 0;
+	std::atomic<uint32_t>	m_newSize;
 	uint16_t			m_width = 1280;
 	uint16_t			m_height = 800;
 
@@ -2553,6 +2553,7 @@ App::App(GLFWwindow* window)
 	glfwGetFramebufferSize(window, &fbWidth, &fbHeight);
 	m_width = uint16_t(fbWidth);
 	m_height = uint16_t(fbHeight);
+	m_newSize = 0;
 }
 
 bool App::Run(const std::vector<std::string>& args)
