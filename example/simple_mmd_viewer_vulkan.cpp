@@ -37,6 +37,8 @@
 
 #include "resource_vulkan/mmd.vert.spv.h"
 #include "resource_vulkan/mmd.frag.spv.h"
+#include "resource_vulkan/mmd_edge.vert.spv.h"
+#include "resource_vulkan/mmd_edge.frag.spv.h"
 
 struct AppContext;
 
@@ -151,6 +153,8 @@ struct Vertex
 	glm::vec2	m_uv;
 };
 
+// MMD Shader uniform buffer
+
 struct MMDVertxShaderUB
 {
 	glm::mat4	m_wv;
@@ -181,6 +185,28 @@ struct MMDFragmentShaderUB
 
 	glm::ivec4	m_textureModes;
 };
+
+// MMD Edge Shader uniform buffer
+
+struct MMDEdgeVertexShaderUB
+{
+	glm::mat4	m_wv;
+	glm::mat4	m_wvp;
+	glm::vec2	m_screenSize;
+	float		m_dummy[2];
+};
+struct MMDEdgeSizeVertexShaderUB
+{
+	float		m_edgeSize;
+	float		m_dummy[3];
+};
+
+struct MMDEdgePixelShaderUB
+{
+	glm::vec4	m_edgeColor;
+};
+
+// Swap chain
 
 struct SwapchainImageResource
 {
@@ -311,6 +337,13 @@ struct AppContext
 	vk::ShaderModule	m_mmdVSModule;
 	vk::ShaderModule	m_mmdFSModule;
 
+	// MMD Edge Draw pipeline
+	vk::DescriptorSetLayout	m_mmdEdgeDescriptorSetLayout;
+	vk::PipelineLayout	m_mmdEdgePipelineLayout;
+	vk::Pipeline		m_mmdEdgePipeline;
+	vk::ShaderModule	m_mmdEdgeVSModule;
+	vk::ShaderModule	m_mmdEdgeFSModule;
+
 	uint32_t	m_imageCount;
 	uint32_t	m_imageIndex = 0;
 
@@ -345,6 +378,7 @@ struct AppContext
 	bool PrepareFramebuffer();
 	bool PreparePipelineCache();
 	bool PrepareMMDPipeline();
+	bool PrepareMMDEdgePipeline();
 	bool PrepareDefaultTexture();
 
 	bool Resize();
@@ -512,6 +546,22 @@ void AppContext::Destory()
 	m_device.destroyShaderModule(m_mmdFSModule, nullptr);
 	m_mmdFSModule = nullptr;
 
+	// MMD Edge Draw Pipeline
+	m_device.destroyDescriptorSetLayout(m_mmdEdgeDescriptorSetLayout, nullptr);
+	m_mmdEdgeDescriptorSetLayout = nullptr;
+
+	m_device.destroyPipelineLayout(m_mmdEdgePipelineLayout, nullptr);
+	m_mmdEdgePipelineLayout = nullptr;
+
+	m_device.destroyPipeline(m_mmdEdgePipeline, nullptr);
+	m_mmdEdgePipeline = nullptr;
+
+	m_device.destroyShaderModule(m_mmdEdgeVSModule, nullptr);
+	m_mmdEdgeVSModule = nullptr;
+
+	m_device.destroyShaderModule(m_mmdEdgeFSModule, nullptr);
+	m_mmdEdgeFSModule = nullptr;
+
 	// Pipeline Cache
 	m_device.destroyPipelineCache(m_pipelineCache, nullptr);
 	m_pipelineCache = nullptr;
@@ -559,6 +609,7 @@ bool AppContext::Prepare()
 	if (!PrepareFramebuffer()) { return false; }
 	if (!PreparePipelineCache()) { return false; }
 	if (!PrepareMMDPipeline()) { return false; }
+	if (!PrepareMMDEdgePipeline()) { return false; }
 	if (!PrepareDefaultTexture()) { return false; }
 	return true;
 }
@@ -1203,6 +1254,7 @@ bool AppContext::PrepareMMDPipeline()
 	if (vk::Result::eSuccess != ret)
 	{
 		std::cout << "Failed to create MMD Pipeline.\n";
+		return false;
 	}
 
 	// Set both face mode
@@ -1216,6 +1268,221 @@ bool AppContext::PrepareMMDPipeline()
 	if (vk::Result::eSuccess != ret)
 	{
 		std::cout << "Failed to create MMD Pipeline.\n";
+		return false;
+	}
+
+	return true;
+}
+
+
+bool AppContext::PrepareMMDEdgePipeline()
+{
+	vk::Result ret;
+
+	// VS Binding
+	auto vsModelUnifomDescSetBinding = vk::DescriptorSetLayoutBinding()
+		.setBinding(0)
+		.setDescriptorType(vk::DescriptorType::eUniformBuffer)
+		.setDescriptorCount(1)
+		.setStageFlags(vk::ShaderStageFlagBits::eVertex);
+
+	auto vsMatUnifomDescSetBinding = vk::DescriptorSetLayoutBinding()
+		.setBinding(1)
+		.setDescriptorType(vk::DescriptorType::eUniformBuffer)
+		.setDescriptorCount(1)
+		.setStageFlags(vk::ShaderStageFlagBits::eVertex);
+
+	// FS Binding
+	auto fsMatUniformDescSetBinding = vk::DescriptorSetLayoutBinding()
+		.setBinding(2)
+		.setDescriptorType(vk::DescriptorType::eUniformBuffer)
+		.setDescriptorCount(1)
+		.setStageFlags(vk::ShaderStageFlagBits::eFragment);
+
+	vk::DescriptorSetLayoutBinding bindings[] = {
+		vsModelUnifomDescSetBinding,
+		vsMatUnifomDescSetBinding,
+		fsMatUniformDescSetBinding,
+	};
+
+	// Create Descriptor Set Layout
+	auto descSetLayoutInfo = vk::DescriptorSetLayoutCreateInfo()
+		.setBindingCount(std::extent<decltype(bindings)>::value)
+		.setPBindings(bindings);
+	ret = m_device.createDescriptorSetLayout(&descSetLayoutInfo, nullptr, &m_mmdEdgeDescriptorSetLayout);
+	if (vk::Result::eSuccess != ret)
+	{
+		std::cout << "Failed to create MMD Edge Descriptor Set Layout.\n";
+		return false;
+	}
+
+	// Create Pipeline Layout
+	auto pipelineLayoutInfo = vk::PipelineLayoutCreateInfo()
+		.setSetLayoutCount(1)
+		.setPSetLayouts(&m_mmdEdgeDescriptorSetLayout);
+	ret = m_device.createPipelineLayout(&pipelineLayoutInfo, nullptr, &m_mmdEdgePipelineLayout);
+	if (vk::Result::eSuccess != ret)
+	{
+		std::cout << "Failed to create MMD Edge Pipeline Layout.\n";
+		return false;
+	}
+
+	// Create Vertex Shader Module
+	auto vsInfo = vk::ShaderModuleCreateInfo()
+		.setCodeSize(sizeof(mmd_edge_vert_spv_data))
+		.setPCode(reinterpret_cast<const uint32_t*>(mmd_edge_vert_spv_data));
+	ret = m_device.createShaderModule(&vsInfo, nullptr, &m_mmdEdgeVSModule);
+	if (vk::Result::eSuccess != ret)
+	{
+		std::cout << "Failed to create MMD Edge Vertex Shader Module.\n";
+		return false;
+	}
+
+	// Create Fragment Shader Module
+	auto fsInfo = vk::ShaderModuleCreateInfo()
+		.setCodeSize(sizeof(mmd_edge_frag_spv_data))
+		.setPCode(reinterpret_cast<const uint32_t*>(mmd_edge_frag_spv_data));
+	ret = m_device.createShaderModule(&fsInfo, nullptr, &m_mmdEdgeFSModule);
+	if (vk::Result::eSuccess != ret)
+	{
+		std::cout << "Failed to create MMD Edge Fragment Shader Module.\n";
+		return false;
+	}
+
+	// Pipeline
+	auto pipelineInfo = vk::GraphicsPipelineCreateInfo()
+		.setLayout(m_mmdEdgePipelineLayout)
+		.setRenderPass(m_renderPass);
+
+	// Input Assembly
+	auto inputAssemblyInfo = vk::PipelineInputAssemblyStateCreateInfo()
+		.setTopology(vk::PrimitiveTopology::eTriangleList);
+	pipelineInfo.setPInputAssemblyState(&inputAssemblyInfo);
+
+	// Rasterization State
+	auto rasterizationInfo = vk::PipelineRasterizationStateCreateInfo()
+		.setPolygonMode(vk::PolygonMode::eFill)
+		.setCullMode(vk::CullModeFlagBits::eNone)
+		.setFrontFace(vk::FrontFace::eCounterClockwise)
+		.setDepthClampEnable(false)
+		.setRasterizerDiscardEnable(false)
+		.setDepthBiasEnable(false)
+		.setLineWidth(1.0f);
+	pipelineInfo.setPRasterizationState(&rasterizationInfo);
+
+	// Color blend state
+	auto colorBlendAttachmentInfo = vk::PipelineColorBlendAttachmentState()
+		.setColorWriteMask(vk::ColorComponentFlagBits::eR |
+			vk::ColorComponentFlagBits::eG |
+			vk::ColorComponentFlagBits::eB |
+			vk::ColorComponentFlagBits::eA)
+		.setBlendEnable(false);
+	auto colorBlendStateInfo = vk::PipelineColorBlendStateCreateInfo()
+		.setAttachmentCount(1)
+		.setPAttachments(&colorBlendAttachmentInfo);
+	pipelineInfo.setPColorBlendState(&colorBlendStateInfo);
+
+	// Viewport State
+	auto viewportInfo = vk::PipelineViewportStateCreateInfo()
+		.setViewportCount(1)
+		.setScissorCount(1);
+	pipelineInfo.setPViewportState(&viewportInfo);
+
+	// Dynamic State
+	vk::DynamicState dynamicStates[2] = {
+		vk::DynamicState::eViewport,
+		vk::DynamicState::eScissor
+	};
+	auto dynamicInfo = vk::PipelineDynamicStateCreateInfo()
+		.setDynamicStateCount(std::extent<decltype(dynamicStates)>::value)
+		.setPDynamicStates(dynamicStates);
+	pipelineInfo.setPDynamicState(&dynamicInfo);
+
+	// Depth and Stencil State
+	auto depthAndStencilInfo = vk::PipelineDepthStencilStateCreateInfo()
+		.setDepthTestEnable(true)
+		.setDepthWriteEnable(true)
+		.setDepthCompareOp(vk::CompareOp::eLessOrEqual)
+		.setDepthBoundsTestEnable(false)
+		.setBack(vk::StencilOpState()
+			.setFailOp(vk::StencilOp::eKeep)
+			.setPassOp(vk::StencilOp::eKeep)
+			.setCompareOp(vk::CompareOp::eAlways))
+		.setStencilTestEnable(false);
+	depthAndStencilInfo.front = depthAndStencilInfo.back;
+	pipelineInfo.setPDepthStencilState(&depthAndStencilInfo);
+
+	// Multisample
+	auto multisampleInfo = vk::PipelineMultisampleStateCreateInfo()
+		.setRasterizationSamples(vk::SampleCountFlagBits::e1);
+	pipelineInfo.setPMultisampleState(&multisampleInfo);
+
+	// Vertex input binding
+	auto vertexInputBindingDesc = vk::VertexInputBindingDescription()
+		.setBinding(0)
+		.setStride(sizeof(Vertex))
+		.setInputRate(vk::VertexInputRate::eVertex);
+	auto posAttr = vk::VertexInputAttributeDescription()
+		.setBinding(0)
+		.setLocation(0)
+		.setFormat(vk::Format::eR32G32B32Sfloat)
+		.setOffset(offsetof(Vertex, m_position));
+	auto normalAttr = vk::VertexInputAttributeDescription()
+		.setBinding(0)
+		.setLocation(1)
+		.setFormat(vk::Format::eR32G32B32Sfloat)
+		.setOffset(offsetof(Vertex, m_normal));
+	vk::VertexInputAttributeDescription vertexInputAttrs[] = {
+		posAttr,
+		normalAttr,
+	};
+
+	auto vertexInputInfo = vk::PipelineVertexInputStateCreateInfo()
+		.setVertexBindingDescriptionCount(1)
+		.setPVertexBindingDescriptions(&vertexInputBindingDesc)
+		.setVertexAttributeDescriptionCount(std::extent<decltype(vertexInputAttrs)>::value)
+		.setPVertexAttributeDescriptions(vertexInputAttrs);
+	pipelineInfo.setPVertexInputState(&vertexInputInfo);
+
+	// Shader
+	auto vsStageInfo = vk::PipelineShaderStageCreateInfo()
+		.setStage(vk::ShaderStageFlagBits::eVertex)
+		.setModule(m_mmdEdgeVSModule)
+		.setPName("main");
+	auto fsStageInfo = vk::PipelineShaderStageCreateInfo()
+		.setStage(vk::ShaderStageFlagBits::eFragment)
+		.setModule(m_mmdEdgeFSModule)
+		.setPName("main");
+	vk::PipelineShaderStageCreateInfo shaderStages[2] = {
+		vsStageInfo,
+		fsStageInfo,
+	};
+	pipelineInfo
+		.setStageCount(std::extent<decltype(shaderStages)>::value)
+		.setPStages(shaderStages);
+
+	// Set alpha blend mode
+	colorBlendAttachmentInfo
+		.setBlendEnable(true)
+		.setColorBlendOp(vk::BlendOp::eAdd)
+		.setSrcColorBlendFactor(vk::BlendFactor::eSrcAlpha)
+		.setDstColorBlendFactor(vk::BlendFactor::eOneMinusSrcAlpha)
+		.setAlphaBlendOp(vk::BlendOp::eAdd)
+		.setSrcAlphaBlendFactor(vk::BlendFactor::eSrcAlpha)
+		.setDstAlphaBlendFactor(vk::BlendFactor::eOneMinusSrcAlpha);
+
+	// Set front face mode
+	rasterizationInfo.
+		setCullMode(vk::CullModeFlagBits::eFront);
+
+	ret = m_device.createGraphicsPipelines(
+		m_pipelineCache,
+		1, &pipelineInfo, nullptr,
+		&m_mmdEdgePipeline);
+	if (vk::Result::eSuccess != ret)
+	{
+		std::cout << "Failed to create MMD Edge Pipeline.\n";
+		return false;
 	}
 
 	return true;
@@ -1780,6 +2047,7 @@ struct Model
 
 	bool Setup(AppContext& appContext);
 	bool SetupVertexBuffer(AppContext& appContext);
+	bool SetupDescriptorPool(AppContext& appContext);
 	bool SetupDescriptorSet(AppContext& appContext);
 	bool SetupCommandBuffer(AppContext& appContext);
 	void Destroy(AppContext& appContext);
@@ -1808,15 +2076,26 @@ struct Model
 
 		Buffer	m_uniformBuffer;
 
+		// MMD Shader
 		uint32_t	m_mmdVSUBOffset;
+
+		// MMD Edge Shader
+		uint32_t	m_mmdEdgeVSUBOffset;
 
 		vk::CommandBuffer	m_cmdBuffer;
 	};
 
 	struct MaterialResource
 	{
-		vk::DescriptorSet	m_desc;
+		vk::DescriptorSet	m_mmdDescSet;
+		vk::DescriptorSet	m_mmdEdgeDescSet;
+
+		// MMD Shader
 		uint32_t			m_mmdFSUBOffset;
+
+		// MMD Edge Shader
+		uint32_t			m_mmdEdgeSizeVSUBOffset;
+		uint32_t			m_mmdEdgeFSUBOffset;
 	};
 
 	struct Resource
@@ -1953,6 +2232,7 @@ bool Model::Setup(AppContext& appContext)
 	}
 
 	if (!SetupVertexBuffer(appContext)) { return false; }
+	if (!SetupDescriptorPool(appContext)) { return false; }
 	if (!SetupDescriptorSet(appContext)) { return false; }
 	if (!SetupCommandBuffer(appContext)) { return false; }
 
@@ -2048,7 +2328,7 @@ bool Model::SetupVertexBuffer(AppContext& appContext)
 	return true;
 }
 
-bool Model::SetupDescriptorSet(AppContext& appContext)
+bool Model::SetupDescriptorPool(AppContext & appContext)
 {
 	vk::Result ret;
 
@@ -2057,25 +2337,54 @@ bool Model::SetupDescriptorSet(AppContext& appContext)
 	// Descriptor Pool
 	uint32_t swapImageCount = uint32_t(appContext.m_swapchainImageResouces.size());
 	uint32_t matCount = uint32_t(m_mmdModel->GetMaterialCount());
-	uint32_t ubCount = matCount * 2;
+
+	/*
+	Uniform Count
+	MMD Sahder
+	- MMDVertxShaderUB
+	- MMDFragmentShaderUB
+	MMD Edge Shader
+	- MMDEdgeVertexShaderUB
+	- MMDEdgeSizeVertexShaderUB
+	- MMDEdgePixelShaderUB
+	*/
+	uint32_t ubCount = 5;
+	ubCount *= matCount;
 	ubCount *= swapImageCount;
-	uint32_t imgPoolCount = matCount * 3;
-	imgPoolCount *= swapImageCount;
-	uint32_t descSetCount = matCount;
-	descSetCount *= swapImageCount;
 	auto ubPoolSize = vk::DescriptorPoolSize()
 		.setType(vk::DescriptorType::eUniformBuffer)
 		.setDescriptorCount(ubCount);
+
+	/*
+	Image Count
+	MMD Shader
+	- Texture
+	- Toon Texture
+	- Sphere Texture
+	*/
+	uint32_t imgPoolCount = 3;
+	imgPoolCount *= matCount;
+	imgPoolCount *= swapImageCount;
 	auto imgPoolSize = vk::DescriptorPoolSize()
 		.setType(vk::DescriptorType::eCombinedImageSampler)
 		.setDescriptorCount(imgPoolCount);
+
 	vk::DescriptorPoolSize poolSizes[] = {
 		ubPoolSize,
 		imgPoolSize
 	};
+
+	/*
+	Descriptor Set Count
+	- MMD
+	- MMD Edge
+	*/
+	uint32_t descSetCount = 2;
+	descSetCount *= matCount;
+	descSetCount *= swapImageCount;
 	auto descPoolInfo = vk::DescriptorPoolCreateInfo()
 		.setMaxSets(descSetCount)
-		.setPoolSizeCount(2)
+		.setPoolSizeCount(std::extent<decltype(poolSizes)>::value)
 		.setPPoolSizes(poolSizes);
 	ret = device.createDescriptorPool(&descPoolInfo, nullptr, &m_descPool);
 	if (vk::Result::eSuccess != ret)
@@ -2084,10 +2393,26 @@ bool Model::SetupDescriptorSet(AppContext& appContext)
 		return false;
 	}
 
-	auto descAllocInfo = vk::DescriptorSetAllocateInfo()
+	return true;
+}
+
+bool Model::SetupDescriptorSet(AppContext& appContext)
+{
+	vk::Result ret;
+
+	auto device = appContext.m_device;
+
+	uint32_t swapImageCount = uint32_t(appContext.m_swapchainImageResouces.size());
+
+	auto mmdDescSetAllocInfo = vk::DescriptorSetAllocateInfo()
 		.setDescriptorPool(m_descPool)
 		.setDescriptorSetCount(1)
 		.setPSetLayouts(&appContext.m_mmdDescriptorSetLayout);
+
+	auto mmdEdgeDescSetAllocInfo = vk::DescriptorSetAllocateInfo()
+		.setDescriptorPool(m_descPool)
+		.setDescriptorSetCount(1)
+		.setPSetLayouts(&appContext.m_mmdEdgeDescriptorSetLayout);
 
 	auto gpu = appContext.m_gpu;
 	auto gpuProp = gpu.getProperties();
@@ -2098,8 +2423,15 @@ bool Model::SetupDescriptorSet(AppContext& appContext)
 
 		auto& res = m_resources[imgIdx];
 		auto& modelRes = res.m_modelResource;
+
+		// MMDVertxShaderUB
 		modelRes.m_mmdVSUBOffset = ubOffset;
 		ubOffset += sizeof(MMDVertxShaderUB);
+		ubOffset = (ubOffset + ubAlign) - ((ubOffset + ubAlign) % ubAlign);
+
+		// MMDEdgeVertexShaderUB
+		modelRes.m_mmdEdgeVSUBOffset = ubOffset;
+		ubOffset += sizeof(MMDEdgeVertexShaderUB);
 		ubOffset = (ubOffset + ubAlign) - ((ubOffset + ubAlign) % ubAlign);
 
 		size_t matCount = m_mmdModel->GetMaterialCount();
@@ -2107,17 +2439,36 @@ bool Model::SetupDescriptorSet(AppContext& appContext)
 		for (size_t matIdx = 0; matIdx < matCount; matIdx++)
 		{
 			auto& matRes = res.m_materialResources[matIdx];
-			auto& desc = matRes.m_desc;
-			ret = device.allocateDescriptorSets(&descAllocInfo, &desc);
+
+			// MMD Descriptor Set
+			ret = device.allocateDescriptorSets(&mmdDescSetAllocInfo, &matRes.m_mmdDescSet);
 			if (vk::Result::eSuccess != ret)
 			{
-				std::cout << "Failed to allocate Descriptor Set.\n";
+				std::cout << "Failed to allocate MMD Descriptor Set.\n";
 				return false;
 			}
 
+			// MMD Edge Descriptor Set
+			ret = device.allocateDescriptorSets(&mmdEdgeDescSetAllocInfo, &matRes.m_mmdEdgeDescSet);
+			if (vk::Result::eSuccess != ret)
+			{
+				std::cout << "Failed to allocate MMD Edge Descriptor Set.\n";
+				return false;
+			}
+
+			// MMDFragmentShaderUB
 			matRes.m_mmdFSUBOffset = ubOffset;
-			auto a = sizeof(MMDFragmentShaderUB);
 			ubOffset += sizeof(MMDFragmentShaderUB);
+			ubOffset = (ubOffset + ubAlign) - ((ubOffset + ubAlign) % ubAlign);
+
+			// MMDEdgeSizeVertexShaderUB
+			matRes.m_mmdEdgeSizeVSUBOffset = ubOffset;
+			ubOffset += sizeof(MMDEdgeSizeVertexShaderUB);
+			ubOffset = (ubOffset + ubAlign) - ((ubOffset + ubAlign) % ubAlign);
+
+			// MMDEdgePixelShaderUB
+			matRes.m_mmdEdgeFSUBOffset = ubOffset;
+			ubOffset += sizeof(MMDEdgePixelShaderUB);
 			ubOffset = (ubOffset + ubAlign) - ((ubOffset + ubAlign) % ubAlign);
 		}
 
@@ -2136,84 +2487,160 @@ bool Model::SetupDescriptorSet(AppContext& appContext)
 		}
 	}
 
-	//
+	// MMD Descriptor Set
+
+	// MMDVertxShaderUB
 	auto mmdVSBufferInfo = vk::DescriptorBufferInfo()
 		.setOffset(0)
 		.setRange(sizeof(MMDVertxShaderUB));
-	auto mmdFSBufferInfo = vk::DescriptorBufferInfo()
-		.setOffset(0)
-		.setRange(sizeof(MMDFragmentShaderUB));
-	auto mmdFSTexSamplerInfo = vk::DescriptorImageInfo();
-	auto mmdFSToonTexSamplerInfo = vk::DescriptorImageInfo();
-	auto mmdFSSphereTexSamplerInfo = vk::DescriptorImageInfo();
-
 	auto mmdVSWriteDescSet = vk::WriteDescriptorSet()
 		.setDstBinding(0)
 		.setDescriptorCount(1)
 		.setDescriptorType(vk::DescriptorType::eUniformBuffer)
 		.setPBufferInfo(&mmdVSBufferInfo);
+
+	// MMDFragmentShaderUB
+	auto mmdFSBufferInfo = vk::DescriptorBufferInfo()
+		.setOffset(0)
+		.setRange(sizeof(MMDFragmentShaderUB));
 	auto mmdFSWriteDescSet = vk::WriteDescriptorSet()
 		.setDstBinding(1)
 		.setDescriptorCount(1)
 		.setDescriptorType(vk::DescriptorType::eUniformBuffer)
 		.setPBufferInfo(&mmdFSBufferInfo);
+
+	// MMD Texture
+	auto mmdFSTexSamplerInfo = vk::DescriptorImageInfo();
 	auto mmdFSTexSamplerWriteDescSet = vk::WriteDescriptorSet()
 		.setDstBinding(2)
 		.setDescriptorCount(1)
 		.setDescriptorType(vk::DescriptorType::eCombinedImageSampler)
 		.setPImageInfo(&mmdFSTexSamplerInfo);
+
+	// MMD Toon Texture
+	auto mmdFSToonTexSamplerInfo = vk::DescriptorImageInfo();
 	auto mmdFSToonTexSamplerWriteDescSet = vk::WriteDescriptorSet()
 		.setDstBinding(3)
 		.setDescriptorCount(1)
 		.setDescriptorType(vk::DescriptorType::eCombinedImageSampler)
 		.setPImageInfo(&mmdFSToonTexSamplerInfo);
+
+	// MMD Sphere Texture
+	auto mmdFSSphereTexSamplerInfo = vk::DescriptorImageInfo();
 	auto mmdFSSphereTexSamplerWriteDescSet = vk::WriteDescriptorSet()
 		.setDstBinding(4)
 		.setDescriptorCount(1)
 		.setDescriptorType(vk::DescriptorType::eCombinedImageSampler)
 		.setPImageInfo(&mmdFSSphereTexSamplerInfo);
-	vk::WriteDescriptorSet writes[] = {
+
+	vk::WriteDescriptorSet mmdWriteDescSets[] = {
 		mmdVSWriteDescSet,
 		mmdFSWriteDescSet,
 		mmdFSTexSamplerWriteDescSet,
 		mmdFSToonTexSamplerWriteDescSet,
 		mmdFSSphereTexSamplerWriteDescSet,
 	};
+
+	// MMD Edge Descriptor Set
+
+	// MMDEdgeVertxShaderUB
+	auto mmdEdgeVSBufferInfo = vk::DescriptorBufferInfo()
+		.setOffset(0)
+		.setRange(sizeof(MMDEdgeVertexShaderUB));
+	auto mmdEdgeVSWriteDescSet = vk::WriteDescriptorSet()
+		.setDstBinding(0)
+		.setDescriptorCount(1)
+		.setDescriptorType(vk::DescriptorType::eUniformBuffer)
+		.setPBufferInfo(&mmdEdgeVSBufferInfo);
+
+	// MMDEdgeSizeVertexShaderUB
+	auto mmdEdgeSizeVSBufferInfo = vk::DescriptorBufferInfo()
+		.setOffset(0)
+		.setRange(sizeof(MMDEdgeSizeVertexShaderUB));
+	auto mmdEdgeSizeVSWriteDescSet = vk::WriteDescriptorSet()
+		.setDstBinding(1)
+		.setDescriptorCount(1)
+		.setDescriptorType(vk::DescriptorType::eUniformBuffer)
+		.setPBufferInfo(&mmdEdgeSizeVSBufferInfo);
+
+	// MMDEdgePixelShaderUB
+	auto mmdEdgeFSBufferInfo = vk::DescriptorBufferInfo()
+		.setOffset(0)
+		.setRange(sizeof(MMDEdgePixelShaderUB));
+	auto mmdEdgeFSWriteDescSet = vk::WriteDescriptorSet()
+		.setDstBinding(2)
+		.setDescriptorCount(1)
+		.setDescriptorType(vk::DescriptorType::eUniformBuffer)
+		.setPBufferInfo(&mmdEdgeFSBufferInfo);
+
+	vk::WriteDescriptorSet mmdEdgeWriteDescSets[] = {
+		mmdEdgeVSWriteDescSet,
+		mmdEdgeSizeVSWriteDescSet,
+		mmdEdgeFSWriteDescSet,
+	};
+
 	for (uint32_t imgIdx = 0; imgIdx < swapImageCount; imgIdx++)
 	{
 		auto& res = m_resources[imgIdx];
 		auto& modelRes = res.m_modelResource;
+
+		// MMDVertxShaderUB
 		mmdVSBufferInfo.setBuffer(modelRes.m_uniformBuffer.m_buffer);
 		mmdVSBufferInfo.setOffset(modelRes.m_mmdVSUBOffset);
+
+		// MMDEdgeVertexShaderUB
+		mmdEdgeVSBufferInfo.setBuffer(modelRes.m_uniformBuffer.m_buffer);
+		mmdEdgeVSBufferInfo.setOffset(modelRes.m_mmdEdgeVSUBOffset);
 
 		size_t matCount = m_mmdModel->GetMaterialCount();
 		res.m_materialResources.resize(matCount);
 		for (size_t matIdx = 0; matIdx < matCount; matIdx++)
 		{
 			auto& matRes = res.m_materialResources[matIdx];
+			const auto& mat = m_materials[matIdx];
+
+			// MMDFragmentShaderUB
 			mmdFSBufferInfo.setBuffer(modelRes.m_uniformBuffer.m_buffer);
 			mmdFSBufferInfo.setOffset(matRes.m_mmdFSUBOffset);
 
-			const auto& mat = m_materials[matIdx];
 			// Tex
 			mmdFSTexSamplerInfo.setImageView(mat.m_mmdTex->m_imageView);
 			mmdFSTexSamplerInfo.setImageLayout(mat.m_mmdTex->m_imageLayout);
 			mmdFSTexSamplerInfo.setSampler(mat.m_mmdTexSampler);
+
 			// Toon Tex
 			mmdFSToonTexSamplerInfo.setImageView(mat.m_mmdToonTex->m_imageView);
 			mmdFSToonTexSamplerInfo.setImageLayout(mat.m_mmdToonTex->m_imageLayout);
 			mmdFSToonTexSamplerInfo.setSampler(mat.m_mmdToonTexSampler);
+
 			// Sphere Tex
 			mmdFSSphereTexSamplerInfo.setImageView(mat.m_mmdSphereTex->m_imageView);
 			mmdFSSphereTexSamplerInfo.setImageLayout(mat.m_mmdSphereTex->m_imageLayout);
 			mmdFSSphereTexSamplerInfo.setSampler(mat.m_mmdSphereTexSampler);
 
-			uint32_t writesCount = std::extent<decltype(writes)>::value;
+			// Write MMD descriptor set
+			uint32_t writesCount = std::extent<decltype(mmdWriteDescSets)>::value;
 			for (uint32_t i = 0; i < writesCount; i++)
 			{
-				writes[i].setDstSet(matRes.m_desc);
+				mmdWriteDescSets[i].setDstSet(matRes.m_mmdDescSet);
 			}
-			device.updateDescriptorSets(writesCount, writes, 0, nullptr);
+			device.updateDescriptorSets(writesCount, mmdWriteDescSets, 0, nullptr);
+
+			// MMDEdgeSizeVertexShaderUB
+			mmdEdgeSizeVSBufferInfo.setBuffer(modelRes.m_uniformBuffer.m_buffer);
+			mmdEdgeSizeVSBufferInfo.setOffset(matRes.m_mmdEdgeSizeVSUBOffset);
+
+			// MMDEdgePixelShaderUB
+			mmdEdgeFSBufferInfo.setBuffer(modelRes.m_uniformBuffer.m_buffer);
+			mmdEdgeFSBufferInfo.setOffset(matRes.m_mmdEdgeFSUBOffset);
+
+			// Write MMD edge descriptor set
+			writesCount = std::extent<decltype(mmdEdgeWriteDescSets)>::value;
+			for (uint32_t i = 0; i < writesCount; i++)
+			{
+				mmdEdgeWriteDescSets[i].setDstSet(matRes.m_mmdEdgeDescSet);
+			}
+			device.updateDescriptorSets(writesCount, mmdEdgeWriteDescSets, 0, nullptr);
 		}
 	}
 
@@ -2268,11 +2695,6 @@ void Model::Destroy(AppContext & appContext)
 		modelRes.m_vertexBuffer.Clear(appContext);
 		modelRes.m_uniformBuffer.Clear(appContext);
 		device.freeCommandBuffers(appContext.m_commandPool, 1, &modelRes.m_cmdBuffer);
-
-		for (auto& matRes : res.m_materialResources)
-		{
-			//device.freeDescriptorSets(m_descPool, 1, &matRes.m_desc);
-		}
 	}
 	m_resources.clear();
 
@@ -2366,6 +2788,11 @@ void Model::Update(AppContext& appContext)
 		auto mmdVSUB = reinterpret_cast<MMDVertxShaderUB*>(ubPtr + res.m_modelResource.m_mmdVSUBOffset);
 		mmdVSUB->m_wv = wv;
 		mmdVSUB->m_wvp = wvp;
+
+		auto mmdEdgeVSUB = reinterpret_cast<MMDEdgeVertexShaderUB*>(ubPtr + res.m_modelResource.m_mmdEdgeVSUBOffset);
+		mmdEdgeVSUB->m_wv = wv;
+		mmdEdgeVSUB->m_wvp = wvp;
+		mmdEdgeVSUB->m_screenSize = glm::vec2(float(appContext.m_screenWidth), float(appContext.m_screenHeight));
 	}
 
 	// Write Material uniform buffer;
@@ -2440,6 +2867,12 @@ void Model::Update(AppContext& appContext)
 			glm::mat3 viewMat = glm::mat3(appContext.m_viewMat);
 			lightDir = viewMat * lightDir;
 			mmdFSUB->m_lightDir = lightDir;
+
+			auto mmdEdgeSizeVSUB = reinterpret_cast<MMDEdgeSizeVertexShaderUB*>(ubPtr + matRes.m_mmdEdgeSizeVSUBOffset);
+			mmdEdgeSizeVSUB->m_edgeSize = mmdMat.m_edgeSize;
+
+			auto mmdEdgeFSUB = reinterpret_cast<MMDEdgePixelShaderUB*>(ubPtr + matRes.m_mmdEdgeFSUBOffset);
+			mmdEdgeFSUB->m_edgeColor = mmdMat.m_edgeColor;
 		}
 	}
 	device.unmapMemory(ubStBuf.m_memory);
@@ -2483,10 +2916,16 @@ void Model::Draw(AppContext& appContext)
 
 		const auto& mmdMat = m_mmdModel->GetMaterials()[matID];
 		auto& matRes = res.m_materialResources[matID];
+
+		if (mmdMat.m_alpha == 0.0f)
+		{
+			continue;
+		}
+
 		cmdBuf.bindDescriptorSets(
 			vk::PipelineBindPoint::eGraphics,
 			appContext.m_mmdPipelineLayout,
-			0, 1, &matRes.m_desc,
+			0, 1, &matRes.m_mmdDescSet,
 			0, nullptr);
 
 		if (mmdMat.m_bothFace)
@@ -2501,6 +2940,39 @@ void Model::Draw(AppContext& appContext)
 				vk::PipelineBindPoint::eGraphics,
 				appContext.m_mmdPipelines[int(AppContext::MMDRenderType::AlphaBlend_FrontFace)]);
 		}
+		vk::DeviceSize offsets[1] = { 0 };
+		cmdBuf.bindVertexBuffers(0, 1, &modelRes.m_vertexBuffer.m_buffer, offsets);
+		cmdBuf.bindIndexBuffer(m_indexBuffer.m_buffer, 0, m_indexType);
+		cmdBuf.drawIndexed(subMesh.m_vertexCount, 1, subMesh.m_beginIndex, 0, 1);
+	}
+
+	// MMD Edge
+	for (size_t i = 0; i < subMeshCount; i++)
+	{
+		const auto& subMesh = m_mmdModel->GetSubMeshes()[i];
+		const auto& matID = subMesh.m_materialID;
+
+		const auto& mmdMat = m_mmdModel->GetMaterials()[matID];
+		auto& matRes = res.m_materialResources[matID];
+
+		if (!mmdMat.m_edgeFlag)
+		{
+			continue;
+		}
+		if (mmdMat.m_alpha == 0.0f)
+		{
+			continue;
+		}
+
+		cmdBuf.bindDescriptorSets(
+			vk::PipelineBindPoint::eGraphics,
+			appContext.m_mmdEdgePipelineLayout,
+			0, 1, &matRes.m_mmdEdgeDescSet,
+			0, nullptr);
+		cmdBuf.bindPipeline(
+			vk::PipelineBindPoint::eGraphics,
+			appContext.m_mmdEdgePipeline);
+
 		vk::DeviceSize offsets[1] = { 0 };
 		cmdBuf.bindVertexBuffers(0, 1, &modelRes.m_vertexBuffer.m_buffer, offsets);
 		cmdBuf.bindIndexBuffer(m_indexBuffer.m_buffer, 0, m_indexType);
