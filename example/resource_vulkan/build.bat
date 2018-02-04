@@ -17,3 +17,13 @@ python ..\..\tools\bin2h.py mmd_edge.frag.spv
 
 del mmd_edge.vert.spv
 del mmd_edge.frag.spv
+
+rem mmd_ground_shadow
+glslangValidator.exe -V -o mmd_ground_shadow.vert.spv mmd_ground_shadow.vert
+glslangValidator.exe -V -o mmd_ground_shadow.frag.spv mmd_ground_shadow.frag
+
+python ..\..\tools\bin2h.py mmd_ground_shadow.vert.spv
+python ..\..\tools\bin2h.py mmd_ground_shadow.frag.spv
+
+del mmd_ground_shadow.vert.spv
+del mmd_ground_shadow.frag.spv

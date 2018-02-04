@@ -39,6 +39,8 @@
 #include "resource_vulkan/mmd.frag.spv.h"
 #include "resource_vulkan/mmd_edge.vert.spv.h"
 #include "resource_vulkan/mmd_edge.frag.spv.h"
+#include "resource_vulkan/mmd_ground_shadow.vert.spv.h"
+#include "resource_vulkan/mmd_ground_shadow.frag.spv.h"
 
 struct AppContext;
 
@@ -195,15 +197,28 @@ struct MMDEdgeVertexShaderUB
 	glm::vec2	m_screenSize;
 	float		m_dummy[2];
 };
+
 struct MMDEdgeSizeVertexShaderUB
 {
 	float		m_edgeSize;
 	float		m_dummy[3];
 };
 
-struct MMDEdgePixelShaderUB
+struct MMDEdgeFragmentShaderUB
 {
 	glm::vec4	m_edgeColor;
+};
+
+// MMD Ground Shadow Shader uniform buffer
+
+struct MMDGroundShadowVertexShaderUB
+{
+	glm::mat4	m_wvp;
+};
+
+struct MMDGroundShadowFragmentShaderUB
+{
+	glm::vec4	m_shadowColor;
 };
 
 // Swap chain
@@ -344,6 +359,13 @@ struct AppContext
 	vk::ShaderModule	m_mmdEdgeVSModule;
 	vk::ShaderModule	m_mmdEdgeFSModule;
 
+	// MMD Ground Shadow Draw pipeline
+	vk::DescriptorSetLayout	m_mmdGroundShadowDescriptorSetLayout;
+	vk::PipelineLayout	m_mmdGroundShadowPipelineLayout;
+	vk::Pipeline		m_mmdGroundShadowPipeline;
+	vk::ShaderModule	m_mmdGroundShadowVSModule;
+	vk::ShaderModule	m_mmdGroundShadowFSModule;
+
 	uint32_t	m_imageCount;
 	uint32_t	m_imageIndex = 0;
 
@@ -379,6 +401,7 @@ struct AppContext
 	bool PreparePipelineCache();
 	bool PrepareMMDPipeline();
 	bool PrepareMMDEdgePipeline();
+	bool PrepareMMDGroundShadowPipeline();
 	bool PrepareDefaultTexture();
 
 	bool Resize();
@@ -562,6 +585,22 @@ void AppContext::Destory()
 	m_device.destroyShaderModule(m_mmdEdgeFSModule, nullptr);
 	m_mmdEdgeFSModule = nullptr;
 
+	// MMD Ground Shadow Draw Pipeline
+	m_device.destroyDescriptorSetLayout(m_mmdGroundShadowDescriptorSetLayout, nullptr);
+	m_mmdGroundShadowDescriptorSetLayout = nullptr;
+
+	m_device.destroyPipelineLayout(m_mmdGroundShadowPipelineLayout, nullptr);
+	m_mmdGroundShadowPipelineLayout = nullptr;
+
+	m_device.destroyPipeline(m_mmdGroundShadowPipeline, nullptr);
+	m_mmdGroundShadowPipeline = nullptr;
+
+	m_device.destroyShaderModule(m_mmdGroundShadowVSModule, nullptr);
+	m_mmdGroundShadowVSModule = nullptr;
+
+	m_device.destroyShaderModule(m_mmdGroundShadowFSModule, nullptr);
+	m_mmdGroundShadowFSModule = nullptr;
+
 	// Pipeline Cache
 	m_device.destroyPipelineCache(m_pipelineCache, nullptr);
 	m_pipelineCache = nullptr;
@@ -610,6 +649,7 @@ bool AppContext::Prepare()
 	if (!PreparePipelineCache()) { return false; }
 	if (!PrepareMMDPipeline()) { return false; }
 	if (!PrepareMMDEdgePipeline()) { return false; }
+	if (!PrepareMMDGroundShadowPipeline()) { return false; }
 	if (!PrepareDefaultTexture()) { return false; }
 	return true;
 }
@@ -941,7 +981,7 @@ bool AppContext::PrepareRenderPass()
 		.setSamples(vk::SampleCountFlagBits::e1)
 		.setLoadOp(vk::AttachmentLoadOp::eClear)
 		.setStoreOp(vk::AttachmentStoreOp::eDontCare)
-		.setStencilLoadOp(vk::AttachmentLoadOp::eDontCare)
+		.setStencilLoadOp(vk::AttachmentLoadOp::eClear)
 		.setStencilStoreOp(vk::AttachmentStoreOp::eDontCare)
 		.setInitialLayout(vk::ImageLayout::eUndefined)
 		.setFinalLayout(vk::ImageLayout::eDepthStencilAttachmentOptimal);
@@ -1482,6 +1522,217 @@ bool AppContext::PrepareMMDEdgePipeline()
 	if (vk::Result::eSuccess != ret)
 	{
 		std::cout << "Failed to create MMD Edge Pipeline.\n";
+		return false;
+	}
+
+	return true;
+}
+
+bool AppContext::PrepareMMDGroundShadowPipeline()
+{
+	vk::Result ret;
+
+	// VS Binding
+	auto vsModelUnifomDescSetBinding = vk::DescriptorSetLayoutBinding()
+		.setBinding(0)
+		.setDescriptorType(vk::DescriptorType::eUniformBuffer)
+		.setDescriptorCount(1)
+		.setStageFlags(vk::ShaderStageFlagBits::eVertex);
+
+	// FS Binding
+	auto fsMatUniformDescSetBinding = vk::DescriptorSetLayoutBinding()
+		.setBinding(1)
+		.setDescriptorType(vk::DescriptorType::eUniformBuffer)
+		.setDescriptorCount(1)
+		.setStageFlags(vk::ShaderStageFlagBits::eFragment);
+
+	vk::DescriptorSetLayoutBinding bindings[] = {
+		vsModelUnifomDescSetBinding,
+		fsMatUniformDescSetBinding,
+	};
+
+	// Create Descriptor Set Layout
+	auto descSetLayoutInfo = vk::DescriptorSetLayoutCreateInfo()
+		.setBindingCount(std::extent<decltype(bindings)>::value)
+		.setPBindings(bindings);
+	ret = m_device.createDescriptorSetLayout(&descSetLayoutInfo, nullptr, &m_mmdGroundShadowDescriptorSetLayout);
+	if (vk::Result::eSuccess != ret)
+	{
+		std::cout << "Failed to create MMD Ground Shadow Descriptor Set Layout.\n";
+		return false;
+	}
+
+	// Create Pipeline Layout
+	auto pipelineLayoutInfo = vk::PipelineLayoutCreateInfo()
+		.setSetLayoutCount(1)
+		.setPSetLayouts(&m_mmdGroundShadowDescriptorSetLayout);
+	ret = m_device.createPipelineLayout(&pipelineLayoutInfo, nullptr, &m_mmdGroundShadowPipelineLayout);
+	if (vk::Result::eSuccess != ret)
+	{
+		std::cout << "Failed to create MMD Ground Shadow Pipeline Layout.\n";
+		return false;
+	}
+
+	// Create Vertex Shader Module
+	auto vsInfo = vk::ShaderModuleCreateInfo()
+		.setCodeSize(sizeof(mmd_ground_shadow_vert_spv_data))
+		.setPCode(reinterpret_cast<const uint32_t*>(mmd_ground_shadow_vert_spv_data));
+	ret = m_device.createShaderModule(&vsInfo, nullptr, &m_mmdGroundShadowVSModule);
+	if (vk::Result::eSuccess != ret)
+	{
+		std::cout << "Failed to create MMD Ground Shadow Vertex Shader Module.\n";
+		return false;
+	}
+
+	// Create Fragment Shader Module
+	auto fsInfo = vk::ShaderModuleCreateInfo()
+		.setCodeSize(sizeof(mmd_ground_shadow_frag_spv_data))
+		.setPCode(reinterpret_cast<const uint32_t*>(mmd_ground_shadow_frag_spv_data));
+	ret = m_device.createShaderModule(&fsInfo, nullptr, &m_mmdGroundShadowFSModule);
+	if (vk::Result::eSuccess != ret)
+	{
+		std::cout << "Failed to create MMD GroundShadow Fragment Shader Module.\n";
+		return false;
+	}
+
+	// Pipeline
+	auto pipelineInfo = vk::GraphicsPipelineCreateInfo()
+		.setLayout(m_mmdGroundShadowPipelineLayout)
+		.setRenderPass(m_renderPass);
+
+	// Input Assembly
+	auto inputAssemblyInfo = vk::PipelineInputAssemblyStateCreateInfo()
+		.setTopology(vk::PrimitiveTopology::eTriangleList);
+	pipelineInfo.setPInputAssemblyState(&inputAssemblyInfo);
+
+	// Rasterization State
+	auto rasterizationInfo = vk::PipelineRasterizationStateCreateInfo()
+		.setPolygonMode(vk::PolygonMode::eFill)
+		.setCullMode(vk::CullModeFlagBits::eNone)
+		.setFrontFace(vk::FrontFace::eCounterClockwise)
+		.setDepthClampEnable(false)
+		.setRasterizerDiscardEnable(false)
+		.setDepthBiasEnable(false)
+		.setLineWidth(1.0f);
+	pipelineInfo.setPRasterizationState(&rasterizationInfo);
+
+	// Color blend state
+	auto colorBlendAttachmentInfo = vk::PipelineColorBlendAttachmentState()
+		.setColorWriteMask(vk::ColorComponentFlagBits::eR |
+			vk::ColorComponentFlagBits::eG |
+			vk::ColorComponentFlagBits::eB |
+			vk::ColorComponentFlagBits::eA)
+		.setBlendEnable(false);
+	auto colorBlendStateInfo = vk::PipelineColorBlendStateCreateInfo()
+		.setAttachmentCount(1)
+		.setPAttachments(&colorBlendAttachmentInfo);
+	pipelineInfo.setPColorBlendState(&colorBlendStateInfo);
+
+	// Viewport State
+	auto viewportInfo = vk::PipelineViewportStateCreateInfo()
+		.setViewportCount(1)
+		.setScissorCount(1);
+	pipelineInfo.setPViewportState(&viewportInfo);
+
+	// Dynamic State
+	vk::DynamicState dynamicStates[] = {
+		vk::DynamicState::eViewport,
+		vk::DynamicState::eScissor,
+		vk::DynamicState::eDepthBias,
+		vk::DynamicState::eStencilReference,
+		vk::DynamicState::eStencilCompareMask,
+		vk::DynamicState::eStencilWriteMask,
+	};
+	auto dynamicInfo = vk::PipelineDynamicStateCreateInfo()
+		.setDynamicStateCount(std::extent<decltype(dynamicStates)>::value)
+		.setPDynamicStates(dynamicStates);
+	pipelineInfo.setPDynamicState(&dynamicInfo);
+
+	// Depth and Stencil State
+	auto depthAndStencilInfo = vk::PipelineDepthStencilStateCreateInfo()
+		.setDepthTestEnable(true)
+		.setDepthWriteEnable(true)
+		.setDepthCompareOp(vk::CompareOp::eLessOrEqual)
+		.setDepthBoundsTestEnable(false)
+		.setFront(vk::StencilOpState()
+			.setCompareOp(vk::CompareOp::eNotEqual)
+			.setFailOp(vk::StencilOp::eKeep)
+			.setDepthFailOp(vk::StencilOp::eKeep)
+			.setPassOp(vk::StencilOp::eReplace)
+		)
+		.setBack(vk::StencilOpState()
+			.setCompareOp(vk::CompareOp::eNotEqual)
+			.setFailOp(vk::StencilOp::eKeep)
+			.setDepthFailOp(vk::StencilOp::eKeep)
+			.setPassOp(vk::StencilOp::eReplace))
+		.setStencilTestEnable(true);
+	depthAndStencilInfo.front = depthAndStencilInfo.back;
+	pipelineInfo.setPDepthStencilState(&depthAndStencilInfo);
+
+	// Multisample
+	auto multisampleInfo = vk::PipelineMultisampleStateCreateInfo()
+		.setRasterizationSamples(vk::SampleCountFlagBits::e1);
+	pipelineInfo.setPMultisampleState(&multisampleInfo);
+
+	// Vertex input binding
+	auto vertexInputBindingDesc = vk::VertexInputBindingDescription()
+		.setBinding(0)
+		.setStride(sizeof(Vertex))
+		.setInputRate(vk::VertexInputRate::eVertex);
+	auto posAttr = vk::VertexInputAttributeDescription()
+		.setBinding(0)
+		.setLocation(0)
+		.setFormat(vk::Format::eR32G32B32Sfloat)
+		.setOffset(offsetof(Vertex, m_position));
+	vk::VertexInputAttributeDescription vertexInputAttrs[] = {
+		posAttr,
+	};
+
+	auto vertexInputInfo = vk::PipelineVertexInputStateCreateInfo()
+		.setVertexBindingDescriptionCount(1)
+		.setPVertexBindingDescriptions(&vertexInputBindingDesc)
+		.setVertexAttributeDescriptionCount(std::extent<decltype(vertexInputAttrs)>::value)
+		.setPVertexAttributeDescriptions(vertexInputAttrs);
+	pipelineInfo.setPVertexInputState(&vertexInputInfo);
+
+	// Shader
+	auto vsStageInfo = vk::PipelineShaderStageCreateInfo()
+		.setStage(vk::ShaderStageFlagBits::eVertex)
+		.setModule(m_mmdGroundShadowVSModule)
+		.setPName("main");
+	auto fsStageInfo = vk::PipelineShaderStageCreateInfo()
+		.setStage(vk::ShaderStageFlagBits::eFragment)
+		.setModule(m_mmdGroundShadowFSModule)
+		.setPName("main");
+	vk::PipelineShaderStageCreateInfo shaderStages[2] = {
+		vsStageInfo,
+		fsStageInfo,
+	};
+	pipelineInfo
+		.setStageCount(std::extent<decltype(shaderStages)>::value)
+		.setPStages(shaderStages);
+
+	// Set alpha blend mode
+	colorBlendAttachmentInfo
+		.setBlendEnable(true)
+		.setColorBlendOp(vk::BlendOp::eAdd)
+		.setSrcColorBlendFactor(vk::BlendFactor::eSrcAlpha)
+		.setDstColorBlendFactor(vk::BlendFactor::eOneMinusSrcAlpha)
+		.setAlphaBlendOp(vk::BlendOp::eAdd)
+		.setSrcAlphaBlendFactor(vk::BlendFactor::eSrcAlpha)
+		.setDstAlphaBlendFactor(vk::BlendFactor::eOneMinusSrcAlpha);
+
+	// Set front face mode
+	rasterizationInfo.
+		setCullMode(vk::CullModeFlagBits::eNone);
+
+	ret = m_device.createGraphicsPipelines(
+		m_pipelineCache,
+		1, &pipelineInfo, nullptr,
+		&m_mmdGroundShadowPipeline);
+	if (vk::Result::eSuccess != ret)
+	{
+		std::cout << "Failed to create MMD Ground Shadow Pipeline.\n";
 		return false;
 	}
 
@@ -2082,6 +2333,9 @@ struct Model
 		// MMD Edge Shader
 		uint32_t	m_mmdEdgeVSUBOffset;
 
+		// MMD Ground Shader
+		uint32_t	m_mmdGroundShadowVSUBOffset;
+
 		vk::CommandBuffer	m_cmdBuffer;
 	};
 
@@ -2089,6 +2343,7 @@ struct Model
 	{
 		vk::DescriptorSet	m_mmdDescSet;
 		vk::DescriptorSet	m_mmdEdgeDescSet;
+		vk::DescriptorSet	m_mmdGroundShadowDescSet;
 
 		// MMD Shader
 		uint32_t			m_mmdFSUBOffset;
@@ -2096,6 +2351,9 @@ struct Model
 		// MMD Edge Shader
 		uint32_t			m_mmdEdgeSizeVSUBOffset;
 		uint32_t			m_mmdEdgeFSUBOffset;
+
+		// MMD Ground Shadow Shader
+		uint32_t			m_mmdGroundShadowFSUBOffset;
 	};
 
 	struct Resource
@@ -2346,9 +2604,12 @@ bool Model::SetupDescriptorPool(AppContext & appContext)
 	MMD Edge Shader
 	- MMDEdgeVertexShaderUB
 	- MMDEdgeSizeVertexShaderUB
-	- MMDEdgePixelShaderUB
+	- MMDEdgeFragmentShaderUB
+	MMD Ground Shadow Shader
+	- MMDGroundShadowVertexShaderUB
+	- MMDGroundShadowFragmentShaderUB
 	*/
-	uint32_t ubCount = 5;
+	uint32_t ubCount = 7;
 	ubCount *= matCount;
 	ubCount *= swapImageCount;
 	auto ubPoolSize = vk::DescriptorPoolSize()
@@ -2378,8 +2639,9 @@ bool Model::SetupDescriptorPool(AppContext & appContext)
 	Descriptor Set Count
 	- MMD
 	- MMD Edge
+	- MMD Ground Shadow
 	*/
-	uint32_t descSetCount = 2;
+	uint32_t descSetCount = 3;
 	descSetCount *= matCount;
 	descSetCount *= swapImageCount;
 	auto descPoolInfo = vk::DescriptorPoolCreateInfo()
@@ -2414,6 +2676,11 @@ bool Model::SetupDescriptorSet(AppContext& appContext)
 		.setDescriptorSetCount(1)
 		.setPSetLayouts(&appContext.m_mmdEdgeDescriptorSetLayout);
 
+	auto mmdGroundShadowDescSetAllocInfo = vk::DescriptorSetAllocateInfo()
+		.setDescriptorPool(m_descPool)
+		.setDescriptorSetCount(1)
+		.setPSetLayouts(&appContext.m_mmdGroundShadowDescriptorSetLayout);
+
 	auto gpu = appContext.m_gpu;
 	auto gpuProp = gpu.getProperties();
 	uint32_t ubAlign = uint32_t(gpuProp.limits.minUniformBufferOffsetAlignment);
@@ -2432,6 +2699,11 @@ bool Model::SetupDescriptorSet(AppContext& appContext)
 		// MMDEdgeVertexShaderUB
 		modelRes.m_mmdEdgeVSUBOffset = ubOffset;
 		ubOffset += sizeof(MMDEdgeVertexShaderUB);
+		ubOffset = (ubOffset + ubAlign) - ((ubOffset + ubAlign) % ubAlign);
+
+		// MMDGroundShadowVertexShaderUB
+		modelRes.m_mmdGroundShadowVSUBOffset = ubOffset;
+		ubOffset += sizeof(MMDGroundShadowVertexShaderUB);
 		ubOffset = (ubOffset + ubAlign) - ((ubOffset + ubAlign) % ubAlign);
 
 		size_t matCount = m_mmdModel->GetMaterialCount();
@@ -2456,6 +2728,14 @@ bool Model::SetupDescriptorSet(AppContext& appContext)
 				return false;
 			}
 
+			// MMD Ground Shadow Descriptor Set
+			ret = device.allocateDescriptorSets(&mmdGroundShadowDescSetAllocInfo, &matRes.m_mmdGroundShadowDescSet);
+			if (vk::Result::eSuccess != ret)
+			{
+				std::cout << "Failed to allocate MMD Ground Shadow Descriptor Set.\n";
+				return false;
+			}
+
 			// MMDFragmentShaderUB
 			matRes.m_mmdFSUBOffset = ubOffset;
 			ubOffset += sizeof(MMDFragmentShaderUB);
@@ -2466,9 +2746,14 @@ bool Model::SetupDescriptorSet(AppContext& appContext)
 			ubOffset += sizeof(MMDEdgeSizeVertexShaderUB);
 			ubOffset = (ubOffset + ubAlign) - ((ubOffset + ubAlign) % ubAlign);
 
-			// MMDEdgePixelShaderUB
+			// MMDEdgeFragmentShaderUB
 			matRes.m_mmdEdgeFSUBOffset = ubOffset;
-			ubOffset += sizeof(MMDEdgePixelShaderUB);
+			ubOffset += sizeof(MMDEdgeFragmentShaderUB);
+			ubOffset = (ubOffset + ubAlign) - ((ubOffset + ubAlign) % ubAlign);
+
+			// MMDEdgeFragmentShaderUB
+			matRes.m_mmdGroundShadowFSUBOffset = ubOffset;
+			ubOffset += sizeof(MMDGroundShadowFragmentShaderUB);
 			ubOffset = (ubOffset + ubAlign) - ((ubOffset + ubAlign) % ubAlign);
 		}
 
@@ -2563,10 +2848,10 @@ bool Model::SetupDescriptorSet(AppContext& appContext)
 		.setDescriptorType(vk::DescriptorType::eUniformBuffer)
 		.setPBufferInfo(&mmdEdgeSizeVSBufferInfo);
 
-	// MMDEdgePixelShaderUB
+	// MMDEdgeFragmentShaderUB
 	auto mmdEdgeFSBufferInfo = vk::DescriptorBufferInfo()
 		.setOffset(0)
-		.setRange(sizeof(MMDEdgePixelShaderUB));
+		.setRange(sizeof(MMDEdgeFragmentShaderUB));
 	auto mmdEdgeFSWriteDescSet = vk::WriteDescriptorSet()
 		.setDstBinding(2)
 		.setDescriptorCount(1)
@@ -2577,6 +2862,33 @@ bool Model::SetupDescriptorSet(AppContext& appContext)
 		mmdEdgeVSWriteDescSet,
 		mmdEdgeSizeVSWriteDescSet,
 		mmdEdgeFSWriteDescSet,
+	};
+
+	// MMD GroundShadow Descriptor Set
+
+	// MMDGroundShadowVertxShaderUB
+	auto mmdGroundShadowVSBufferInfo = vk::DescriptorBufferInfo()
+		.setOffset(0)
+		.setRange(sizeof(MMDGroundShadowVertexShaderUB));
+	auto mmdGroundShadowVSWriteDescSet = vk::WriteDescriptorSet()
+		.setDstBinding(0)
+		.setDescriptorCount(1)
+		.setDescriptorType(vk::DescriptorType::eUniformBuffer)
+		.setPBufferInfo(&mmdGroundShadowVSBufferInfo);
+
+	// MMDGroundShadowFragmentShaderUB
+	auto mmdGroundShadowFSBufferInfo = vk::DescriptorBufferInfo()
+		.setOffset(0)
+		.setRange(sizeof(MMDGroundShadowFragmentShaderUB));
+	auto mmdGroundShadowFSWriteDescSet = vk::WriteDescriptorSet()
+		.setDstBinding(1)
+		.setDescriptorCount(1)
+		.setDescriptorType(vk::DescriptorType::eUniformBuffer)
+		.setPBufferInfo(&mmdGroundShadowFSBufferInfo);
+
+	vk::WriteDescriptorSet mmdGroundShadowWriteDescSets[] = {
+		mmdGroundShadowVSWriteDescSet,
+		mmdGroundShadowFSWriteDescSet,
 	};
 
 	for (uint32_t imgIdx = 0; imgIdx < swapImageCount; imgIdx++)
@@ -2591,6 +2903,10 @@ bool Model::SetupDescriptorSet(AppContext& appContext)
 		// MMDEdgeVertexShaderUB
 		mmdEdgeVSBufferInfo.setBuffer(modelRes.m_uniformBuffer.m_buffer);
 		mmdEdgeVSBufferInfo.setOffset(modelRes.m_mmdEdgeVSUBOffset);
+
+		// MMDGroundShadowVertexShaderUB
+		mmdGroundShadowVSBufferInfo.setBuffer(modelRes.m_uniformBuffer.m_buffer);
+		mmdGroundShadowVSBufferInfo.setOffset(modelRes.m_mmdGroundShadowVSUBOffset);
 
 		size_t matCount = m_mmdModel->GetMaterialCount();
 		res.m_materialResources.resize(matCount);
@@ -2630,17 +2946,29 @@ bool Model::SetupDescriptorSet(AppContext& appContext)
 			mmdEdgeSizeVSBufferInfo.setBuffer(modelRes.m_uniformBuffer.m_buffer);
 			mmdEdgeSizeVSBufferInfo.setOffset(matRes.m_mmdEdgeSizeVSUBOffset);
 
-			// MMDEdgePixelShaderUB
+			// MMDEdgeFragmentShaderUB
 			mmdEdgeFSBufferInfo.setBuffer(modelRes.m_uniformBuffer.m_buffer);
 			mmdEdgeFSBufferInfo.setOffset(matRes.m_mmdEdgeFSUBOffset);
 
-			// Write MMD edge descriptor set
+			// Write MMD Edge descriptor set
 			writesCount = std::extent<decltype(mmdEdgeWriteDescSets)>::value;
 			for (uint32_t i = 0; i < writesCount; i++)
 			{
 				mmdEdgeWriteDescSets[i].setDstSet(matRes.m_mmdEdgeDescSet);
 			}
 			device.updateDescriptorSets(writesCount, mmdEdgeWriteDescSets, 0, nullptr);
+
+			// MMDGroundShadowFragmentShaderUB
+			mmdGroundShadowFSBufferInfo.setBuffer(modelRes.m_uniformBuffer.m_buffer);
+			mmdGroundShadowFSBufferInfo.setOffset(matRes.m_mmdGroundShadowFSUBOffset);
+
+			// Write MMD Ground Shadow descriptor set
+			writesCount = std::extent<decltype(mmdGroundShadowWriteDescSets)>::value;
+			for (uint32_t i = 0; i < writesCount; i++)
+			{
+				mmdGroundShadowWriteDescSets[i].setDstSet(matRes.m_mmdGroundShadowDescSet);
+			}
+			device.updateDescriptorSets(writesCount, mmdGroundShadowWriteDescSets, 0, nullptr);
 		}
 	}
 
@@ -2780,6 +3108,7 @@ void Model::Update(AppContext& appContext)
 	// Write Model uniform buffer
 	auto& modelRes = res.m_modelResource;
 	{
+		const auto world = glm::mat4(1.0f);
 		const auto& view = appContext.m_viewMat;
 		const auto& proj = appContext.m_projMat;
 		glm::mat4 vkMat = glm::scale(glm::mat4(), glm::vec3(1, -1, 1));
@@ -2793,6 +3122,35 @@ void Model::Update(AppContext& appContext)
 		mmdEdgeVSUB->m_wv = wv;
 		mmdEdgeVSUB->m_wvp = wvp;
 		mmdEdgeVSUB->m_screenSize = glm::vec2(float(appContext.m_screenWidth), float(appContext.m_screenHeight));
+
+		auto mmdGraoundShadowVSUB = reinterpret_cast<MMDGroundShadowVertexShaderUB*>(ubPtr + res.m_modelResource.m_mmdGroundShadowVSUBOffset);
+
+		auto plane = glm::vec4(0, 1, 0, 0);
+		auto light = -appContext.m_lightDir;
+		auto shadow = glm::mat4();
+
+		shadow[0][0] = plane.y * light.y + plane.z * light.z;
+		shadow[0][1] = -plane.x * light.y;
+		shadow[0][2] = -plane.x * light.z;
+		shadow[0][3] = 0;
+
+		shadow[1][0] = -plane.y * light.x;
+		shadow[1][1] = plane.x * light.x + plane.z * light.z;
+		shadow[1][2] = -plane.y * light.z;
+		shadow[1][3] = 0;
+
+		shadow[2][0] = -plane.z * light.x;
+		shadow[2][1] = -plane.z * light.y;
+		shadow[2][2] = plane.x * light.x + plane.y * light.y;
+		shadow[2][3] = 0;
+
+		shadow[3][0] = -plane.w * light.x;
+		shadow[3][1] = -plane.w * light.y;
+		shadow[3][2] = -plane.w * light.z;
+		shadow[3][3] = plane.x * light.x + plane.y * light.y + plane.z * light.z;
+
+		auto wsvp = vkMat * proj * view * shadow * world;
+		mmdGraoundShadowVSUB->m_wvp = wsvp;
 	}
 
 	// Write Material uniform buffer;
@@ -2871,8 +3229,11 @@ void Model::Update(AppContext& appContext)
 			auto mmdEdgeSizeVSUB = reinterpret_cast<MMDEdgeSizeVertexShaderUB*>(ubPtr + matRes.m_mmdEdgeSizeVSUBOffset);
 			mmdEdgeSizeVSUB->m_edgeSize = mmdMat.m_edgeSize;
 
-			auto mmdEdgeFSUB = reinterpret_cast<MMDEdgePixelShaderUB*>(ubPtr + matRes.m_mmdEdgeFSUBOffset);
+			auto mmdEdgeFSUB = reinterpret_cast<MMDEdgeFragmentShaderUB*>(ubPtr + matRes.m_mmdEdgeFSUBOffset);
 			mmdEdgeFSUB->m_edgeColor = mmdMat.m_edgeColor;
+
+			auto mmdGraoundShadowFSUB = reinterpret_cast<MMDGroundShadowFragmentShaderUB*>(ubPtr + matRes.m_mmdGroundShadowFSUBOffset);
+			mmdGraoundShadowFSUB->m_shadowColor = glm::vec4(0.4f, 0.2f, 0.2f, 0.7f);
 		}
 	}
 	device.unmapMemory(ubStBuf.m_memory);
@@ -2979,6 +3340,38 @@ void Model::Draw(AppContext& appContext)
 		cmdBuf.drawIndexed(subMesh.m_vertexCount, 1, subMesh.m_beginIndex, 0, 1);
 	}
 
+	// MMD GroundShadow
+	for (size_t i = 0; i < subMeshCount; i++)
+	{
+		const auto& subMesh = m_mmdModel->GetSubMeshes()[i];
+		const auto& matID = subMesh.m_materialID;
+
+		const auto& mmdMat = m_mmdModel->GetMaterials()[matID];
+		auto& matRes = res.m_materialResources[matID];
+
+		if (!mmdMat.m_groundShadow)
+		{
+			continue;
+		}
+
+		cmdBuf.bindDescriptorSets(
+			vk::PipelineBindPoint::eGraphics,
+			appContext.m_mmdGroundShadowPipelineLayout,
+			0, 1, &matRes.m_mmdGroundShadowDescSet,
+			0, nullptr);
+		cmdBuf.bindPipeline(
+			vk::PipelineBindPoint::eGraphics,
+			appContext.m_mmdGroundShadowPipeline);
+		cmdBuf.setDepthBias(-1.0f, 0.0f, -1.0f);
+		cmdBuf.setStencilReference(vk::StencilFaceFlagBits::eVkStencilFrontAndBack, 0x01);
+		cmdBuf.setStencilCompareMask(vk::StencilFaceFlagBits::eVkStencilFrontAndBack, 0x01);
+		cmdBuf.setStencilWriteMask(vk::StencilFaceFlagBits::eVkStencilFrontAndBack, 0xff);
+
+		vk::DeviceSize offsets[1] = { 0 };
+		cmdBuf.bindVertexBuffers(0, 1, &modelRes.m_vertexBuffer.m_buffer, offsets);
+		cmdBuf.bindIndexBuffer(m_indexBuffer.m_buffer, 0, m_indexType);
+		cmdBuf.drawIndexed(subMesh.m_vertexCount, 1, subMesh.m_beginIndex, 0, 1);
+	}
 	cmdBuf.end();
 }
 
