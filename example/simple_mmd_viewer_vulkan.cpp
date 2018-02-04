@@ -373,6 +373,7 @@ struct AppContext
 	vk::ShaderModule	m_mmdGroundShadowVSModule;
 	vk::ShaderModule	m_mmdGroundShadowFSModule;
 
+	static const uint32_t DefaultImageCount{ 2 };
 	uint32_t	m_imageCount;
 	uint32_t	m_imageIndex = 0;
 
@@ -497,7 +498,7 @@ bool AppContext::Setup(vk::Instance inst, vk::SurfaceKHR surface, vk::PhysicalDe
 		return false;
 	}
 	m_imageCount = surfaceCaps.value.minImageCount;
-	m_imageCount = std::max(m_imageCount, uint32_t(2));
+	m_imageCount = std::max(m_imageCount, DefaultImageCount);
 	m_imageCount = std::min(m_imageCount, surfaceCaps.value.maxImageCount);
 
 	if (!Prepare())
@@ -762,9 +763,10 @@ bool AppContext::PrepareBuffer()
 
 	auto presentModes = m_gpu.getSurfacePresentModesKHR(m_surface);
 	bool findPresentMode = false;
+	auto selectPresentMode = vk::PresentModeKHR::eMailbox;
 	for (const auto& presentMode : presentModes.value)
 	{
-		if (presentMode == vk::PresentModeKHR::eFifo)
+		if (presentMode == selectPresentMode)
 		{
 			findPresentMode = true;
 			break;
@@ -772,8 +774,20 @@ bool AppContext::PrepareBuffer()
 	}
 	if (!findPresentMode)
 	{
-		std::cout << "Present mode unsupported.\n";
-		return false;
+		selectPresentMode = vk::PresentModeKHR::eFifo;
+		for (const auto& presentMode : presentModes.value)
+		{
+			if (presentMode == selectPresentMode)
+			{
+				findPresentMode = true;
+				break;
+			}
+		}
+		if (!findPresentMode)
+		{
+			std::cout << "Present mode unsupported.\n";
+			return false;
+		}
 	}
 
 	auto formats = m_gpu.getSurfaceFormatsKHR(m_surface);
@@ -842,7 +856,7 @@ bool AppContext::PrepareBuffer()
 		.setPQueueFamilyIndices(queueFamilyIndices)
 		.setPreTransform(vk::SurfaceTransformFlagBitsKHR::eIdentity)
 		.setCompositeAlpha(compositeAlpha)
-		.setPresentMode(vk::PresentModeKHR::eFifo)
+		.setPresentMode(selectPresentMode)
 		.setClipped(true)
 		.setOldSwapchain(oldSwapchain);
 	vk::SwapchainKHR swapchain;
