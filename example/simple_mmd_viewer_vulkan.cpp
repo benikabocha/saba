@@ -3532,6 +3532,12 @@ void Model::Draw(AppContext& appContext)
 	auto scissor = vk::Rect2D(vk::Offset2D(0, 0), vk::Extent2D(width, height));
 	cmdBuf.setScissor(0, 1, &scissor);
 
+	vk::DeviceSize offsets[1] = { 0 };
+	cmdBuf.bindVertexBuffers(0, 1, &modelRes.m_vertexBuffer.m_buffer, offsets);
+	cmdBuf.bindIndexBuffer(m_indexBuffer.m_buffer, 0, m_indexType);
+
+	// MMD
+	vk::Pipeline* currentMMDPipeline = nullptr;
 	size_t subMeshCount = m_mmdModel->GetSubMeshCount();
 	for (size_t i = 0; i < subMeshCount; i++)
 	{
@@ -3552,25 +3558,31 @@ void Model::Draw(AppContext& appContext)
 			0, 1, &matRes.m_mmdDescSet,
 			0, nullptr);
 
+		vk::Pipeline* mmdPipeline = nullptr;
 		if (mmdMat.m_bothFace)
 		{
-			cmdBuf.bindPipeline(
-				vk::PipelineBindPoint::eGraphics,
-				appContext.m_mmdPipelines[int(AppContext::MMDRenderType::AlphaBlend_BothFace)]);
+			mmdPipeline = &appContext.m_mmdPipelines[
+				int(AppContext::MMDRenderType::AlphaBlend_BothFace)
+			];
 		}
 		else
 		{
-			cmdBuf.bindPipeline(
-				vk::PipelineBindPoint::eGraphics,
-				appContext.m_mmdPipelines[int(AppContext::MMDRenderType::AlphaBlend_FrontFace)]);
+			mmdPipeline = &appContext.m_mmdPipelines[
+				int(AppContext::MMDRenderType::AlphaBlend_FrontFace)
+			];
 		}
-		vk::DeviceSize offsets[1] = { 0 };
-		cmdBuf.bindVertexBuffers(0, 1, &modelRes.m_vertexBuffer.m_buffer, offsets);
-		cmdBuf.bindIndexBuffer(m_indexBuffer.m_buffer, 0, m_indexType);
+		if (currentMMDPipeline != mmdPipeline)
+		{
+			cmdBuf.bindPipeline(vk::PipelineBindPoint::eGraphics, *mmdPipeline);
+			currentMMDPipeline = mmdPipeline;
+		}
 		cmdBuf.drawIndexed(subMesh.m_vertexCount, 1, subMesh.m_beginIndex, 0, 1);
 	}
 
 	// MMD Edge
+	cmdBuf.bindPipeline(
+		vk::PipelineBindPoint::eGraphics,
+		appContext.m_mmdEdgePipeline);
 	for (size_t i = 0; i < subMeshCount; i++)
 	{
 		const auto& subMesh = m_mmdModel->GetSubMeshes()[i];
@@ -3593,17 +3605,18 @@ void Model::Draw(AppContext& appContext)
 			appContext.m_mmdEdgePipelineLayout,
 			0, 1, &matRes.m_mmdEdgeDescSet,
 			0, nullptr);
-		cmdBuf.bindPipeline(
-			vk::PipelineBindPoint::eGraphics,
-			appContext.m_mmdEdgePipeline);
 
-		vk::DeviceSize offsets[1] = { 0 };
-		cmdBuf.bindVertexBuffers(0, 1, &modelRes.m_vertexBuffer.m_buffer, offsets);
-		cmdBuf.bindIndexBuffer(m_indexBuffer.m_buffer, 0, m_indexType);
 		cmdBuf.drawIndexed(subMesh.m_vertexCount, 1, subMesh.m_beginIndex, 0, 1);
 	}
 
 	// MMD GroundShadow
+	cmdBuf.bindPipeline(
+		vk::PipelineBindPoint::eGraphics,
+		appContext.m_mmdGroundShadowPipeline);
+	cmdBuf.setDepthBias(-1.0f, 0.0f, -1.0f);
+	cmdBuf.setStencilReference(vk::StencilFaceFlagBits::eVkStencilFrontAndBack, 0x01);
+	cmdBuf.setStencilCompareMask(vk::StencilFaceFlagBits::eVkStencilFrontAndBack, 0x01);
+	cmdBuf.setStencilWriteMask(vk::StencilFaceFlagBits::eVkStencilFrontAndBack, 0xff);
 	for (size_t i = 0; i < subMeshCount; i++)
 	{
 		const auto& subMesh = m_mmdModel->GetSubMeshes()[i];
@@ -3622,17 +3635,7 @@ void Model::Draw(AppContext& appContext)
 			appContext.m_mmdGroundShadowPipelineLayout,
 			0, 1, &matRes.m_mmdGroundShadowDescSet,
 			0, nullptr);
-		cmdBuf.bindPipeline(
-			vk::PipelineBindPoint::eGraphics,
-			appContext.m_mmdGroundShadowPipeline);
-		cmdBuf.setDepthBias(-1.0f, 0.0f, -1.0f);
-		cmdBuf.setStencilReference(vk::StencilFaceFlagBits::eVkStencilFrontAndBack, 0x01);
-		cmdBuf.setStencilCompareMask(vk::StencilFaceFlagBits::eVkStencilFrontAndBack, 0x01);
-		cmdBuf.setStencilWriteMask(vk::StencilFaceFlagBits::eVkStencilFrontAndBack, 0xff);
 
-		vk::DeviceSize offsets[1] = { 0 };
-		cmdBuf.bindVertexBuffers(0, 1, &modelRes.m_vertexBuffer.m_buffer, offsets);
-		cmdBuf.bindIndexBuffer(m_indexBuffer.m_buffer, 0, m_indexType);
 		cmdBuf.drawIndexed(subMesh.m_vertexCount, 1, subMesh.m_beginIndex, 0, 1);
 	}
 	cmdBuf.end();
