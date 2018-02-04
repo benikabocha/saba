@@ -4071,6 +4071,20 @@ void App::MainLoop()
 			}
 		} while (vk::Result::eSuccess != ret);
 
+		//FPS
+		{
+			fpsFrame++;
+			double time = saba::GetTime();
+			double deltaTime = time - fpsTime;
+			if (deltaTime > 1.0)
+			{
+				double fps = double(fpsFrame) / deltaTime;
+				std::cout << fps << " fps\n";
+				fpsFrame = 0;
+				fpsTime = time;
+			}
+		}
+
 		double time = saba::GetTime();
 		double elapsed = time - saveTime;
 		if (elapsed > 1.0 / 30.0)
