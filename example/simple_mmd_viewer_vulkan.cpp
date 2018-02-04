@@ -315,6 +315,7 @@ struct AppContext
 
 	vk::Format	m_colorFormat = vk::Format::eB8G8R8A8Unorm;
 	vk::Format	m_depthFormat = vk::Format::eD24UnormS8Uint;
+	vk::SampleCountFlagBits	m_msaaSampleCount = vk::SampleCountFlagBits::e4;
 
 	// Sync Objects
 	struct FrameSyncData
@@ -332,6 +333,12 @@ struct AppContext
 	vk::Image							m_depthImage;
 	vk::DeviceMemory					m_depthMem;
 	vk::ImageView						m_depthImageView;
+	vk::Image							m_msaaColorImage;
+	vk::DeviceMemory					m_msaaColorMem;
+	vk::ImageView						m_msaaColorImageView;
+	vk::Image							m_msaaDepthImage;
+	vk::DeviceMemory					m_msaaDepthMem;
+	vk::ImageView						m_msaaDepthImageView;
 
 	// Render Pass
 	vk::RenderPass	m_renderPass;
@@ -537,6 +544,7 @@ void AppContext::Destory()
 	}
 	m_swapchainImageResouces.clear();
 
+	// Clear depth
 	m_device.destroyImage(m_depthImage, nullptr);
 	m_depthImage = nullptr;
 
@@ -545,6 +553,26 @@ void AppContext::Destory()
 
 	m_device.destroyImageView(m_depthImageView, nullptr);
 	m_depthImageView = nullptr;
+
+	// Clear msaa color
+	m_device.destroyImageView(m_msaaColorImageView, nullptr);
+	m_msaaColorImageView = nullptr;
+
+	m_device.destroyImage(m_msaaColorImage, nullptr);
+	m_msaaColorImage = nullptr;
+
+	m_device.freeMemory(m_msaaColorMem, nullptr);
+	m_msaaColorMem = nullptr;
+
+	// Clear msaa depth
+	m_device.destroyImageView(m_msaaDepthImageView, nullptr);
+	m_msaaDepthImageView = nullptr;
+
+	m_device.destroyImage(m_msaaDepthImage, nullptr);
+	m_msaaDepthImage = nullptr;
+
+	m_device.freeMemory(m_msaaDepthMem, nullptr);
+	m_msaaDepthMem = nullptr;
 
 	// Render Pass
 	m_device.destroyRenderPass(m_renderPass, nullptr);
@@ -690,6 +718,8 @@ bool AppContext::PrepareBuffer()
 		res.Clear(*this);
 	}
 	m_swapchainImageResouces.clear();
+
+	// Clear depth
 	m_device.destroyImageView(m_depthImageView, nullptr);
 	m_depthImageView = nullptr;
 
@@ -699,6 +729,27 @@ bool AppContext::PrepareBuffer()
 	m_device.freeMemory(m_depthMem, nullptr);
 	m_depthMem = nullptr;
 
+	// Clear msaa color
+	m_device.destroyImageView(m_msaaColorImageView, nullptr);
+	m_msaaColorImageView = nullptr;
+
+	m_device.destroyImage(m_msaaColorImage, nullptr);
+	m_msaaColorImage = nullptr;
+
+	m_device.freeMemory(m_msaaColorMem, nullptr);
+	m_msaaColorMem = nullptr;
+
+	// Clear msaa depth
+	m_device.destroyImageView(m_msaaDepthImageView, nullptr);
+	m_msaaDepthImageView = nullptr;
+
+	m_device.destroyImage(m_msaaDepthImage, nullptr);
+	m_msaaDepthImage = nullptr;
+
+	m_device.freeMemory(m_msaaDepthMem, nullptr);
+	m_msaaDepthMem = nullptr;
+
+	// Prepare swapchain
 	auto oldSwapchain =
 		m_swapchain;
 
@@ -855,7 +906,7 @@ bool AppContext::PrepareBuffer()
 	// Depth buffer
 
 	// Create the depth buffer image object
-	auto depthFormant = vk::Format::eD24UnormS8Uint;
+	auto depthFormant = m_depthFormat;
 	auto depthImageInfo = vk::ImageCreateInfo()
 		.setImageType(vk::ImageType::e2D)
 		.setFormat(depthFormant)
@@ -912,7 +963,7 @@ bool AppContext::PrepareBuffer()
 	// Create the Depth Image View
 	auto depthImageViewInfo = vk::ImageViewCreateInfo()
 		.setImage(depthImage)
-		.setFormat(vk::Format::eD24UnormS8Uint)
+		.setFormat(m_depthFormat)
 		.setViewType(vk::ImageViewType::e2D)
 		.setSubresourceRange(vk::ImageSubresourceRange(vk::ImageAspectFlagBits::eDepth, 0, 1, 0, 1));
 	vk::ImageView depthImageView;
@@ -923,6 +974,151 @@ bool AppContext::PrepareBuffer()
 		return false;
 	}
 	m_depthImageView = depthImageView;
+
+
+	// MSAA color buffer
+
+	// Create the msaa color buffer image object
+	auto msaaColorFormant = m_colorFormat;
+	auto msaaColorImageInfo = vk::ImageCreateInfo()
+		.setImageType(vk::ImageType::e2D)
+		.setFormat(msaaColorFormant)
+		.setExtent({ (uint32_t)m_screenWidth, (uint32_t)m_screenHeight, 1 })
+		.setMipLevels(1)
+		.setArrayLayers(1)
+		.setSamples(m_msaaSampleCount)
+		.setInitialLayout(vk::ImageLayout::eUndefined)
+		.setUsage(vk::ImageUsageFlagBits::eColorAttachment)
+		.setPQueueFamilyIndices(nullptr)
+		.setQueueFamilyIndexCount(0)
+		.setSharingMode(vk::SharingMode::eExclusive);
+	vk::Image msaaColorImage;
+	ret = m_device.createImage(&msaaColorImageInfo, nullptr, &msaaColorImage);
+	if (vk::Result::eSuccess != ret)
+	{
+		std::cout << "Failed to create MSAA Color Image.\n";
+		return false;
+	}
+	m_msaaColorImage = msaaColorImage;
+
+	// Allocate the Memory for MSAA Color Buffer
+	auto msaaColorMemoReq = m_device.getImageMemoryRequirements(msaaColorImage);
+	uint32_t msaaColorMemIdx = 0;
+	if (!FindMemoryTypeIndex(
+		m_memProperties,
+		msaaColorMemoReq.memoryTypeBits,
+		vk::MemoryPropertyFlagBits::eDeviceLocal,
+		&msaaColorMemIdx))
+	{
+		std::cout << "Failed to find MSAA Color memory property.\n";
+		return false;
+	}
+	auto msaaColorMemAllocInfo = vk::MemoryAllocateInfo()
+		.setAllocationSize(msaaColorMemoReq.size)
+		.setMemoryTypeIndex(msaaColorMemIdx);
+	vk::DeviceMemory msaaColorMem;
+	ret = m_device.allocateMemory(&msaaColorMemAllocInfo, nullptr, &msaaColorMem);
+	if (ret != vk::Result::eSuccess)
+	{
+		std::cout << "Failed to allocate MSAA Color memory.\n";
+		return false;
+	}
+	m_msaaColorMem = msaaColorMem;
+
+	// Bind thee Memory to the MSAA Color Buffer
+	ret = m_device.bindImageMemory(msaaColorImage, msaaColorMem, 0);
+	if (vk::Result::eSuccess != ret)
+	{
+		std::cout << "Failed to bind MSAA Color Image Memory.\n";
+		return false;
+	}
+
+	// Create the msaa color Image View
+	auto msaaColorImageViewInfo = vk::ImageViewCreateInfo()
+		.setImage(msaaColorImage)
+		.setFormat(msaaColorFormant)
+		.setViewType(vk::ImageViewType::e2D)
+		.setSubresourceRange(vk::ImageSubresourceRange(vk::ImageAspectFlagBits::eColor, 0, 1, 0, 1));
+	vk::ImageView msaaColorImageView;
+	ret = m_device.createImageView(&msaaColorImageViewInfo, nullptr, &msaaColorImageView);
+	if (vk::Result::eSuccess != ret)
+	{
+		std::cout << "Failed to create MSAA Color Image View.\n";
+		return false;
+	}
+	m_msaaColorImageView = msaaColorImageView;
+
+	// MSAA Depth buffer
+
+	// Create the msaa Depth buffer image object
+	auto msaaDepthFormant = m_depthFormat;
+	auto msaaDepthImageInfo = vk::ImageCreateInfo()
+		.setImageType(vk::ImageType::e2D)
+		.setFormat(msaaDepthFormant)
+		.setExtent({ (uint32_t)m_screenWidth, (uint32_t)m_screenHeight, 1 })
+		.setMipLevels(1)
+		.setArrayLayers(1)
+		.setSamples(m_msaaSampleCount)
+		.setInitialLayout(vk::ImageLayout::eUndefined)
+		.setUsage(vk::ImageUsageFlagBits::eDepthStencilAttachment)
+		.setPQueueFamilyIndices(nullptr)
+		.setQueueFamilyIndexCount(0)
+		.setSharingMode(vk::SharingMode::eExclusive);
+	vk::Image msaaDepthImage;
+	ret = m_device.createImage(&msaaDepthImageInfo, nullptr, &msaaDepthImage);
+	if (vk::Result::eSuccess != ret)
+	{
+		std::cout << "Failed to create MSAA Depth Image.\n";
+		return false;
+	}
+	m_msaaDepthImage = msaaDepthImage;
+
+	// Allocate the Memory for MSAA Depth Buffer
+	auto msaaDepthMemoReq = m_device.getImageMemoryRequirements(msaaDepthImage);
+	uint32_t msaaDepthMemIdx = 0;
+	if (!FindMemoryTypeIndex(
+		m_memProperties,
+		msaaDepthMemoReq.memoryTypeBits,
+		vk::MemoryPropertyFlagBits::eDeviceLocal,
+		&msaaDepthMemIdx))
+	{
+		std::cout << "Failed to find MSAA Depth memory property.\n";
+		return false;
+	}
+	auto msaaDepthMemAllocInfo = vk::MemoryAllocateInfo()
+		.setAllocationSize(msaaDepthMemoReq.size)
+		.setMemoryTypeIndex(msaaDepthMemIdx);
+	vk::DeviceMemory msaaDepthMem;
+	ret = m_device.allocateMemory(&msaaDepthMemAllocInfo, nullptr, &msaaDepthMem);
+	if (ret != vk::Result::eSuccess)
+	{
+		std::cout << "Failed to allocate MSAA Depth memory.\n";
+		return false;
+	}
+	m_msaaDepthMem = msaaDepthMem;
+
+	// Bind thee Memory to the MSAA Depth Buffer
+	ret = m_device.bindImageMemory(msaaDepthImage, msaaDepthMem, 0);
+	if (vk::Result::eSuccess != ret)
+	{
+		std::cout << "Failed to bind MSAA Depth Image Memory.\n";
+		return false;
+	}
+
+	// Create the MSAA Depth Image View
+	auto msaaDepthImageViewInfo = vk::ImageViewCreateInfo()
+		.setImage(msaaDepthImage)
+		.setFormat(msaaDepthFormant)
+		.setViewType(vk::ImageViewType::e2D)
+		.setSubresourceRange(vk::ImageSubresourceRange(vk::ImageAspectFlagBits::eDepth, 0, 1, 0, 1));
+	vk::ImageView msaaDepthImageView;
+	ret = m_device.createImageView(&msaaDepthImageViewInfo, nullptr, &msaaDepthImageView);
+	if (vk::Result::eSuccess != ret)
+	{
+		std::cout << "Failed to create MSAA Depth Image View.\n";
+		return false;
+	}
+	m_msaaDepthImageView = msaaDepthImageView;
 
 	m_imageIndex = 0;
 
@@ -967,6 +1163,15 @@ bool AppContext::PrepareRenderPass()
 {
 	vk::Result ret;
 	// Create the Render pass
+	auto msaaColorAttachment = vk::AttachmentDescription()
+		.setFormat(m_colorFormat)
+		.setSamples(m_msaaSampleCount)
+		.setLoadOp(vk::AttachmentLoadOp::eClear)
+		.setStoreOp(vk::AttachmentStoreOp::eStore)
+		.setStencilLoadOp(vk::AttachmentLoadOp::eDontCare)
+		.setStencilStoreOp(vk::AttachmentStoreOp::eDontCare)
+		.setInitialLayout(vk::ImageLayout::eUndefined)
+		.setFinalLayout(vk::ImageLayout::eColorAttachmentOptimal);
 	auto colorAttachment = vk::AttachmentDescription()
 		.setFormat(m_colorFormat)
 		.setSamples(vk::SampleCountFlagBits::e1)
@@ -976,6 +1181,15 @@ bool AppContext::PrepareRenderPass()
 		.setStencilStoreOp(vk::AttachmentStoreOp::eDontCare)
 		.setInitialLayout(vk::ImageLayout::eUndefined)
 		.setFinalLayout(vk::ImageLayout::ePresentSrcKHR);
+	auto msaaDepthAttachment = vk::AttachmentDescription()
+		.setFormat(m_depthFormat)
+		.setSamples(m_msaaSampleCount)
+		.setLoadOp(vk::AttachmentLoadOp::eClear)
+		.setStoreOp(vk::AttachmentStoreOp::eDontCare)
+		.setStencilLoadOp(vk::AttachmentLoadOp::eClear)
+		.setStencilStoreOp(vk::AttachmentStoreOp::eDontCare)
+		.setInitialLayout(vk::ImageLayout::eUndefined)
+		.setFinalLayout(vk::ImageLayout::eDepthStencilAttachmentOptimal);
 	auto depthAttachment = vk::AttachmentDescription()
 		.setFormat(m_depthFormat)
 		.setSamples(vk::SampleCountFlagBits::e1)
@@ -989,26 +1203,51 @@ bool AppContext::PrepareRenderPass()
 		.setAttachment(0)
 		.setLayout(vk::ImageLayout::eColorAttachmentOptimal);
 	auto depthRef = vk::AttachmentReference()
-		.setAttachment(1)
+		.setAttachment(2)
 		.setLayout(vk::ImageLayout::eDepthStencilAttachmentOptimal);
+	auto resolveRef = vk::AttachmentReference()
+		.setAttachment(1)
+		.setLayout(vk::ImageLayout::eColorAttachmentOptimal);
 	auto subpass = vk::SubpassDescription()
 		.setPipelineBindPoint(vk::PipelineBindPoint::eGraphics)
 		.setInputAttachmentCount(0)
 		.setPInputAttachments(nullptr)
 		.setColorAttachmentCount(1)
 		.setPColorAttachments(&colorRef)
-		.setPResolveAttachments(nullptr)
+		.setPResolveAttachments(&resolveRef)
 		.setPDepthStencilAttachment(&depthRef)
 		.setPreserveAttachmentCount(0)
 		.setPPreserveAttachments(nullptr);
-	vk::AttachmentDescription attachments[2] = { colorAttachment, depthAttachment };
+	vk::SubpassDependency dependencies[2];
+	dependencies[0]
+		.setSrcSubpass(VK_SUBPASS_EXTERNAL)
+		.setDstSubpass(0)
+		.setSrcStageMask(vk::PipelineStageFlagBits::eBottomOfPipe)
+		.setDstStageMask(vk::PipelineStageFlagBits::eColorAttachmentOutput)
+		.setSrcAccessMask(vk::AccessFlagBits::eMemoryRead)
+		.setDstAccessMask(vk::AccessFlagBits::eColorAttachmentRead | vk::AccessFlagBits::eColorAttachmentWrite)
+		.setDependencyFlags(vk::DependencyFlagBits::eByRegion);
+	dependencies[1]
+		.setSrcSubpass(0)
+		.setDstSubpass(VK_SUBPASS_EXTERNAL)
+		.setSrcStageMask(vk::PipelineStageFlagBits::eColorAttachmentOutput)
+		.setDstStageMask(vk::PipelineStageFlagBits::eBottomOfPipe)
+		.setSrcAccessMask(vk::AccessFlagBits::eColorAttachmentRead | vk::AccessFlagBits::eColorAttachmentWrite)
+		.setDstAccessMask(vk::AccessFlagBits::eMemoryRead)
+		.setDependencyFlags(vk::DependencyFlagBits::eByRegion);
+	vk::AttachmentDescription attachments[] = {
+		msaaColorAttachment,
+		colorAttachment,
+		msaaDepthAttachment,
+		depthAttachment
+	};
 	auto renderPassInfo = vk::RenderPassCreateInfo()
 		.setAttachmentCount(std::extent<decltype(attachments)>::value)
 		.setPAttachments(attachments)
 		.setSubpassCount(1)
 		.setPSubpasses(&subpass)
-		.setDependencyCount(0)
-		.setPDependencies(nullptr);
+		.setDependencyCount(std::extent<decltype(dependencies)>::value)
+		.setPDependencies(dependencies);
 
 	vk::RenderPass renderPass;
 	ret = m_device.createRenderPass(&renderPassInfo, nullptr, &renderPass);
@@ -1025,9 +1264,12 @@ bool AppContext::PrepareFramebuffer()
 {
 	vk::Result ret;
 
-	vk::ImageView attachments[2];
+	vk::ImageView attachments[4];
 
-	attachments[1] = m_depthImageView;
+	attachments[0] = m_msaaColorImageView;
+	// attachments[1] = swapchain image
+	attachments[2] = m_msaaDepthImageView;
+	attachments[3] = m_depthImageView;
 
 	auto framebufferInfo = vk::FramebufferCreateInfo()
 		.setRenderPass(m_renderPass)
@@ -1038,7 +1280,7 @@ bool AppContext::PrepareFramebuffer()
 		.setLayers(1);
 	for (size_t i = 0; i < m_swapchainImageResouces.size(); i++)
 	{
-		attachments[0] = m_swapchainImageResouces[i].m_imageView;
+		attachments[1] = m_swapchainImageResouces[i].m_imageView;
 		vk::Framebuffer framebuffer;
 		ret = m_device.createFramebuffer(&framebufferInfo, nullptr, &framebuffer);
 		if (vk::Result::eSuccess != ret)
@@ -1220,7 +1462,9 @@ bool AppContext::PrepareMMDPipeline()
 
 	// Multisample
 	auto multisampleInfo = vk::PipelineMultisampleStateCreateInfo()
-		.setRasterizationSamples(vk::SampleCountFlagBits::e1);
+		.setRasterizationSamples(m_msaaSampleCount)
+		.setSampleShadingEnable(true)
+		.setMinSampleShading(0.25f);
 	pipelineInfo.setPMultisampleState(&multisampleInfo);
 
 	// Vertex input binding
@@ -1454,7 +1698,10 @@ bool AppContext::PrepareMMDEdgePipeline()
 
 	// Multisample
 	auto multisampleInfo = vk::PipelineMultisampleStateCreateInfo()
-		.setRasterizationSamples(vk::SampleCountFlagBits::e1);
+		.setRasterizationSamples(m_msaaSampleCount)
+		.setSampleShadingEnable(true)
+		.setMinSampleShading(0.25f);
+
 	pipelineInfo.setPMultisampleState(&multisampleInfo);
 
 	// Vertex input binding
@@ -1671,7 +1918,9 @@ bool AppContext::PrepareMMDGroundShadowPipeline()
 
 	// Multisample
 	auto multisampleInfo = vk::PipelineMultisampleStateCreateInfo()
-		.setRasterizationSamples(vk::SampleCountFlagBits::e1);
+		.setRasterizationSamples(m_msaaSampleCount)
+		.setSampleShadingEnable(true)
+		.setMinSampleShading(0.25f);
 	pipelineInfo.setPMultisampleState(&multisampleInfo);
 
 	// Vertex input binding
@@ -3872,15 +4121,17 @@ void App::MainLoop()
 
 		auto clearColor = vk::ClearColorValue(std::array<float, 4>({ 1.0f, 0.8f, 0.75f, 1.0f }));
 		auto clearDepth = vk::ClearDepthStencilValue(1.0f, 0);
-		vk::ClearValue clearValues[2] = {
+		vk::ClearValue clearValues[] = {
 			clearColor,
+			clearColor,
+			clearDepth,
 			clearDepth,
 		};
 		auto renderPassBeginInfo = vk::RenderPassBeginInfo()
 			.setRenderPass(m_appContext.m_renderPass)
 			.setFramebuffer(res.m_framebuffer)
 			.setRenderArea(vk::Rect2D(vk::Offset2D(0, 0), vk::Extent2D(screenWidth, screenHeight)))
-			.setClearValueCount(2)
+			.setClearValueCount(std::extent<decltype(clearValues)>::value)
 			.setPClearValues(clearValues);
 		cmdBuf.beginRenderPass(&renderPassBeginInfo, vk::SubpassContents::eSecondaryCommandBuffers);
 
