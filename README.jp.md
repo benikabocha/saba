@@ -7,9 +7,9 @@
 * Viewer (MMD/OBJ)
     * saba_viewer
 * Example
-    * simple_mmd_viewer_glfw (OpenGL)
+    * simple_mmd_viewer_glfw (OpenGL 4.1)
     * simple_mmd_viewer_dx11 (DirectX 11)
-    * simple_mmd_viewer_vulkan (Vulkan)
+    * simple_mmd_viewer_vulkan (Vulkan 1.0.65)
 
 
 ![saba_viewer](./images/saba_viewer_01.png)
