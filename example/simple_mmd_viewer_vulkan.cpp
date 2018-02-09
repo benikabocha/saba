@@ -271,6 +271,9 @@ struct StagingBuffer
 
 	vk::CommandBuffer	m_copyCommand;
 	vk::Fence			m_transferCompleteFence;
+	vk::Semaphore		m_transferCompleteSemaphore;
+
+	vk::Semaphore		m_waitSemaphore;
 
 	bool Setup(AppContext& appContext, vk::DeviceSize size);
 	void Clear(AppContext& appContext);
@@ -373,7 +376,7 @@ struct AppContext
 	vk::ShaderModule	m_mmdGroundShadowVSModule;
 	vk::ShaderModule	m_mmdGroundShadowFSModule;
 
-	static const uint32_t DefaultImageCount{ 2 };
+	const uint32_t DefaultImageCount = 3;
 	uint32_t	m_imageCount;
 	uint32_t	m_imageIndex = 0;
 
@@ -385,7 +388,7 @@ struct AppContext
 	vk::Queue			m_graphicsQueue;
 
 	// Staging Buffer
-	std::vector<StagingBuffer>	m_stagingBuffers;
+	std::vector<std::unique_ptr<StagingBuffer>>	m_stagingBuffers;
 
 	// Texture
 	using TextureUPtr = std::unique_ptr<Texture>;
@@ -414,7 +417,7 @@ struct AppContext
 
 	bool Resize();
 
-	bool GetStagingBuffer(vk::DeviceSize memSize, StagingBuffer* outBuf);
+	bool GetStagingBuffer(vk::DeviceSize memSize, StagingBuffer** outBuf);
 	void WaitAllStagingBuffer();
 
 	bool GetTexture(const std::string& texturePath, Texture** outTex);
@@ -468,6 +471,7 @@ bool AppContext::Setup(vk::Instance inst, vk::SurfaceKHR surface, vk::PhysicalDe
 		std::cout << "Failed to find graphics queue family.\n";
 		return false;
 	}
+
 	if (selectPresentQueueFamilyIndex == UINT32_MAX)
 	{
 		for (uint32_t i = 0; i < (uint32_t)queueFamilies.size(); i++)
@@ -485,6 +489,7 @@ bool AppContext::Setup(vk::Instance inst, vk::SurfaceKHR surface, vk::PhysicalDe
 		std::cout << "Failed to find present queue family.\n";
 		return false;
 	}
+
 	m_graphicsQueueFamilyIndex = selectGraphicsQueueFamilyIndex;
 	m_presentQueueFamilyIndex = selectPresentQueueFamilyIndex;
 
@@ -640,7 +645,7 @@ void AppContext::Destory()
 	// Staging Buffer
 	for (auto& stBuf : m_stagingBuffers)
 	{
-		stBuf.Clear(*this);
+		stBuf->Clear(*this);
 	}
 	m_stagingBuffers.clear();
 
@@ -2017,7 +2022,7 @@ bool AppContext::Resize()
 	return true;
 }
 
-bool AppContext::GetStagingBuffer(vk::DeviceSize memSize, StagingBuffer* outBuf)
+bool AppContext::GetStagingBuffer(vk::DeviceSize memSize, StagingBuffer** outBuf)
 {
 	if (outBuf == nullptr)
 	{
@@ -2027,41 +2032,41 @@ bool AppContext::GetStagingBuffer(vk::DeviceSize memSize, StagingBuffer* outBuf)
 	vk::Result ret;
 	for (auto& stBuf : m_stagingBuffers)
 	{
-		ret = m_device.getFenceStatus(stBuf.m_transferCompleteFence);
-		if (vk::Result::eSuccess == ret && memSize < stBuf.m_memorySize)
+		ret = m_device.getFenceStatus(stBuf->m_transferCompleteFence);
+		if (vk::Result::eSuccess == ret && memSize < stBuf->m_memorySize)
 		{
-			m_device.resetFences(1, &stBuf.m_transferCompleteFence);
-			*outBuf = stBuf;
+			m_device.resetFences(1, &stBuf->m_transferCompleteFence);
+			*outBuf = stBuf.get();
 			return true;
 		}
 	}
 
 	for (auto& stBuf : m_stagingBuffers)
 	{
-		ret = m_device.getFenceStatus(stBuf.m_transferCompleteFence);
+		ret = m_device.getFenceStatus(stBuf->m_transferCompleteFence);
 		if (vk::Result::eSuccess == ret)
 		{
-			if (!stBuf.Setup(*this, memSize))
+			if (!stBuf->Setup(*this, memSize))
 			{
 				std::cout << "Failed to setup Staging Buffer.\n";
 				return false;
 			}
-			m_device.resetFences(1, &stBuf.m_transferCompleteFence);
-			*outBuf = stBuf;
+			m_device.resetFences(1, &stBuf->m_transferCompleteFence);
+			*outBuf = stBuf.get();
 			return true;
 		}
 	}
 
-	StagingBuffer newStagingBuffer;
-	if (!newStagingBuffer.Setup(*this, memSize))
+	auto newStagingBuffer = std::make_unique<StagingBuffer>();
+	if (!newStagingBuffer->Setup(*this, memSize))
 	{
 		std::cout << "Failed to setup Staging Buffer.\n";
-		newStagingBuffer.Clear(*this);
+		newStagingBuffer->Clear(*this);
 		return false;
 	}
-	m_stagingBuffers.push_back(newStagingBuffer);
-	m_device.resetFences(1, &newStagingBuffer.m_transferCompleteFence);
-	*outBuf = newStagingBuffer;
+	m_device.resetFences(1, &newStagingBuffer->m_transferCompleteFence);
+	*outBuf = newStagingBuffer.get();
+	m_stagingBuffers.emplace_back(std::move(newStagingBuffer));
 	return true;
 }
 
@@ -2069,7 +2074,7 @@ void AppContext::WaitAllStagingBuffer()
 {
 	for (auto& stBuf : m_stagingBuffers)
 	{
-		m_device.waitForFences(1, &stBuf.m_transferCompleteFence, true, UINT64_MAX);
+		m_device.waitForFences(1, &stBuf->m_transferCompleteFence, true, UINT64_MAX);
 	}
 }
 
@@ -2112,16 +2117,16 @@ bool AppContext::GetTexture(const std::string & texturePath, Texture** outTex)
 		}
 
 		uint32_t memSize = x * y * 4;
-		StagingBuffer imgStBuf;
+		StagingBuffer* imgStBuf;
 		if (!GetStagingBuffer(memSize, &imgStBuf))
 		{
 			stbi_image_free(image);
 			return false;
 		}
 		void* imgPtr;
-		m_device.mapMemory(imgStBuf.m_memory, 0, memSize, vk::MemoryMapFlags(), &imgPtr);
+		m_device.mapMemory(imgStBuf->m_memory, 0, memSize, vk::MemoryMapFlags(), &imgPtr);
 		memcpy(imgPtr, image, memSize);
-		m_device.unmapMemory(imgStBuf.m_memory);
+		m_device.unmapMemory(imgStBuf->m_memory);
 		stbi_image_free(image);
 
 		auto bufferImageCopy = vk::BufferImageCopy()
@@ -2132,7 +2137,7 @@ bool AppContext::GetTexture(const std::string & texturePath, Texture** outTex)
 				.setLayerCount(1))
 			.setImageExtent(vk::Extent3D(x, y, 1))
 			.setBufferOffset(0);
-		if (!imgStBuf.CopyImage(
+		if (!imgStBuf->CopyImage(
 			*this,
 			tex->m_image,
 			vk::ImageLayout::eShaderReadOnlyOptimal,
@@ -2414,7 +2419,16 @@ bool StagingBuffer::Setup(AppContext& appContext, vk::DeviceSize size)
 	ret = device.createFence(&fenceInfo, nullptr, &m_transferCompleteFence);
 	if (vk::Result::eSuccess != ret)
 	{
-		std::cout << "Failed to  create Staging Buffer Transer Complete Fence.\n";
+		std::cout << "Failed to  create Staging Buffer Transfer Complete Fence.\n";
+		return false;
+	}
+
+	// Create Semaphore
+	auto semaphoreInfo = vk::SemaphoreCreateInfo();
+	ret = device.createSemaphore(&semaphoreInfo, nullptr, &m_transferCompleteSemaphore);
+	if (vk::Result::eSuccess != ret)
+	{
+		std::cout << "Failed to  create Staging Buffer Transer Complete Semaphore.\n";
 		return false;
 	}
 
@@ -2439,6 +2453,10 @@ void StagingBuffer::Clear(AppContext& appContext)
 
 	device.destroyFence(m_transferCompleteFence, nullptr);
 	m_transferCompleteFence = nullptr;
+
+	device.destroySemaphore(m_transferCompleteSemaphore, nullptr);
+	m_transferCompleteSemaphore = nullptr;
+	m_waitSemaphore = nullptr;
 
 	auto cmdPool = appContext.m_transferCommandPool;
 	device.freeCommandBuffers(cmdPool, 1, &m_copyCommand);
@@ -2470,10 +2488,21 @@ bool StagingBuffer::CopyBuffer(AppContext& appContext, vk::Buffer buffer, vk::De
 	// Submit
 	auto submitInfo = vk::SubmitInfo()
 		.setCommandBufferCount(1)
-		.setPCommandBuffers(&m_copyCommand);
+		.setPCommandBuffers(&m_copyCommand)
+		.setSignalSemaphoreCount(1)
+		.setPSignalSemaphores(&m_transferCompleteSemaphore);
+	vk::PipelineStageFlags waitDstStage = vk::PipelineStageFlagBits::eTransfer;
+	if (m_waitSemaphore)
+	{
+		submitInfo
+			.setWaitSemaphoreCount(1)
+			.setPWaitSemaphores(&m_waitSemaphore)
+			.setPWaitDstStageMask(&waitDstStage);
+	}
 
 	auto queue = appContext.m_graphicsQueue;
 	ret = queue.submit(1, &submitInfo, m_transferCompleteFence);
+	m_waitSemaphore = m_transferCompleteSemaphore;
 	if (vk::Result::eSuccess != ret)
 	{
 		std::cout << "Failed to submit Copy Command Buffer.\n";
@@ -2537,16 +2566,26 @@ bool StagingBuffer::CopyImage(
 	// Submit
 	auto submitInfo = vk::SubmitInfo()
 		.setCommandBufferCount(1)
-		.setPCommandBuffers(&m_copyCommand);
+		.setPCommandBuffers(&m_copyCommand)
+		.setSignalSemaphoreCount(1)
+		.setPSignalSemaphores(&m_transferCompleteSemaphore);
+	vk::PipelineStageFlags waitDstStage = vk::PipelineStageFlagBits::eTransfer;
+	if (m_waitSemaphore)
+	{
+		submitInfo
+			.setWaitSemaphoreCount(1)
+			.setPWaitSemaphores(&m_waitSemaphore)
+			.setPWaitDstStageMask(&waitDstStage);
+	}
 
 	auto queue = appContext.m_graphicsQueue;
 	ret = queue.submit(1, &submitInfo, m_transferCompleteFence);
+	m_waitSemaphore = m_transferCompleteSemaphore;
 	if (vk::Result::eSuccess != ret)
 	{
 		std::cout << "Failed to submit Copy Command Buffer.\n";
 		return false;
 	}
-
 	return true;
 }
 
@@ -2802,7 +2841,7 @@ bool Model::SetupVertexBuffer(AppContext& appContext)
 			return false;
 		}
 
-		StagingBuffer indicesStagingBuffer;
+		StagingBuffer* indicesStagingBuffer;
 		if (!appContext.GetStagingBuffer(ibMemSize, &indicesStagingBuffer))
 		{
 			std::cout << "Failed to get Staging Buffer.\n";
@@ -2810,21 +2849,21 @@ bool Model::SetupVertexBuffer(AppContext& appContext)
 		}
 
 		void* mapMem;
-		ret = device.mapMemory(indicesStagingBuffer.m_memory, 0, ibMemSize, vk::MemoryMapFlagBits(0), &mapMem);
+		ret = device.mapMemory(indicesStagingBuffer->m_memory, 0, ibMemSize, vk::MemoryMapFlagBits(0), &mapMem);
 		if (vk::Result::eSuccess != ret)
 		{
 			std::cout << "Failed to map memory.\n";
 			return false;
 		}
 		std::memcpy(mapMem, m_mmdModel->GetIndices(), ibMemSize);
-		device.unmapMemory(indicesStagingBuffer.m_memory);
+		device.unmapMemory(indicesStagingBuffer->m_memory);
 
-		if (!indicesStagingBuffer.CopyBuffer(appContext, m_indexBuffer.m_buffer, ibMemSize))
+		if (!indicesStagingBuffer->CopyBuffer(appContext, m_indexBuffer.m_buffer, ibMemSize))
 		{
 			std::cout << "Failed to copy buffer.\n";
 			return false;
 		}
-		indicesStagingBuffer.Wait(appContext);
+		indicesStagingBuffer->Wait(appContext);
 
 		if (m_mmdModel->GetIndexElementSize() == 1)
 		{
@@ -3319,7 +3358,7 @@ void Model::Update(AppContext& appContext)
 	// Update vertices
 
 	auto memSize = vk::DeviceSize(sizeof(Vertex) * vtxCount);
-	StagingBuffer vbStBuf;
+	StagingBuffer* vbStBuf;
 	if (!appContext.GetStagingBuffer(memSize, &vbStBuf))
 	{
 		std::cout << "Failed to get Staging Buffer.\n";
@@ -3327,7 +3366,7 @@ void Model::Update(AppContext& appContext)
 	}
 
 	void* vbStMem;
-	ret = device.mapMemory(vbStBuf.m_memory, 0, memSize, vk::MemoryMapFlags(), &vbStMem);
+	ret = device.mapMemory(vbStBuf->m_memory, 0, memSize, vk::MemoryMapFlags(), &vbStMem);
 	if (vk::Result::eSuccess != ret)
 	{
 		std::cout << "Failed to map memory.\n";
@@ -3344,9 +3383,9 @@ void Model::Update(AppContext& appContext)
 		normal++;
 		uv++;
 	}
-	device.unmapMemory(vbStBuf.m_memory);
+	device.unmapMemory(vbStBuf->m_memory);
 
-	if (!vbStBuf.CopyBuffer(appContext, res.m_modelResource.m_vertexBuffer.m_buffer, memSize))
+	if (!vbStBuf->CopyBuffer(appContext, res.m_modelResource.m_vertexBuffer.m_buffer, memSize))
 	{
 		std::cout << "Failed to copy buffer.\n";
 		return;
@@ -3354,14 +3393,14 @@ void Model::Update(AppContext& appContext)
 
 	// Update uniform buffer
 	auto ubMemSize = res.m_modelResource.m_uniformBuffer.m_memorySize;
-	StagingBuffer ubStBuf;
+	StagingBuffer* ubStBuf;
 	if (!appContext.GetStagingBuffer(ubMemSize, &ubStBuf))
 	{
 		std::cout << "Failed to get Staging Buffer.\n";
 		return;
 	}
 	uint8_t* ubPtr;
-	ret = device.mapMemory(ubStBuf.m_memory, 0, ubMemSize, vk::MemoryMapFlags(), (void**)&ubPtr);
+	ret = device.mapMemory(ubStBuf->m_memory, 0, ubMemSize, vk::MemoryMapFlags(), (void**)&ubPtr);
 	if (vk::Result::eSuccess != ret)
 	{
 		std::cout << "Failed to map memory.\n";
@@ -3499,9 +3538,9 @@ void Model::Update(AppContext& appContext)
 			mmdGraoundShadowFSUB->m_shadowColor = glm::vec4(0.4f, 0.2f, 0.2f, 0.7f);
 		}
 	}
-	device.unmapMemory(ubStBuf.m_memory);
+	device.unmapMemory(ubStBuf->m_memory);
 
-	ubStBuf.CopyBuffer(appContext, modelRes.m_uniformBuffer.m_buffer, ubMemSize);
+	ubStBuf->CopyBuffer(appContext, modelRes.m_uniformBuffer.m_buffer, ubMemSize);
 }
 
 void Model::Draw(AppContext& appContext)
@@ -4037,6 +4076,8 @@ void App::MainLoop()
 	int fpsFrame = 0;
 	double saveTime = saba::GetTime();
 	int frame = 0;
+	std::vector<vk::Semaphore> waitSemaphores;
+	std::vector<vk::PipelineStageFlags> waitStageMasks;
 	while (m_runable)
 	{
 		frame++;
@@ -4175,18 +4216,31 @@ void App::MainLoop()
 		cmdBuf.endRenderPass();
 		cmdBuf.end();
 
-		m_appContext.WaitAllStagingBuffer();
+		//m_appContext.WaitAllStagingBuffer();
 
+		waitSemaphores.push_back(presentCompleteSemaphore);
+		waitStageMasks.push_back(vk::PipelineStageFlagBits::eColorAttachmentOutput);
+		for (const auto& stBuf : m_appContext.m_stagingBuffers)
+		{
+			if (stBuf->m_waitSemaphore)
+			{
+				waitSemaphores.push_back(stBuf->m_waitSemaphore);
+				waitStageMasks.push_back(vk::PipelineStageFlagBits::eTransfer);
+				stBuf->m_waitSemaphore = nullptr;
+			}
+		}
 		vk::PipelineStageFlags waitStageMask = vk::PipelineStageFlagBits::eColorAttachmentOutput;
 		auto submitInfo = vk::SubmitInfo()
-			.setPWaitDstStageMask(&waitStageMask)
-			.setWaitSemaphoreCount(1)
-			.setPWaitSemaphores(&presentCompleteSemaphore)
+			.setPWaitDstStageMask(waitStageMasks.data())
+			.setWaitSemaphoreCount(uint32_t(waitSemaphores.size()))
+			.setPWaitSemaphores(waitSemaphores.data())
 			.setSignalSemaphoreCount(1)
 			.setPSignalSemaphores(&renderCompleteSemaphore)
 			.setCommandBufferCount(1)
 			.setPCommandBuffers(&cmdBuf);
 		ret = m_appContext.m_graphicsQueue.submit(1, &submitInfo, waitFence);
+		waitSemaphores.clear();
+		waitStageMasks.clear();
 
 		auto presentInfo = vk::PresentInfoKHR()
 			.setWaitSemaphoreCount(1)
