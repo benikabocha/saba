@@ -316,8 +316,8 @@ struct AppContext
 	uint32_t	m_graphicsQueueFamilyIndex;
 	uint32_t	m_presentQueueFamilyIndex;
 
-	vk::Format	m_colorFormat = vk::Format::eB8G8R8A8Unorm;
-	vk::Format	m_depthFormat = vk::Format::eD24UnormS8Uint;
+	vk::Format	m_colorFormat = vk::Format::eUndefined;
+	vk::Format	m_depthFormat = vk::Format::eUndefined;
 	vk::SampleCountFlagBits	m_msaaSampleCount = vk::SampleCountFlagBits::e4;
 
 	// Sync Objects
@@ -505,6 +505,57 @@ bool AppContext::Setup(vk::Instance inst, vk::SurfaceKHR surface, vk::PhysicalDe
 	m_imageCount = surfaceCaps.value.minImageCount;
 	m_imageCount = std::max(m_imageCount, DefaultImageCount);
 	m_imageCount = std::min(m_imageCount, surfaceCaps.value.maxImageCount);
+
+	// Select buffer format
+	vk::Format selectColorFormats[] = {
+		vk::Format::eB8G8R8A8Unorm,
+		vk::Format::eB8G8R8A8Srgb,
+	};
+	m_colorFormat = vk::Format::eUndefined;
+	auto surfaceFormats = m_gpu.getSurfaceFormatsKHR(m_surface);
+	for (const auto& selectFmt : selectColorFormats)
+	{
+		for (const auto& surfaceFmt : surfaceFormats.value)
+		{
+			if (selectFmt == surfaceFmt.format)
+			{
+				m_colorFormat = selectFmt;
+				break;
+			}
+		}
+		if (m_colorFormat != vk::Format::eUndefined)
+		{
+			break;
+		}
+	}
+	if (m_colorFormat == vk::Format::eUndefined)
+	{
+		std::cout << "Failed to find color formant.\n";
+		return false;
+	}
+
+	m_depthFormat = vk::Format::eUndefined;
+	vk::Format selectDepthFormats[] = {
+		vk::Format::eD24UnormS8Uint,
+		vk::Format::eD16UnormS8Uint,
+		vk::Format::eD32SfloatS8Uint,
+	};
+	for (const auto& selectFmt : selectDepthFormats)
+	{
+		auto fmtProp = m_gpu.getFormatProperties(selectFmt);
+		if (fmtProp.optimalTilingFeatures & vk::FormatFeatureFlagBits::eDepthStencilAttachment)
+		{
+			m_depthFormat = selectFmt;
+			break;
+		}
+	}
+	if (m_depthFormat == vk::Format::eUndefined)
+	{
+		std::cout << "Failed to find depth formant.\n";
+		return false;
+	}
+	std::cout << "Select color format [" << int(m_colorFormat) << "]\n";
+	std::cout << "Select depth format [" << int(m_depthFormat) << "]\n";
 
 	if (!Prepare())
 	{
@@ -766,34 +817,36 @@ bool AppContext::PrepareBuffer()
 		return false;
 	}
 
+	vk::PresentModeKHR selectPresentModes[] = {
+		vk::PresentModeKHR::eMailbox,
+		vk::PresentModeKHR::eImmediate,
+		vk::PresentModeKHR::eFifo,
+	};
 	auto presentModes = m_gpu.getSurfacePresentModesKHR(m_surface);
 	bool findPresentMode = false;
-	auto selectPresentMode = vk::PresentModeKHR::eMailbox;
-	for (const auto& presentMode : presentModes.value)
+	vk::PresentModeKHR selectPresentMode;
+	for (auto selectMode : selectPresentModes)
 	{
-		if (presentMode == selectPresentMode)
+		for (auto presentMode : presentModes.value)
 		{
-			findPresentMode = true;
+			if (selectMode == presentMode)
+			{
+				selectPresentMode = selectMode;
+				findPresentMode = true;
+				break;
+			}
+		}
+		if (findPresentMode)
+		{
 			break;
 		}
 	}
 	if (!findPresentMode)
 	{
-		selectPresentMode = vk::PresentModeKHR::eFifo;
-		for (const auto& presentMode : presentModes.value)
-		{
-			if (presentMode == selectPresentMode)
-			{
-				findPresentMode = true;
-				break;
-			}
-		}
-		if (!findPresentMode)
-		{
-			std::cout << "Present mode unsupported.\n";
-			return false;
-		}
+		std::cout << "Present mode unsupported.\n";
+		return false;
 	}
+	std::cout << "Select present mode [" << int(selectPresentMode) << "]\n";
 
 	auto formats = m_gpu.getSurfaceFormatsKHR(m_surface);
 	if (vk::Result::eSuccess != formats.result)
