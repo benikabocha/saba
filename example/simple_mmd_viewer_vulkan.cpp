@@ -3430,7 +3430,7 @@ void Model::Update(AppContext& appContext)
 	{
 		v->m_position = *position;
 		v->m_normal = *normal;
-		v->m_uv = *uv * glm::vec2(1, -1);
+		v->m_uv = *uv;
 		v++;
 		position++;
 		normal++;

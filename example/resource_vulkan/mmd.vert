@@ -27,5 +27,5 @@ void main()
 	gl_Position = ubo.wvp * vec4(inPos.xyz, 1.0);
 	outPos = (ubo.wv * vec4(inPos.xyz, 1.0)).xyz;
 	outNor = mat3(ubo.wv) * inNor;
-	outUV = inUV;
+	outUV = vec2(inUV.x, 1.0 - inUV.y);
 }
