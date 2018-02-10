@@ -3526,7 +3526,7 @@ void Model::Update(AppContext& appContext)
 			// Tex
 			if (!mmdMat.m_texture.empty())
 			{
-				if (mat.m_mmdTex->m_hasAlpha)
+				if (!mat.m_mmdTex->m_hasAlpha)
 				{
 					mmdFSUB->m_textureModes.x = 1;
 				}
