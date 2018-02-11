@@ -962,7 +962,7 @@ bool AppContext::PrepareBuffer()
 
 		// CommandBuffer
 		auto cmdBufInfo = vk::CommandBufferAllocateInfo()
-			.setCommandBufferCount(01)
+			.setCommandBufferCount(1)
 			.setCommandPool(m_commandPool)
 			.setLevel(vk::CommandBufferLevel::ePrimary);
 		vk::CommandBuffer cmdBuf;
@@ -2403,7 +2403,7 @@ bool StagingBuffer::Setup(AppContext& appContext, vk::DeviceSize size)
 	vk::Result ret;
 	auto device = appContext.m_device;
 
-	if (size < m_memorySize)
+	if (size <= m_memorySize)
 	{
 		return true;
 	}
