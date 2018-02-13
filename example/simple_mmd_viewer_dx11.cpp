@@ -942,10 +942,16 @@ void Model::Draw(const AppContext& appContext)
 {
 	const auto& view = appContext.m_viewMat;
 	const auto& proj = appContext.m_projMat;
+	const auto& dxMat = glm::mat4(
+		1.0f, 0.0f, 0.0f, 0.0f,
+		0.0f, 1.0f, 0.0f, 0.0f,
+		0.0f, 0.0f, 0.5f, 0.0f,
+		0.0f, 0.0f, 0.5f, 1.0f
+	);
 
 	auto world = glm::mat4(1.0f);
 	auto wv = view * world;
-	auto wvp = proj * view * world;
+	auto wvp = dxMat * proj * view * world;
 	auto wvit = glm::mat3(view * world);
 	wvit = glm::inverse(wvit);
 	wvit = glm::transpose(wvit);
@@ -1214,7 +1220,7 @@ void Model::Draw(const AppContext& appContext)
 		shadow[3][2] = -plane.w * light.z;
 		shadow[3][3] = plane.x * light.x + plane.y * light.y + plane.z * light.z;
 
-		auto wsvp = proj * view * shadow * world;
+		auto wsvp = dxMat * proj * view * shadow * world;
 
 		MMDGroundShadowVertexShaderCB vsCB;
 		vsCB.m_wvp = wsvp;

@@ -3466,7 +3466,12 @@ void Model::Update(AppContext& appContext)
 		const auto world = glm::mat4(1.0f);
 		const auto& view = appContext.m_viewMat;
 		const auto& proj = appContext.m_projMat;
-		glm::mat4 vkMat = glm::scale(glm::mat4(), glm::vec3(1, -1, 1));
+		glm::mat4 vkMat = glm::mat4(
+			1.0f,  0.0f, 0.0f, 0.0f,
+			0.0f, -1.0f, 0.0f, 0.0f,
+			0.0f,  0.0f, 0.5f, 0.0f,
+			0.0f,  0.0f, 0.5f, 1.0f
+		);
 		auto wv = view;
 		auto wvp = vkMat * proj * view;
 		auto mmdVSUB = reinterpret_cast<MMDVertxShaderUB*>(ubPtr + res.m_modelResource.m_mmdVSUBOffset);
