@@ -2690,8 +2690,6 @@ struct Model
 
 		// MMD Ground Shader
 		uint32_t	m_mmdGroundShadowVSUBOffset;
-
-		vk::CommandBuffer	m_cmdBuffer;
 	};
 
 	struct MaterialResource
@@ -2718,8 +2716,10 @@ struct Model
 	};
 
 	std::vector<Material>	m_materials;
-	std::vector<Resource>	m_resources;
+	Resource				m_resource;
 	vk::DescriptorPool		m_descPool;
+
+	std::vector<vk::CommandBuffer>	m_cmdBuffers;
 };
 
 /*
@@ -2731,7 +2731,6 @@ bool Model::Setup(AppContext& appContext)
 	auto device = appContext.m_device;
 
 	auto swapImageCount = uint32_t(appContext.m_swapchainImageResouces.size());
-	m_resources.resize(swapImageCount);
 
 	size_t matCount = m_mmdModel->GetMaterialCount();
 	m_materials.resize(matCount);
@@ -2856,12 +2855,13 @@ bool Model::SetupVertexBuffer(AppContext& appContext)
 {
 	vk::Result ret;
 	auto device = appContext.m_device;
-	auto swapImageCount = uint32_t(m_resources.size());
+	//auto swapImageCount = uint32_t(m_resources.size());
 
 	// Vertex Buffer
-	for (uint32_t i = 0; i < swapImageCount; i++)
+	//for (uint32_t i = 0; i < swapImageCount; i++)
 	{
-		auto& res = m_resources[i];
+		//auto& res = m_resources[i];
+		auto& res = m_resource;
 		auto& modelRes = res.m_modelResource;
 		auto& vb = modelRes.m_vertexBuffer;
 
@@ -2948,7 +2948,6 @@ bool Model::SetupDescriptorPool(AppContext & appContext)
 	auto device = appContext.m_device;
 
 	// Descriptor Pool
-	uint32_t swapImageCount = uint32_t(appContext.m_swapchainImageResouces.size());
 	uint32_t matCount = uint32_t(m_mmdModel->GetMaterialCount());
 
 	/*
@@ -2966,7 +2965,6 @@ bool Model::SetupDescriptorPool(AppContext & appContext)
 	*/
 	uint32_t ubCount = 7;
 	ubCount *= matCount;
-	ubCount *= swapImageCount;
 	auto ubPoolSize = vk::DescriptorPoolSize()
 		.setType(vk::DescriptorType::eUniformBuffer)
 		.setDescriptorCount(ubCount);
@@ -2980,7 +2978,6 @@ bool Model::SetupDescriptorPool(AppContext & appContext)
 	*/
 	uint32_t imgPoolCount = 3;
 	imgPoolCount *= matCount;
-	imgPoolCount *= swapImageCount;
 	auto imgPoolSize = vk::DescriptorPoolSize()
 		.setType(vk::DescriptorType::eCombinedImageSampler)
 		.setDescriptorCount(imgPoolCount);
@@ -2998,7 +2995,6 @@ bool Model::SetupDescriptorPool(AppContext & appContext)
 	*/
 	uint32_t descSetCount = 3;
 	descSetCount *= matCount;
-	descSetCount *= swapImageCount;
 	auto descPoolInfo = vk::DescriptorPoolCreateInfo()
 		.setMaxSets(descSetCount)
 		.setPoolSizeCount(std::extent<decltype(poolSizes)>::value)
@@ -3039,11 +3035,12 @@ bool Model::SetupDescriptorSet(AppContext& appContext)
 	auto gpu = appContext.m_gpu;
 	auto gpuProp = gpu.getProperties();
 	uint32_t ubAlign = uint32_t(gpuProp.limits.minUniformBufferOffsetAlignment);
-	for (uint32_t imgIdx = 0; imgIdx < swapImageCount; imgIdx++)
+	//for (uint32_t imgIdx = 0; imgIdx < swapImageCount; imgIdx++)
 	{
 		uint32_t ubOffset = 0;
 
-		auto& res = m_resources[imgIdx];
+		//auto& res = m_resources[imgIdx];
+		auto& res = m_resource;
 		auto& modelRes = res.m_modelResource;
 
 		// MMDVertxShaderUB
@@ -3246,9 +3243,10 @@ bool Model::SetupDescriptorSet(AppContext& appContext)
 		mmdGroundShadowFSWriteDescSet,
 	};
 
-	for (uint32_t imgIdx = 0; imgIdx < swapImageCount; imgIdx++)
+	//for (uint32_t imgIdx = 0; imgIdx < swapImageCount; imgIdx++)
 	{
-		auto& res = m_resources[imgIdx];
+		//auto& res = m_resources[imgIdx];
+		auto& res = m_resource;
 		auto& modelRes = res.m_modelResource;
 
 		// MMDVertxShaderUB
@@ -3336,8 +3334,8 @@ bool Model::SetupCommandBuffer(AppContext& appContext)
 
 	auto device = appContext.m_device;
 
-	auto imgCount = uint32_t(m_resources.size());
-	std::vector<vk::CommandBuffer> cmdBuffers(imgCount);
+	auto imgCount = appContext.m_imageCount;
+	std::vector<vk::CommandBuffer> cmdBuffers(appContext.m_imageCount);
 
 	auto cmdBufInfo = vk::CommandBufferAllocateInfo()
 		.setCommandBufferCount(imgCount)
@@ -3349,11 +3347,7 @@ bool Model::SetupCommandBuffer(AppContext& appContext)
 		std::cout << "Failed to allocate Models Command Buffer.\n";
 		return false;
 	}
-
-	for (uint32_t i = 0; i < imgCount; i++)
-	{
-		m_resources[i].m_modelResource.m_cmdBuffer = cmdBuffers[i];
-	}
+	m_cmdBuffers = std::move(cmdBuffers);
 
 	return true;
 }
@@ -3372,14 +3366,13 @@ void Model::Destroy(AppContext & appContext)
 	}
 	m_materials.clear();
 
-	for (auto& res : m_resources)
 	{
-		auto& modelRes = res.m_modelResource;
+		auto& modelRes = m_resource.m_modelResource;
 		modelRes.m_vertexBuffer.Clear(appContext);
 		modelRes.m_uniformBuffer.Clear(appContext);
-		device.freeCommandBuffers(appContext.m_commandPool, 1, &modelRes.m_cmdBuffer);
 	}
-	m_resources.clear();
+	device.freeCommandBuffers(appContext.m_commandPool, uint32_t(m_cmdBuffers.size()), m_cmdBuffers.data());
+	m_cmdBuffers.clear();
 
 	device.destroyDescriptorPool(m_descPool, nullptr);
 
@@ -3398,7 +3391,7 @@ void Model::Update(AppContext& appContext)
 {
 	vk::Result ret;
 
-	auto& res = m_resources[appContext.m_imageIndex];
+	auto& res = m_resource;
 
 	auto device = appContext.m_device;
 
@@ -3610,9 +3603,9 @@ void Model::Draw(AppContext& appContext)
 		.setFlags(vk::CommandBufferUsageFlagBits::eRenderPassContinue)
 		.setPInheritanceInfo(&inheritanceInfo);
 
-	auto& res = m_resources[appContext.m_imageIndex];
+	auto& res = m_resource;
 	auto& modelRes = res.m_modelResource;
-	auto cmdBuf = res.m_modelResource.m_cmdBuffer;
+	auto& cmdBuf = m_cmdBuffers[appContext.m_imageIndex];
 
 	auto width = appContext.m_screenWidth;
 	auto height = appContext.m_screenHeight;
@@ -3740,7 +3733,7 @@ void Model::Draw(AppContext& appContext)
 
 vk::CommandBuffer Model::GetCommandBuffer(uint32_t imageIndex) const
 {
-	return m_resources[imageIndex].m_modelResource.m_cmdBuffer;
+	return m_cmdBuffers[imageIndex];
 }
 
 
