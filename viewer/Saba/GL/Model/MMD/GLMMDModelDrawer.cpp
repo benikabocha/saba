@@ -697,6 +697,10 @@ namespace saba
 				{
 					continue;
 				}
+				if (mmdMat.m_alpha == 0.0f)
+				{
+					continue;
+				}
 
 				auto shader = m_drawContext->GetGroundShadowShader(matShader.m_mmdGroundShadowShaderIndex);
 

@@ -3719,6 +3719,10 @@ void Model::Draw(AppContext& appContext)
 		{
 			continue;
 		}
+		if (mmdMat.m_alpha == 0.0f)
+		{
+			continue;
+		}
 
 		cmdBuf.bindDescriptorSets(
 			vk::PipelineBindPoint::eGraphics,

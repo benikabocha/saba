@@ -1024,6 +1024,10 @@ void Model::Draw(const AppContext& appContext)
 		{
 			continue;
 		}
+		if (mmdMat.m_alpha == 0.0f)
+		{
+			continue;
+		}
 
 		glUseProgram(shader->m_prog);
 		glBindVertexArray(m_mmdGroundShadowVAO);
