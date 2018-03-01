@@ -1073,6 +1073,7 @@ bool SampleMain(std::vector<std::string>& args)
 				Usage();
 				return false;
 			}
+			currentInput = Input();
 			currentInput.m_modelPath = (*argIt);
 		}
 		else if (arg == "-vmd")
