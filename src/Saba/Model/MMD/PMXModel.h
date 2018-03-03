@@ -130,6 +130,7 @@ namespace saba
 			Weight1,
 			Weight2,
 			Weight4,
+			DualQuaternion,
 		};
 		struct VertexBoneInfo
 		{

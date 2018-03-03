@@ -16,6 +16,8 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtx/matrix_decompose.hpp>
+#include <glm/gtx/quaternion.hpp>
+#include <glm/gtx/dual_quaternion.hpp>
 #include <map>
 #include <limits>
 #include <algorithm>
@@ -342,7 +344,7 @@ namespace saba
 		m_bboxMin = glm::vec3(std::numeric_limits<float>::max());
 
 		bool warnSDEF = false;
-		bool warnQDEF = false;
+		bool infoQDEF = false;
 		for (const auto& v : pmx.m_vertices)
 		{
 			glm::vec3 pos = v.m_position * glm::vec3(1, 1, -1);
@@ -377,20 +379,24 @@ namespace saba
 				vtxBoneInfo.m_skinningType = SkinningType::Weight4;
 				break;
 			case PMXVertexWeight::SDEF:
-				vtxBoneInfo.m_skinningType = SkinningType::Weight2;
+				vtxBoneInfo.m_skinningType = SkinningType::DualQuaternion;
 				vtxBoneInfo.m_boneWeight[1] = 1.0f - vtxBoneInfo.m_boneWeight[0];
+				vtxBoneInfo.m_boneWeight[2] = 0;
+				vtxBoneInfo.m_boneWeight[3] = 0;
+				vtxBoneInfo.m_boneIndex[2] = -1;
+				vtxBoneInfo.m_boneIndex[3] = -1;
 				if (!warnSDEF)
 				{
-					SABA_WARN("SDEF Not Surpported: Use Weight2");
+					SABA_WARN("SDEF Not Surpported: Use Dual Quaternion");
 					warnSDEF = true;
 				}
 				break;
 			case PMXVertexWeight::QDEF:
-				vtxBoneInfo.m_skinningType = SkinningType::Weight4;
-				if (!warnQDEF)
+				vtxBoneInfo.m_skinningType = SkinningType::DualQuaternion;
+				if (!infoQDEF)
 				{
-					SABA_WARN("QDEF Not Surpported: Use Weight4");
-					warnQDEF = true;
+					SABA_INFO("Use QDEF");
+					infoQDEF = true;
 				}
 				break;
 			default:
@@ -914,6 +920,39 @@ namespace saba
 				const auto& m2 = transforms[vtxInfo->m_boneIndex.z];
 				const auto& m3 = transforms[vtxInfo->m_boneIndex.w];
 				m = m0 * w0 + m1 * w1 + m2 * w2 + m3 * w3;
+				break;
+			}
+			case PMXModel::SkinningType::DualQuaternion:
+			{
+				//
+				// Skinning with Dual Quaternions
+				// https://www.cs.utah.edu/~ladislav/dq/index.html
+				//
+				glm::dualquat dq[4];
+				float w[4] = { 0 };
+				for (int bi = 0; bi < 4; bi++)
+				{
+					auto boneID = vtxInfo->m_boneIndex[bi];
+					if (boneID != -1)
+					{ 
+						dq[bi] = glm::dualquat_cast(glm::mat3x4(glm::transpose(transforms[boneID])));
+						dq[bi] = glm::normalize(dq[bi]);
+						w[bi] = vtxInfo->m_boneWeight[bi];
+					}
+					else
+					{
+						w[bi] = 0;
+					}
+				}
+				if (glm::dot(dq[0].real, dq[1].real) < 0) { w[1] *= -1.0f; }
+				if (glm::dot(dq[0].real, dq[2].real) < 0) { w[2] *= -1.0f; }
+				if (glm::dot(dq[0].real, dq[3].real) < 0) { w[3] *= -1.0f; }
+				auto blendDQ = w[0] * dq[0]
+					+ w[1] * dq[1]
+					+ w[2] * dq[2]
+					+ w[3] * dq[3];
+				blendDQ = glm::normalize(blendDQ);
+				m = glm::transpose(glm::mat3x4_cast(blendDQ));
 				break;
 			}
 			default:
