@@ -746,6 +746,52 @@ namespace saba
 			}
 		}
 
+		// Check whether Group Morph infinite loop.
+		{
+			std::vector<int32_t> groupMorphStack;
+			std::function<void(int32_t)> fixInifinitGropuMorph;
+			fixInifinitGropuMorph = [this, &fixInifinitGropuMorph, &groupMorphStack](int32_t morphIdx)
+			{
+				const auto& morphs = (*m_morphMan.GetMorphs());
+				const auto& morph = morphs[morphIdx];
+
+				if (morph->m_morphType == MorphType::Group)
+				{
+					auto& groupMorphData = m_groupMorphDatas[morph->m_dataIndex];
+					for (size_t i = 0; i < groupMorphData.m_groupMorphs.size(); i++)
+					{
+						auto& groupMorph = groupMorphData.m_groupMorphs[i];
+
+						auto findIt = std::find(
+							groupMorphStack.begin(),
+							groupMorphStack.end(),
+							groupMorph.m_morphIndex
+						);
+						if (findIt != groupMorphStack.end())
+						{
+							SABA_WARN("Infinit Group Morph:[{}][{}][{}]",
+								morphIdx, morph->GetName(), i
+							);
+							groupMorph.m_morphIndex = -1;
+						}
+						else
+						{
+							groupMorphStack.push_back(morphIdx);
+							fixInifinitGropuMorph(groupMorph.m_morphIndex);
+							groupMorphStack.pop_back();
+						}
+					}
+				}
+			};
+
+			for (int32_t morphIdx = 0; morphIdx < int32_t(m_morphMan.GetMorphCount()); morphIdx++)
+			{
+				fixInifinitGropuMorph(morphIdx);
+				groupMorphStack.clear();
+			}
+
+		}
+
 		// Physics
 		if (!m_physicsMan.Create())
 		{
@@ -1008,6 +1054,7 @@ namespace saba
 			auto& groupMorphData = m_groupMorphDatas[morph->m_dataIndex];
 			for (const auto& groupMorph : groupMorphData.m_groupMorphs)
 			{
+				if (groupMorph.m_morphIndex == -1) { continue; }
 				auto& elemMorph = (*m_morphMan.GetMorphs())[groupMorph.m_morphIndex];
 				Morph(elemMorph.get(), groupMorph.m_weight * weight);
 			}
