@@ -1391,7 +1391,7 @@ bool App::Run(const std::vector<std::string>& args)
 	m_multiSampleQuality = quality - 1;
 
 	ComPtr<IDXGIDevice1> dxgi;
-	hr = m_device->QueryInterface<IDXGIDevice1>(&dxgi);
+	hr = m_device.CopyTo<IDXGIDevice1>(&dxgi);
 	if (FAILED(hr))
 	{
 		return false;
