@@ -235,6 +235,7 @@ namespace saba
 			if (m_override)
 			{
 				m_node->SetGlobalTransform(btGlobal);
+				m_node->UpdateChildTransform();
 			}
 		}
 
