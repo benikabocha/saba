@@ -116,6 +116,10 @@ namespace saba
 		bool Create();
 		void Destroy();
 
+		void SetFPS(float fps);
+		float GetFPS() const;
+		void SetMaxSubStepCount(int numSteps);
+		int GetMaxSubStepCount() const;
 		void Update(float time);
 
 		void AddRigidBody(MMDRigidBody* mmdRB);
@@ -135,6 +139,9 @@ namespace saba
 		std::unique_ptr<btMotionState>						m_groundMS;
 		std::unique_ptr<btRigidBody>						m_groundRB;
 		std::unique_ptr<btOverlapFilterCallback>			m_filterCB;
+
+		double	m_fps;
+		int		m_maxSubStepCount;
 	};
 
 }

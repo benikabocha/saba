@@ -54,6 +54,8 @@ namespace saba
 	};
 
 	MMDPhysics::MMDPhysics()
+		: m_fps(120.0f)
+		, m_maxSubStepCount(10)
 	{
 	}
 
@@ -116,11 +118,32 @@ namespace saba
 		m_groundRB = nullptr;
 	}
 
+	void MMDPhysics::SetFPS(float fps)
+	{
+		m_fps = fps;
+	}
+
+	float MMDPhysics::GetFPS() const
+	{
+		return m_fps;
+	}
+
+	void MMDPhysics::SetMaxSubStepCount(int numSteps)
+	{
+		m_maxSubStepCount = numSteps;
+	}
+
+	int MMDPhysics::GetMaxSubStepCount() const
+	{
+		return m_maxSubStepCount;
+	}
+
+
 	void MMDPhysics::Update(float time)
 	{
 		if (m_world != nullptr)
 		{
-			m_world->stepSimulation(time, 10, 1.0f / 120.0f);
+			m_world->stepSimulation(time, m_maxSubStepCount, 1.0f / m_fps);
 		}
 	}
 

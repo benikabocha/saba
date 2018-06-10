@@ -10,6 +10,7 @@
 #include <Saba/Base/Log.h>
 #include <Saba/GL/GLShaderUtil.h>
 #include <Saba/GL/GLTextureUtil.h>
+#include <Saba/Model/MMD/MMDPhysics.h>
 
 #include <imgui.h>
 
@@ -251,6 +252,20 @@ namespace saba
 			if (ImGui::Checkbox("Enable", &enabledPhysics))
 			{
 				m_mmdModel->EnablePhysics(enabledPhysics);
+			}
+			auto physics = m_mmdModel->GetMMDModel()->GetMMDPhysics();
+			float fps = physics->GetFPS();
+			if (ImGui::InputFloat("FPS", &fps, 0, 0, 1))
+			{
+				if (1 <= fps)
+				{
+					physics->SetFPS(fps);
+				}
+			}
+			int subStepCount = physics->GetMaxSubStepCount();
+			if (ImGui::SliderInt("Max Sub Step", &subStepCount, 1, 100))
+			{
+				physics->SetMaxSubStepCount(subStepCount);
 			}
 			ImGui::TreePop();
 		}
