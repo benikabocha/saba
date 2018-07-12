@@ -8,7 +8,7 @@
 
 namespace saba
 {
-	saba::File::File()
+	File::File()
 		: m_fp(nullptr)
 		, m_fileSize(0)
 		, m_badFlag(false)
@@ -83,7 +83,7 @@ namespace saba
 		return OpenFile(filepath, "w");
 	}
 
-	void saba::File::Close()
+	void File::Close()
 	{
 		if (m_fp != nullptr)
 		{
@@ -94,7 +94,7 @@ namespace saba
 		}
 	}
 
-	bool saba::File::IsOpen()
+	bool File::IsOpen()
 	{
 		return m_fp != nullptr;
 	}
@@ -119,12 +119,12 @@ namespace saba
 		return feof(m_fp) != 0;
 	}
 
-	FILE * saba::File::GetFilePointer() const
+	FILE * File::GetFilePointer() const
 	{
 		return m_fp;
 	}
 
-	bool saba::File::ReadAll(std::vector<char>* buffer)
+	bool File::ReadAll(std::vector<char>* buffer)
 	{
 		if (buffer == nullptr)
 		{
@@ -133,7 +133,7 @@ namespace saba
 
 		buffer->resize(m_fileSize);
 		Seek(0, SeekDir::Begin);
-		if (!Read(&(*buffer)[0], m_fileSize))
+		if (!Read((*buffer).data(), m_fileSize))
 		{
 			return false;
 		}
@@ -141,7 +141,40 @@ namespace saba
 		return true;
 	}
 
-	bool saba::File::Seek(Offset offset, SeekDir origin)
+	bool File::ReadAll(std::vector<uint8_t>* buffer)
+	{
+		if (buffer == nullptr)
+		{
+			return false;
+		}
+
+		buffer->resize(m_fileSize);
+		Seek(0, SeekDir::Begin);
+		if (!Read((*buffer).data(), m_fileSize))
+		{
+			return false;
+		}
+
+		return true;
+	}
+	bool File::ReadAll(std::vector<int8_t>* buffer)
+	{
+		if (buffer == nullptr)
+		{
+			return false;
+		}
+
+		buffer->resize(m_fileSize);
+		Seek(0, SeekDir::Begin);
+		if (!Read((*buffer).data(), m_fileSize))
+		{
+			return false;
+		}
+
+		return true;
+	}
+
+	bool File::Seek(Offset offset, SeekDir origin)
 	{
 		if (m_fp == nullptr)
 		{

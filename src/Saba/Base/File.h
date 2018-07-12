@@ -44,6 +44,8 @@ namespace saba
 		FILE* GetFilePointer() const;
 
 		bool ReadAll(std::vector<char>* buffer);
+		bool ReadAll(std::vector<uint8_t>* buffer);
+		bool ReadAll(std::vector<int8_t>* buffer);
 
 		enum class SeekDir
 		{
@@ -81,9 +83,6 @@ namespace saba
 #endif //!_MSC_VER
 			return true;
 		}
-
-		template <typename T>
-		bool ReadAll(std::vector<char>* buffer);
 
 		template <typename T>
 		bool Write(T* buffer, size_t count = 1)
