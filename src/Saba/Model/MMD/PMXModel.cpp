@@ -2,6 +2,7 @@
 // Copyright(c) 2016-2017 benikabocha.
 // Distributed under the MIT License (http://opensource.org/licenses/MIT)
 //
+#define GLM_ENABLE_EXPERIMENTAL
 
 #include "PMXModel.h"
 
@@ -1326,9 +1327,9 @@ namespace saba
 
 		glm::vec3 s = GetScale();
 
-		m_local = glm::translate(glm::mat4(), t)
+		m_local = glm::translate(glm::mat4(1), t)
 			* glm::mat4_cast(r)
-			* glm::scale(glm::mat4(), s);
+			* glm::scale(glm::mat4(1), s);
 	}
 
 	PMXModel::MaterialFactor::MaterialFactor(const saba::PMXMorph::MaterialMorph & pmxMat)

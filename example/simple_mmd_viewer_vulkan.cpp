@@ -3480,7 +3480,7 @@ void Model::Update(AppContext& appContext)
 
 		auto plane = glm::vec4(0, 1, 0, 0);
 		auto light = -appContext.m_lightDir;
-		auto shadow = glm::mat4();
+		auto shadow = glm::mat4(1);
 
 		shadow[0][0] = plane.y * light.y + plane.z * light.z;
 		shadow[0][1] = -plane.x * light.y;

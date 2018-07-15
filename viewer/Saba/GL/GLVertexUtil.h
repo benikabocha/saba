@@ -133,13 +133,6 @@ namespace saba
 	};
 
 	template <typename T, glm::precision P>
-	struct GLElementTraits< glm::tvec1<T, P> >
-	{
-		static GLenum GetType() { return GLTypeTraits<T>::GetType(); }
-		static GLsizei GetNum() { return 1; }
-	};
-
-	template <typename T, glm::precision P>
 	struct GLElementTraits< glm::tvec2<T, P> >
 	{
 		static GLenum GetType() { return GLTypeTraits<T>::GetType(); }

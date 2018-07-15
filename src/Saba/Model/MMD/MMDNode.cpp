@@ -13,8 +13,6 @@ namespace saba
 {
 	MMDNode::MMDNode()
 		: m_enableIK(false)
-		, m_local(1.0f)
-		, m_global(1.0f)
 		, m_parent(nullptr)
 		, m_child(nullptr)
 		, m_next(nullptr)
@@ -24,7 +22,14 @@ namespace saba
 		, m_scale(1)
 		, m_animTranslate(0)
 		, m_animRotate(1, 0, 0, 0)
+		, m_baseAnimTranslate(0)
+		, m_baseAnimRotate(1, 0, 0, 0)
+		, m_ikRotate(1, 0, 0, 0)
+		, m_local(1)
+		, m_global(1)
+		, m_inverseInit(1)
 		, m_initTranslate(0)
+		, m_initRotate(1, 0, 0, 0)
 		, m_initScale(1)
 	{
 	}
@@ -60,7 +65,7 @@ namespace saba
 	void MMDNode::BeginUpdateTransform()
 	{
 		LoadInitialTRS();
-		SetIKRotate(glm::quat());
+		SetIKRotate(glm::quat(1, 0, 0, 0));
 		OnBeginUpdateTransform();
 	}
 

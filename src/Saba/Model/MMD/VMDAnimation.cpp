@@ -31,7 +31,7 @@ namespace saba
 
 		glm::mat3 InvZ(const glm::mat3& m)
 		{
-			const glm::mat3 invZ = glm::scale(glm::mat4(), glm::vec3(1, 1, -1));
+			const glm::mat3 invZ = glm::scale(glm::mat4(1), glm::vec3(1, 1, -1));
 			return invZ * m * invZ;
 		}
 	} // namespace

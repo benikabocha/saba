@@ -27,7 +27,7 @@ namespace saba
 	{
 		glm::mat4 InvZ(const glm::mat4& m)
 		{
-			const glm::mat4 invZ = glm::scale(glm::mat4(), glm::vec3(1, 1, -1));
+			const glm::mat4 invZ = glm::scale(glm::mat4(1), glm::vec3(1, 1, -1));
 			return invZ * m * invZ;
 		}
 	}
@@ -364,6 +364,10 @@ namespace saba
 	};
 
 	MMDRigidBody::MMDRigidBody()
+		: m_group(0)
+		, m_groupMask(0)
+		, m_node(0)
+		, m_offsetMat(1)
 	{
 	}
 
@@ -412,11 +416,11 @@ namespace saba
 			m_shape->calculateLocalInertia(mass, localInteria);
 		}
 
-		auto rx = glm::rotate(glm::mat4(), pmdRigidBody.m_rot.x, glm::vec3(1, 0, 0));
-		auto ry = glm::rotate(glm::mat4(), pmdRigidBody.m_rot.y, glm::vec3(0, 1, 0));
-		auto rz = glm::rotate(glm::mat4(), pmdRigidBody.m_rot.z, glm::vec3(0, 0, 1));
+		auto rx = glm::rotate(glm::mat4(1), pmdRigidBody.m_rot.x, glm::vec3(1, 0, 0));
+		auto ry = glm::rotate(glm::mat4(1), pmdRigidBody.m_rot.y, glm::vec3(0, 1, 0));
+		auto rz = glm::rotate(glm::mat4(1), pmdRigidBody.m_rot.z, glm::vec3(0, 0, 1));
 		glm::mat4 rotMat = ry * rx * rz;
-		glm::mat4 translateMat = glm::translate(glm::mat4(), pmdRigidBody.m_pos);
+		glm::mat4 translateMat = glm::translate(glm::mat4(1), pmdRigidBody.m_pos);
 
 		glm::mat4 rbMat = translateMat * rotMat;
 		if (node != nullptr)
@@ -435,13 +439,11 @@ namespace saba
 		if (node != nullptr)
 		{
 			m_offsetMat = glm::inverse(node->GetGlobalTransform()) * rbMat;
-			m_invOffsetMat = glm::inverse(m_offsetMat);
 		}
 		else
 		{
 			MMDNode* root = model->GetNodeManager()->GetMMDNode(0);
 			m_offsetMat = glm::inverse(root->GetGlobalTransform()) * rbMat;
-			m_invOffsetMat = glm::inverse(m_offsetMat);
 		}
 
 		btMotionState* motionState = nullptr;
@@ -540,11 +542,11 @@ namespace saba
 			m_shape->calculateLocalInertia(mass, localInteria);
 		}
 
-		auto rx = glm::rotate(glm::mat4(), pmxRigidBody.m_rotate.x, glm::vec3(1, 0, 0));
-		auto ry = glm::rotate(glm::mat4(), pmxRigidBody.m_rotate.y, glm::vec3(0, 1, 0));
-		auto rz = glm::rotate(glm::mat4(), pmxRigidBody.m_rotate.z, glm::vec3(0, 0, 1));
+		auto rx = glm::rotate(glm::mat4(1), pmxRigidBody.m_rotate.x, glm::vec3(1, 0, 0));
+		auto ry = glm::rotate(glm::mat4(1), pmxRigidBody.m_rotate.y, glm::vec3(0, 1, 0));
+		auto rz = glm::rotate(glm::mat4(1), pmxRigidBody.m_rotate.z, glm::vec3(0, 0, 1));
 		glm::mat4 rotMat = ry * rx * rz;
-		glm::mat4 translateMat = glm::translate(glm::mat4(), pmxRigidBody.m_translate);
+		glm::mat4 translateMat = glm::translate(glm::mat4(1), pmxRigidBody.m_translate);
 
 		glm::mat4 rbMat = InvZ(translateMat * rotMat);
 
@@ -553,14 +555,12 @@ namespace saba
 		if (node != nullptr)
 		{
 			m_offsetMat = glm::inverse(node->GetGlobalTransform()) * rbMat;
-			m_invOffsetMat = glm::inverse(m_offsetMat);
 			kinematicNode = node;
 		}
 		else
 		{
 			MMDNode* root = model->GetNodeManager()->GetMMDNode(0);
 			m_offsetMat = glm::inverse(root->GetGlobalTransform()) * rbMat;
-			m_invOffsetMat = glm::inverse(m_offsetMat);
 			kinematicNode = model->GetNodeManager()->GetMMDNode(0);
 			overrideNode = false;
 		}

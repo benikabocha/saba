@@ -34,6 +34,7 @@
 #include <imgui_impl_glfw_gl3.h>
 #include <ImGuizmo.h>
 
+#include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 
 #include <array>
@@ -1501,7 +1502,7 @@ namespace saba
 		if (ImGui::InputFloat3("Direction", &lightDir[0]))
 		{
 			glm::quat rot(glm::vec3(0, 0, -1), glm::normalize(lightDir));
-			m_lgihtManipMat = glm::translate(glm::mat4(), m_lightManipPos) * glm::mat4_cast(rot);
+			m_lgihtManipMat = glm::translate(glm::mat4(1), m_lightManipPos) * glm::mat4_cast(rot);
 		}
 		ImGui::ColorEdit3("Color", &lightColor[0]);
 		if (ImGui::Checkbox("Use Manip", &m_enableLightManip))
@@ -1512,7 +1513,7 @@ namespace saba
 				m_enableManip = false;
 
 				glm::quat rot(glm::vec3(0, 0, -1), glm::normalize(lightDir));
-				m_lgihtManipMat = glm::translate(glm::mat4(), m_lightManipPos) * glm::mat4_cast(rot);
+				m_lgihtManipMat = glm::translate(glm::mat4(1), m_lightManipPos) * glm::mat4_cast(rot);
 			}
 			else
 			{
@@ -1522,7 +1523,7 @@ namespace saba
 		if (ImGui::Checkbox("Light Guide", &m_enableLightGuide))
 		{
 			glm::quat rot(glm::vec3(0, 0, -1), glm::normalize(lightDir));
-			m_lgihtManipMat = glm::translate(glm::mat4(), m_lightManipPos) * glm::mat4_cast(rot);
+			m_lgihtManipMat = glm::translate(glm::mat4(1), m_lightManipPos) * glm::mat4_cast(rot);
 		}
 
 		if (m_enableLightManip)

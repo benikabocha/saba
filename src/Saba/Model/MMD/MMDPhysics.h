@@ -81,7 +81,6 @@ namespace saba
 
 		MMDNode*	m_node;
 		glm::mat4	m_offsetMat;
-		glm::mat4	m_invOffsetMat;
 
 		std::string					m_name;
 	};

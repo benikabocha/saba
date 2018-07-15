@@ -30,6 +30,7 @@ namespace saba
 			chain.m_limitMin = glm::vec3(glm::radians(0.5f), 0, 0);
 			chain.m_limitMax = glm::vec3(glm::radians(180.0f), 0, 0);
 		}
+		chain.m_saveIKRot = glm::quat(1, 0, 0, 0);
 		AddIKChain(std::move(chain));
 	}
 
@@ -45,6 +46,7 @@ namespace saba
 		chain.m_enableAxisLimit = axisLimit;
 		chain.m_limitMin = limixMin;
 		chain.m_limitMax = limitMax;
+		chain.m_saveIKRot = glm::quat(1, 0, 0, 0);
 		AddIKChain(std::move(chain));
 	}
 
@@ -419,11 +421,11 @@ namespace saba
 
 		angle = glm::clamp(angle, -m_limitAngle, m_limitAngle);
 
-		auto rot1 = glm::rotate(glm::quat(), angle, RotateAxis);
+		auto rot1 = glm::rotate(glm::quat(1, 0, 0, 0), angle, RotateAxis);
 		auto targetVec1 = rot1 * chainTargetVec;
 		auto dot1 = glm::dot(targetVec1, chainIkVec);
 
-		auto rot2 = glm::rotate(glm::quat(), -angle, RotateAxis);
+		auto rot2 = glm::rotate(glm::quat(1, 0, 0, 0), -angle, RotateAxis);
 		auto targetVec2 = rot2 * chainTargetVec;
 		auto dot2 = glm::dot(targetVec2, chainIkVec);
 
@@ -469,7 +471,7 @@ namespace saba
 		newAngle = glm::clamp(newAngle, chain.m_limitMin[RotateAxisIndex], chain.m_limitMax[RotateAxisIndex]);
 		chain.m_planeModeAngle = newAngle;
 
-		auto ikRotM = glm::rotate(glm::quat(), newAngle, RotateAxis) * glm::inverse(chain.m_node->AnimateRotate());
+		auto ikRotM = glm::rotate(glm::quat(1, 0, 0, 0), newAngle, RotateAxis) * glm::inverse(chain.m_node->AnimateRotate());
 		chain.m_node->SetIKRotate(ikRotM);
 
 		chain.m_node->UpdateLocalTransform();
