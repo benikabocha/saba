@@ -251,7 +251,7 @@ namespace saba
 
 		void ReflectGlobalTransform() override
 		{
-			glm::mat4 world;
+			alignas(16) glm::mat4 world;
 			m_transform.getOpenGLMatrix(&world[0][0]);
 			glm::mat4 btGlobal = InvZ(world) * m_invOffset;
 
@@ -300,7 +300,7 @@ namespace saba
 
 		void ReflectGlobalTransform() override
 		{
-			glm::mat4 world;
+			alignas(16) glm::mat4 world;
 			m_transform.getOpenGLMatrix(&world[0][0]);
 			glm::mat4 btGlobal = InvZ(world) * m_invOffset;
 			glm::mat4 global = m_node->GetGlobalTransform();
@@ -715,7 +715,7 @@ namespace saba
 	glm::mat4 MMDRigidBody::GetTransform()
 	{
 		btTransform transform = m_rigidBody->getCenterOfMassTransform();
-		glm::mat4 mat;
+		alignas(16) glm::mat4 mat;
 		transform.getOpenGLMatrix(&mat[0][0]);
 		return InvZ(mat);
 	}
