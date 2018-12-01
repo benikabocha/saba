@@ -258,7 +258,10 @@ namespace saba
 
 		for (auto& bone : bones)
 		{
-			bone.m_boneName = ToUtf8String(ConvertSjisToWString(bone.m_boneName.c_str()));
+			std::u16string u16Str = saba::ConvertSjisToU16String(bone.m_boneName.c_str());
+			std::string u8Str;
+			saba::ConvU16ToU8(u16Str, u8Str);
+			bone.m_boneName = u8Str;
 		}
 
 		vpd->m_bones = std::move(bones);
@@ -353,7 +356,10 @@ namespace saba
 
 		for (auto& morph : morphs)
 		{
-			morph.m_morphName = ToUtf8String(ConvertSjisToWString(morph.m_morphName.c_str()));
+			std::u16string u16Str = saba::ConvertSjisToU16String(morph.m_morphName.c_str());
+			std::string u8Str;
+			saba::ConvU16ToU8(u16Str, u8Str);
+			morph.m_morphName = u8Str;
 		}
 
 		vpd->m_morphs = std::move(morphs);

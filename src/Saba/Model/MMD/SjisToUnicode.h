@@ -8,8 +8,11 @@
 
 #include <string>
 
-bool IsSjis1ByteChar(int ch);
-int ConvertSjisToUnicode(int ch);
-std::wstring ConvertSjisToWString(const char* sjisCode);
+namespace saba
+{
+	char16_t ConvertSjisToU16Char(int ch);
+	std::u16string ConvertSjisToU16String(const char* sjisCode);
+	std::u32string ConvertSjisToU32String(const char* sjisCode);
+}
 
 #endif // !SABA_MODEL_MMD_SJISTOUNICODE_H_

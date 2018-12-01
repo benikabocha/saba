@@ -481,14 +481,14 @@ namespace saba
 		}
 		for (int ch = HankakuBegin; ch <= HankakuEnd; ch++)
 		{
-			wcharTable.push_back((ImWchar)ConvertSjisToUnicode(ch));
+			wcharTable.push_back((ImWchar)saba::ConvertSjisToU16Char(ch));
 		}
 		for (int sjisFirst = SjisFirstBegin1; sjisFirst <= SjisFirstEnd1; sjisFirst++)
 		{
 			for (int sjisSecond = SjisSecondBegin; sjisSecond <= SjisSecondEnd; sjisSecond++)
 			{
 				int ch = (sjisFirst << 8) | sjisSecond;
-				wcharTable.push_back((ImWchar)ConvertSjisToUnicode(ch));\
+				wcharTable.push_back((ImWchar)saba::ConvertSjisToU16Char(ch));\
 			}
 		}
 		for (int sjisFirst = SjisFirstBegin2; sjisFirst <= SjisFirstEnd2; sjisFirst++)
@@ -496,7 +496,7 @@ namespace saba
 			for (int sjisSecond = SjisSecondBegin; sjisSecond <= SjisSecondEnd; sjisSecond++)
 			{
 				int ch = (sjisFirst << 8) | sjisSecond;
-				wcharTable.push_back((ImWchar)ConvertSjisToUnicode(ch));
+				wcharTable.push_back((ImWchar)saba::ConvertSjisToU16Char(ch));
 			}
 		}
 		std::sort(wcharTable.begin(), wcharTable.end());
