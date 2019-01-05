@@ -79,6 +79,7 @@ namespace saba
 	private:
 		MMDNode*				m_node;
 		std::vector<KeyType>	m_keys;
+		size_t					m_startKeyIndex;
 	};
 
 	class VMDMorphController
@@ -103,6 +104,7 @@ namespace saba
 	private:
 		MMDMorph*				m_morph;
 		std::vector<KeyType>	m_keys;
+		size_t					m_startKeyIndex;
 	};
 
 	class VMDIKController
@@ -127,6 +129,7 @@ namespace saba
 	private:
 		MMDIkSolver*			m_ikSolver;
 		std::vector<KeyType>	m_keys;
+		size_t					m_startKeyIndex;
 	};
 
 	class VMDAnimation

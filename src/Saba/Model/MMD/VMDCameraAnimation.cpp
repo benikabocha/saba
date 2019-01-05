@@ -1,4 +1,10 @@
-﻿#include "VMDCameraAnimation.h"
+﻿//
+// Copyright(c) 2016-2019 benikabocha.
+// Distributed under the MIT License (http://opensource.org/licenses/MIT)
+//
+
+#include "VMDCameraAnimation.h"
+#include "VMDAnimationCommon.h"
 
 #include <glm/gtc/matrix_transform.hpp>
 
@@ -17,6 +23,7 @@ namespace saba
 
 
 	VMDCameraController::VMDCameraController()
+		: m_startKeyIndex(0)
 	{
 	}
 
@@ -27,12 +34,7 @@ namespace saba
 			return;
 		}
 
-		auto boundIt = std::upper_bound(
-			std::begin(m_keys),
-			std::end(m_keys),
-			int32_t(t),
-			[](int32_t lhs, const KeyType& rhs) { return lhs < rhs.m_time; }
-		);
+		auto boundIt = FindBoundKey(m_keys, int32_t(t), m_startKeyIndex);
 		if (boundIt == std::end(m_keys))
 		{
 			const auto& selectKey = m_keys[m_keys.size() - 1];
@@ -87,6 +89,8 @@ namespace saba
 					m_camera.m_distance = key0.m_distance;
 					m_camera.m_fov = key0.m_fov;
 				}
+
+				m_startKeyIndex = std::distance(m_keys.cbegin(), boundIt);
 			}
 		}
 

@@ -49,6 +49,7 @@ namespace saba
 	private:
 		std::vector<VMDCameraAnimationKey>	m_keys;
 		MMDCamera							m_camera;
+		size_t								m_startKeyIndex;
 	};
 
 	class VMDCameraAnimation

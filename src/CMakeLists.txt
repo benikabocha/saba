@@ -78,6 +78,7 @@ set (
     Saba/Model/MMD/SjisToUnicode.h
     Saba/Model/MMD/VMDAnimation.h
     Saba/Model/MMD/VMDCameraAnimation.h
+    Saba/Model/MMD/VMDAnimationCommon.h
     Saba/Model/MMD/VMDFile.h
     Saba/Model/MMD/VPDFile.h
 )

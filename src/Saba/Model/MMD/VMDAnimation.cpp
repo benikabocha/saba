@@ -4,6 +4,7 @@
 //
 
 #include "VMDAnimation.h"
+#include "VMDAnimationCommon.h"
 
 #include <Saba/Base/Log.h>
 
@@ -101,6 +102,7 @@ namespace saba
 
 	VMDNodeController::VMDNodeController()
 		: m_node(nullptr)
+		, m_startKeyIndex(0)
 	{
 	}
 
@@ -123,12 +125,7 @@ namespace saba
 			return;
 		}
 
-		auto boundIt = std::upper_bound(
-			std::begin(m_keys),
-			std::end(m_keys),
-			int32_t(t),
-			[](int32_t lhs, const KeyType& rhs) { return lhs < rhs.m_time; }
-		);
+		auto boundIt = FindBoundKey(m_keys, int32_t(t), m_startKeyIndex);
 		glm::vec3 vt;
 		glm::quat q;
 		if (boundIt == std::end(m_keys))
@@ -159,6 +156,8 @@ namespace saba
 				glm::vec3 dt = key1.m_translate - key0.m_translate;
 				vt = dt * glm::vec3(tx_y, ty_y, tz_y) + key0.m_translate;
 				q = glm::slerp(key0.m_rotate, key1.m_rotate, rot_y);
+
+				m_startKeyIndex = std::distance(m_keys.cbegin(), boundIt);
 			}
 		}
 
@@ -456,6 +455,7 @@ namespace saba
 
 	VMDIKController::VMDIKController()
 		: m_ikSolver(nullptr)
+		, m_startKeyIndex(0)
 	{
 	}
 
@@ -470,22 +470,34 @@ namespace saba
 		{
 			return;
 		}
+		if (m_keys.empty())
+		{
+			m_ikSolver->Enable(true);
+			return;
+		}
 
+		auto boundIt = FindBoundKey(m_keys, int32_t(t), m_startKeyIndex);
 		int32_t intTime = int32_t(t);
 		auto it = std::partition_point(
 			std::begin(m_keys),
 			std::end(m_keys),
 			[intTime](const VMDIKAnimationKey& key) {return key.m_time <= intTime;}
 		);
-		bool enable = false;
-		if (it == std::begin(m_keys))
+		bool enable = true;
+		if (boundIt == std::end(m_keys))
 		{
-			enable = (*it).m_enable;
+			m_ikSolver->Enable(m_keys.rbegin()->m_enable);
 		}
 		else
 		{
-			const auto& key = *(it - 1);
-			enable = key.m_enable;
+			enable = m_keys.begin()->m_enable;
+			if (boundIt != std::begin(m_keys))
+			{
+				const auto& key = *(it - 1);
+				enable = key.m_enable;
+
+				m_startKeyIndex = std::distance(m_keys.cbegin(), boundIt);
+			}
 		}
 
 		if (weight == 1.0f)
@@ -516,10 +528,11 @@ namespace saba
 
 	VMDMorphController::VMDMorphController()
 		: m_morph(nullptr)
+		, m_startKeyIndex(0)
 	{
 	}
 
-	void VMDMorphController::SetBlendKeyShape(MMDMorph * morph)
+	void VMDMorphController::SetBlendKeyShape(MMDMorph* morph)
 	{
 		m_morph = morph;
 	}
@@ -536,33 +549,26 @@ namespace saba
 			return;
 		}
 
-		auto findIt = std::upper_bound(
-			std::begin(m_keys),
-			std::end(m_keys),
-			int32_t(t),
-			[](int32_t lhs, const KeyType& rhs) { return lhs < rhs.m_time; }
-		);
-
-		VMDMorphAnimationKey key;
-		if (findIt == std::end(m_keys))
+		float weight;
+		auto boundIt = FindBoundKey(m_keys, int32_t(t), m_startKeyIndex);
+		if (boundIt == std::end(m_keys))
 		{
-			key = *(findIt - 1);
+			weight = m_keys.rbegin()->m_weight;
 		}
 		else
 		{
-			key = *findIt;
-		}
+			weight = (*boundIt).m_weight;
+			if (boundIt == std::begin(m_keys))
+			{
+				VMDMorphAnimationKey key0 = *(boundIt - 1);
+				VMDMorphAnimationKey key1 = *boundIt;
 
-		float weight = key.m_weight;
+				float timeRange = float(key1.m_time - key0.m_time);
+				float time = (t - float(key0.m_time)) / timeRange;
+				weight = (key1.m_weight - key0.m_weight) * time + key0.m_weight;
 
-		if (findIt != std::begin(m_keys) && findIt != std::end(m_keys))
-		{
-			VMDMorphAnimationKey key0 = *(findIt - 1);
-			VMDMorphAnimationKey key1 = *findIt;
-
-			float timeRange = float(key1.m_time - key0.m_time);
-			float time = (t - float(key0.m_time)) / timeRange;
-			weight = (key1.m_weight - key0.m_weight) * time + key0.m_weight;
+				m_startKeyIndex = std::distance(m_keys.cbegin(), boundIt);
+			}
 		}
 
 		if (animWeight == 1.0f)
