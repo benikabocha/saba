@@ -72,11 +72,12 @@ namespace saba
 			m_keys.push_back(key);
 		}
 		void SortKeys();
+		const  std::vector<KeyType>& GetKeys() const { return m_keys; }
 
 		MMDNode* GetNode() const { return m_node; }
 
 	private:
-		MMDNode*	m_node;
+		MMDNode*				m_node;
 		std::vector<KeyType>	m_keys;
 	};
 
@@ -95,6 +96,7 @@ namespace saba
 			m_keys.push_back(key);
 		}
 		void SortKeys();
+		const std::vector<KeyType>& GetKeys() const { return m_keys; }
 
 		MMDMorph* GetMorph() const { return m_morph; }
 
@@ -118,12 +120,13 @@ namespace saba
 			m_keys.push_back(key);
 		}
 		void SortKeys();
+		const std::vector<KeyType>& GetKeys() const { return m_keys; }
 
 		MMDIkSolver* GetIkSolver() const { return m_ikSolver; }
 
 	private:
-		MMDIkSolver*					m_ikSolver;
-		std::vector<VMDIKAnimationKey>	m_keys;
+		MMDIkSolver*			m_ikSolver;
+		std::vector<KeyType>	m_keys;
 	};
 
 	class VMDAnimation
@@ -140,6 +143,10 @@ namespace saba
 		// Physics を同期させる
 		void SyncPhysics(float t, int frameCount = 30);
 
+		int32_t GetMaxKeyTime() const { return m_maxKeyTime; };
+	private:
+		int32_t CalculateMaxKeyTime() const;
+
 	private:
 		using NodeControllerPtr = std::unique_ptr<VMDNodeController>;
 		using IKControllerPtr = std::unique_ptr<VMDIKController>;
@@ -149,6 +156,7 @@ namespace saba
 		std::vector<NodeControllerPtr>		m_nodeControllers;
 		std::vector<IKControllerPtr>		m_ikControllers;
 		std::vector<MorphControllerPtr>		m_morphControllers;
+		uint32_t	m_maxKeyTime;
 	};
 
 }

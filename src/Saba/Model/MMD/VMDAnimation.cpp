@@ -343,6 +343,8 @@ namespace saba
 		}
 		morphCtrlMap.clear();
 
+		m_maxKeyTime = CalculateMaxKeyTime();
+
 		return true;
 	}
 
@@ -352,6 +354,7 @@ namespace saba
 		m_nodeControllers.clear();
 		m_ikControllers.clear();
 		m_morphControllers.clear();
+		m_maxKeyTime = 0;
 	}
 
 	void VMDAnimation::Evaluate(float t, float weight)
@@ -399,6 +402,39 @@ namespace saba
 
 			m_model->EndAnimation();
 		}
+	}
+
+	int32_t VMDAnimation::CalculateMaxKeyTime() const
+	{
+		int32_t maxTime = 0;
+		for (const auto& nodeController : m_nodeControllers)
+		{
+			const auto& keys = nodeController->GetKeys();
+			if (!keys.empty())
+			{
+				maxTime = std::max(maxTime, keys.rbegin()->m_time);
+			}
+		}
+
+		for (const auto& ikController : m_ikControllers)
+		{
+			const auto& keys = ikController->GetKeys();
+			if (!keys.empty())
+			{
+				maxTime = std::max(maxTime, keys.rbegin()->m_time);
+			}
+		}
+
+		for (const auto& morphController : m_morphControllers)
+		{
+			const auto& keys = morphController->GetKeys();
+			if (!keys.empty())
+			{
+				maxTime = std::max(maxTime, keys.rbegin()->m_time);
+			}
+		}
+
+		return maxTime;
 	}
 
 	void VMDNodeAnimationKey::Set(const VMDMotion & motion)
