@@ -172,14 +172,13 @@ public:
     };
 
     enum class HeaderCaps2FlagBits : uint32_t {
-        Cubemap,
         CubemapPositiveX = 0x00000600,
         CubemapNegativeX = 0x00000a00,
         CubemapPositiveY = 0x00001200,
         CubemapNegativeY = 0x00002200,
         CubemapPositiveZ = 0x00004200,
         CubemapNegativeZ = 0x00008200,
-        CebemapAllFaces = CubemapPositiveX | CubemapNegativeX |
+        CubemapAllFaces = CubemapPositiveX | CubemapNegativeX |
                           CubemapPositiveY | CubemapNegativeY |
                           CubemapPositiveZ | CubemapNegativeZ,
         Volume = 0x00200000,
@@ -306,7 +305,7 @@ public:
     uint32_t GetArraySize() const { return m_arraySize; }
     DXGIFormat GetFormat() const { return m_format; }
     bool IsCubemap() const { return m_isCubemap; }
-    TextureDimension GetTextureDemension() const { return m_texDim; }
+    TextureDimension GetTextureDimension() const { return m_texDim; }
 
 private:
     void GetImageInfo(uint32_t w, uint32_t h, DXGIFormat fmt,
@@ -838,10 +837,10 @@ Result DDSFile::Load(std::vector<uint8_t>&& dds) {
         if (header->m_flags & uint32_t(HeaderFlagBits::Volume)) {
             m_texDim = TextureDimension::Texture3D;
         } else {
-            if (header->m_caps2 & uint32_t(HeaderCaps2FlagBits::Cubemap)) {
-                auto caps2 = header->m_caps2 &
-                             uint32_t(HeaderCaps2FlagBits::CebemapAllFaces);
-                if (caps2 != uint32_t(HeaderCaps2FlagBits::CebemapAllFaces)) {
+			auto caps2 = header->m_caps2 &
+				uint32_t(HeaderCaps2FlagBits::CubemapAllFaces);
+            if (caps2) {
+                if (caps2 != uint32_t(HeaderCaps2FlagBits::CubemapAllFaces)) {
                     return Result::ErrorNotSupported;
                 }
                 m_arraySize = 6;
