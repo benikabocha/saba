@@ -92,7 +92,9 @@ set (
     IMGUI_SOURCE
     ${CMAKE_CURRENT_SOURCE_DIR}/../external/imgui/src/imgui.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/../external/imgui/src/imgui_draw.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/../external/imgui/src/imgui_impl_glfw_gl3.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/../external/imgui/src/imgui_widgets.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/../external/imgui/src/imgui_impl_glfw.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/../external/imgui/src/imgui_impl_opengl3.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/../external/imgui/src/ImGuizmo.cpp
 )
 

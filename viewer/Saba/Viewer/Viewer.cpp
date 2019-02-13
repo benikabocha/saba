@@ -1,5 +1,5 @@
 ﻿//
-// Copyright(c) 2016-2017 benikabocha.
+// Copyright(c) 2016-2019 benikabocha.
 // Distributed under the MIT License (http://opensource.org/licenses/MIT)
 //
 
@@ -31,7 +31,8 @@
 #include <Saba/GL/Model/XFile/GLXFileModelDrawer.h>
 
 #include <imgui.h>
-#include <imgui_impl_glfw_gl3.h>
+#include <imgui_impl_glfw.h>
+#include <imgui_impl_opengl3.h>
 #include <ImGuizmo.h>
 
 #include <glm/glm.hpp>
@@ -197,9 +198,15 @@ namespace saba
 		glfwSetDropCallback(m_window, OnDropStub);
 
 		glfwMakeContextCurrent(m_window);
+
 		// imguiの初期化
-		ImGui_ImplGlfwGL3_Init(m_window, false);
-		ImGuiIO& io = ImGui::GetIO();
+		IMGUI_CHECKVERSION();
+		ImGui::CreateContext();
+		ImGuiIO& io = ImGui::GetIO(); (void)io;
+		ImGui::StyleColorsDark();
+		ImGui_ImplGlfw_InitForOpenGL(m_window, false);
+		ImGui_ImplOpenGL3_Init("#version 150");
+
 		std::string fontDir = PathUtil::Combine(
 			m_context.GetResourceDir(),
 			"font"
@@ -279,7 +286,9 @@ namespace saba
 		logger->RemoveSink(m_imguiLogSink.get());
 		m_imguiLogSink.reset();
 
-		ImGui_ImplGlfwGL3_Shutdown();
+		ImGui_ImplOpenGL3_Shutdown();
+		ImGui_ImplGlfw_Shutdown();
+		ImGui::DestroyContext();
 
 		m_context.Uninitialize();
 	}
@@ -288,7 +297,10 @@ namespace saba
 	{
 		while (!glfwWindowShouldClose(m_window))
 		{
-			ImGui_ImplGlfwGL3_NewFrame();
+			ImGui_ImplOpenGL3_NewFrame();
+			ImGui_ImplGlfw_NewFrame();
+			ImGui::NewFrame();
+			ImGuizmo::SetOrthographic(false);
 			ImGuizmo::BeginFrame();
 
 			m_mouse.Update(m_window);
@@ -449,6 +461,7 @@ namespace saba
 			if (m_context.IsUIEnabled())
 			{
 				ImGui::Render();
+				ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 			}
 
 			glfwSwapBuffers(m_window);
@@ -1147,6 +1160,8 @@ namespace saba
 			const auto& proj = m_context.GetCamera()->GetProjectionMatrix();
 			auto world = m_selectedModelDrawer->GetTransform();
 
+			ImGuiIO& io = ImGui::GetIO();
+			ImGuizmo::SetRect(0, 0, io.DisplaySize.x, io.DisplaySize.y);
 			ImGuizmo::Manipulate(
 				&view[0][0],
 				&proj[0][0],
@@ -1541,6 +1556,8 @@ namespace saba
 			const auto& view = m_context.GetCamera()->GetViewMatrix();
 			const auto& proj = m_context.GetCamera()->GetProjectionMatrix();
 
+			ImGuiIO& io = ImGui::GetIO();
+			ImGuizmo::SetRect(0, 0, io.DisplaySize.x, io.DisplaySize.y);
 			ImGuizmo::Manipulate(
 				&view[0][0],
 				&proj[0][0],
@@ -2696,7 +2713,7 @@ namespace saba
 
 	void Viewer::OnMouseButtonStub(GLFWwindow * window, int button, int action, int mods)
 	{
-		ImGui_ImplGlfwGL3_MouseButtonCallback(window, button, action, mods);
+		ImGui_ImplGlfw_MouseButtonCallback(window, button, action, mods);
 
 		Viewer* viewer = (Viewer*)glfwGetWindowUserPointer(window);
 		if (viewer != nullptr)
@@ -2753,7 +2770,7 @@ namespace saba
 
 	void Viewer::OnScrollStub(GLFWwindow * window, double offsetx, double offsety)
 	{
-		ImGui_ImplGlfwGL3_ScrollCallback(window, offsetx, offsety);
+		ImGui_ImplGlfw_ScrollCallback(window, offsetx, offsety);
 
 		Viewer* viewer = (Viewer*)glfwGetWindowUserPointer(window);
 		if (viewer != nullptr)
@@ -2769,7 +2786,7 @@ namespace saba
 
 	void Viewer::OnKeyStub(GLFWwindow * window, int key, int scancode, int action, int mods)
 	{
-		ImGui_ImplGlfwGL3_KeyCallback(window, key, scancode, action, mods);
+		ImGui_ImplGlfw_KeyCallback(window, key, scancode, action, mods);
 
 		Viewer* viewer = (Viewer*)glfwGetWindowUserPointer(window);
 		if (viewer != nullptr)
@@ -2788,7 +2805,7 @@ namespace saba
 
 	void Viewer::OnCharStub(GLFWwindow * window, unsigned int codepoint)
 	{
-		ImGui_ImplGlfwGL3_CharCallback(window, codepoint);
+		ImGui_ImplGlfw_CharCallback(window, codepoint);
 
 		Viewer* viewer = (Viewer*)glfwGetWindowUserPointer(window);
 		if (viewer != nullptr)
