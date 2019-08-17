@@ -502,9 +502,11 @@ bool AppContext::Setup(vk::Instance inst, vk::SurfaceKHR surface, vk::PhysicalDe
 		std::cout << "Failed to get Surface Capabilities.\n";
 		return false;
 	}
-	m_imageCount = surfaceCaps.value.minImageCount;
-	m_imageCount = std::max(m_imageCount, DefaultImageCount);
-	m_imageCount = std::min(m_imageCount, surfaceCaps.value.maxImageCount);
+	m_imageCount = std::max(surfaceCaps.value.minImageCount, uint32_t(2));
+	if (surfaceCaps.value.maxImageCount > DefaultImageCount)
+	{
+		m_imageCount = DefaultImageCount;
+	}
 
 	// Select buffer format
 	vk::Format selectColorFormats[] = {
