@@ -3995,6 +3995,9 @@ bool App::Run(const std::vector<std::string>& args)
 		}
 	}
 
+	vk::PhysicalDeviceFeatures features;
+	features.setSampleRateShading(true);
+
 	float priority = 1.0;
 	auto queueInfo = vk::DeviceQueueCreateInfo()
 		.setQueueFamilyIndex(selectGraphicsQueueFamilyIndex)
@@ -4005,7 +4008,8 @@ bool App::Run(const std::vector<std::string>& args)
 		.setQueueCreateInfoCount(1)
 		.setPQueueCreateInfos(&queueInfo)
 		.setEnabledExtensionCount(uint32_t(deviceExtensions.size()))
-		.setPpEnabledExtensionNames(deviceExtensions.data());
+		.setPpEnabledExtensionNames(deviceExtensions.data())
+		.setPEnabledFeatures(&features);
 	ret = m_gpu.createDevice(&deviceInfo, nullptr, &m_device);
 	if (vk::Result::eSuccess != ret)
 	{
