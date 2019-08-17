@@ -2063,7 +2063,48 @@ bool AppContext::PrepareMMDGroundShadowPipeline()
 bool AppContext::PrepareDefaultTexture()
 {
 	m_defaultTexture = std::make_unique<Texture>();
-	return m_defaultTexture->Setup(*this, 1, 1, vk::Format::eR8G8B8A8Unorm);
+	if (!m_defaultTexture->Setup(*this, 1, 1, vk::Format::eR8G8B8A8Unorm))
+	{
+		return false;
+	}
+
+	StagingBuffer* imgStBuf;
+	uint32_t x = 1;
+	uint32_t y = 1;
+	uint32_t memSize = x * y * 4;
+	if (!GetStagingBuffer(memSize, &imgStBuf))
+	{
+		return false;
+	}
+	void* imgPtr;
+	m_device.mapMemory(imgStBuf->m_memory, 0, memSize, vk::MemoryMapFlags(), &imgPtr);
+	uint8_t* pixels = (uint8_t*)imgPtr;
+	pixels[0] = 0;
+	pixels[0] = 0;
+	pixels[0] = 0;
+	pixels[0] = 255;
+	m_device.unmapMemory(imgStBuf->m_memory);
+
+	auto bufferImageCopy = vk::BufferImageCopy()
+		.setImageSubresource(vk::ImageSubresourceLayers()
+			.setAspectMask(vk::ImageAspectFlagBits::eColor)
+			.setMipLevel(0)
+			.setBaseArrayLayer(0)
+			.setLayerCount(1))
+		.setImageExtent(vk::Extent3D(x, y, 1))
+		.setBufferOffset(0);
+	if (!imgStBuf->CopyImage(
+		*this,
+		m_defaultTexture->m_image,
+		vk::ImageLayout::eShaderReadOnlyOptimal,
+		1, &bufferImageCopy))
+	{
+		std::cout << "Failed to copy image.\n";
+		return false;
+	}
+	m_defaultTexture->m_imageLayout = vk::ImageLayout::eShaderReadOnlyOptimal;
+	m_defaultTexture->m_hasAlpha = true;
+	return true;
 }
 
 bool AppContext::Resize()
