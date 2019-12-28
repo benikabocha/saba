@@ -130,13 +130,29 @@ namespace saba
 			Weight1,
 			Weight2,
 			Weight4,
+			SDEF,
 			DualQuaternion,
 		};
 		struct VertexBoneInfo
 		{
 			SkinningType	m_skinningType;
-			glm::ivec4		m_boneIndex;
-			glm::vec4		m_boneWeight;
+			union
+			{
+				struct
+				{
+					glm::ivec4	m_boneIndex;
+					glm::vec4	m_boneWeight;
+				};
+				struct
+				{
+					glm::ivec2	m_boneIndex;
+					float		m_boneWeight;
+
+					glm::vec3	m_sdefC;
+					glm::vec3	m_sdefR0;
+					glm::vec3	m_sdefR1;
+				} m_sdef;
+			};
 		};
 
 	private:

@@ -380,16 +380,33 @@ namespace saba
 				vtxBoneInfo.m_skinningType = SkinningType::Weight4;
 				break;
 			case PMXVertexWeight::SDEF:
-				vtxBoneInfo.m_skinningType = SkinningType::DualQuaternion;
-				vtxBoneInfo.m_boneWeight[1] = 1.0f - vtxBoneInfo.m_boneWeight[0];
-				vtxBoneInfo.m_boneWeight[2] = 0;
-				vtxBoneInfo.m_boneWeight[3] = 0;
-				vtxBoneInfo.m_boneIndex[2] = -1;
-				vtxBoneInfo.m_boneIndex[3] = -1;
 				if (!warnSDEF)
 				{
-					SABA_WARN("SDEF Not Surpported: Use Dual Quaternion");
+					SABA_WARN("Use SDEF");
 					warnSDEF = true;
+				}
+				vtxBoneInfo.m_skinningType = SkinningType::SDEF;
+				{
+					auto i0 = v.m_boneIndices[0];
+					auto i1 = v.m_boneIndices[1];
+					auto w0 = v.m_boneWeights[0];
+					auto w1 = 1.0f - w0;
+
+					auto center = v.m_sdefC * glm::vec3(1, 1, -1);
+					auto r0 = v.m_sdefR0 * glm::vec3(1, 1, -1);
+					auto r1 = v.m_sdefR1 * glm::vec3(1, 1, -1);
+					auto rw = r0 * w0 + r1 * w1;
+					r0 = center + r0 - rw;
+					r1 = center + r1 - rw;
+					auto cr0 = (center + r0) * 0.5f;
+					auto cr1 = (center + r1) * 0.5f;
+
+					vtxBoneInfo.m_sdef.m_boneIndex[0] = v.m_boneIndices[0];
+					vtxBoneInfo.m_sdef.m_boneIndex[1] = v.m_boneIndices[1];
+					vtxBoneInfo.m_sdef.m_boneWeight = v.m_boneWeights[0];
+					vtxBoneInfo.m_sdef.m_sdefC = center;
+					vtxBoneInfo.m_sdef.m_sdefR0 = cr0;
+					vtxBoneInfo.m_sdef.m_sdefR1 = cr1;
 				}
 				break;
 			case PMXVertexWeight::QDEF:
@@ -969,6 +986,31 @@ namespace saba
 				m = m0 * w0 + m1 * w1 + m2 * w2 + m3 * w3;
 				break;
 			}
+			case PMXModel::SkinningType::SDEF:
+			{
+				// https://github.com/powroupi/blender_mmd_tools/blob/dev_test/mmd_tools/core/sdef.py
+
+				auto& nodes = (*m_nodeMan.GetNodes());
+				const auto i0 = vtxInfo->m_sdef.m_boneIndex.x;
+				const auto i1 = vtxInfo->m_sdef.m_boneIndex.y;
+				const auto w0 = vtxInfo->m_sdef.m_boneWeight;
+				const auto w1 = 1.0f - w0;
+				const auto center = vtxInfo->m_sdef.m_sdefC;
+				const auto cr0 = vtxInfo->m_sdef.m_sdefR0;
+				const auto cr1 = vtxInfo->m_sdef.m_sdefR1;
+				const auto q0 = glm::quat_cast(nodes[i0]->GetGlobalTransform());
+				const auto q1 = glm::quat_cast(nodes[i1]->GetGlobalTransform());
+				const auto m0 = transforms[i0];
+				const auto m1 = transforms[i1];
+
+				const auto pos = *position + *morphPos;
+				const auto rot_mat = glm::mat3_cast(glm::slerp(q0, q1, w1));
+
+				*updatePosition = glm::mat3(rot_mat) * (pos - center) + glm::vec3(m0 * glm::vec4(cr0, 1)) * w0 + glm::vec3(m1 * glm::vec4(cr1, 1)) * w1;
+				*updateNormal = rot_mat * *normal;
+
+				break;
+			}
 			case PMXModel::SkinningType::DualQuaternion:
 			{
 				//
@@ -1006,8 +1048,11 @@ namespace saba
 				break;
 			}
 
-			*updatePosition = glm::vec3(m * glm::vec4(*position + *morphPos, 1));
-			*updateNormal = glm::normalize(glm::mat3(m) * *normal);
+			if (PMXModel::SkinningType::SDEF != vtxInfo->m_skinningType)
+			{
+				*updatePosition = glm::vec3(m * glm::vec4(*position + *morphPos, 1));
+				*updateNormal = glm::normalize(glm::mat3(m) * *normal);
+			}
 			*updateUV = *uv + glm::vec2((*morphUV).x, (*morphUV).y);
 
 			vtxInfo++;
