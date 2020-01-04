@@ -355,18 +355,19 @@ namespace saba
 			m_normals.push_back(nor);
 			m_uvs.push_back(uv);
 			VertexBoneInfo vtxBoneInfo;
-			vtxBoneInfo.m_boneIndex = glm::ivec4(
-				v.m_boneIndices[0],
-				v.m_boneIndices[1],
-				v.m_boneIndices[2],
-				v.m_boneIndices[3]
-			);
-			vtxBoneInfo.m_boneWeight = glm::vec4(
-				v.m_boneWeights[0],
-				v.m_boneWeights[1],
-				v.m_boneWeights[2],
-				v.m_boneWeights[3]
-			);
+			if (PMXVertexWeight::SDEF != v.m_weightType)
+			{
+				vtxBoneInfo.m_boneIndex[0] = v.m_boneIndices[0];
+				vtxBoneInfo.m_boneIndex[1] = v.m_boneIndices[1];
+				vtxBoneInfo.m_boneIndex[2] = v.m_boneIndices[2];
+				vtxBoneInfo.m_boneIndex[3] = v.m_boneIndices[3];
+
+				vtxBoneInfo.m_boneWeight[0] = v.m_boneWeights[0];
+				vtxBoneInfo.m_boneWeight[1] = v.m_boneWeights[1];
+				vtxBoneInfo.m_boneWeight[2] = v.m_boneWeights[2];
+				vtxBoneInfo.m_boneWeight[3] = v.m_boneWeights[3];
+			}
+
 			switch (v.m_weightType)
 			{
 			case PMXVertexWeight::BDEF1:
@@ -960,29 +961,36 @@ namespace saba
 			{
 			case PMXModel::SkinningType::Weight1:
 			{
-				const auto& m0 = transforms[vtxInfo->m_boneIndex.x];
+				const auto i0 = vtxInfo->m_boneIndex[0];
+				const auto& m0 = transforms[i0];
 				m = m0;
 				break;
 			}
 			case PMXModel::SkinningType::Weight2:
 			{
-				auto w0 = vtxInfo->m_boneWeight.x;
-				auto w1 = vtxInfo->m_boneWeight.y;
-				const auto& m0 = transforms[vtxInfo->m_boneIndex.x];
-				const auto& m1 = transforms[vtxInfo->m_boneIndex.y];
+				const auto i0 = vtxInfo->m_boneIndex[0];
+				const auto i1 = vtxInfo->m_boneIndex[1];
+				const auto w0 = vtxInfo->m_boneWeight[0];
+				const auto w1 = vtxInfo->m_boneWeight[1];
+				const auto& m0 = transforms[i0];
+				const auto& m1 = transforms[i1];
 				m = m0 * w0 + m1 * w1;
 				break;
 			}
 			case PMXModel::SkinningType::Weight4:
 			{
-				auto w0 = vtxInfo->m_boneWeight.x;
-				auto w1 = vtxInfo->m_boneWeight.y;
-				auto w2 = vtxInfo->m_boneWeight.z;
-				auto w3 = vtxInfo->m_boneWeight.w;
-				const auto& m0 = transforms[vtxInfo->m_boneIndex.x];
-				const auto& m1 = transforms[vtxInfo->m_boneIndex.y];
-				const auto& m2 = transforms[vtxInfo->m_boneIndex.z];
-				const auto& m3 = transforms[vtxInfo->m_boneIndex.w];
+				const auto i0 = vtxInfo->m_boneIndex[0];
+				const auto i1 = vtxInfo->m_boneIndex[1];
+				const auto i2 = vtxInfo->m_boneIndex[2];
+				const auto i3 = vtxInfo->m_boneIndex[3];
+				const auto w0 = vtxInfo->m_boneWeight[0];
+				const auto w1 = vtxInfo->m_boneWeight[1];
+				const auto w2 = vtxInfo->m_boneWeight[2];
+				const auto w3 = vtxInfo->m_boneWeight[3];
+				const auto& m0 = transforms[i0];
+				const auto& m1 = transforms[i1];
+				const auto& m2 = transforms[i2];
+				const auto& m3 = transforms[i3];
 				m = m0 * w0 + m1 * w1 + m2 * w2 + m3 * w3;
 				break;
 			}
@@ -991,8 +999,8 @@ namespace saba
 				// https://github.com/powroupi/blender_mmd_tools/blob/dev_test/mmd_tools/core/sdef.py
 
 				auto& nodes = (*m_nodeMan.GetNodes());
-				const auto i0 = vtxInfo->m_sdef.m_boneIndex.x;
-				const auto i1 = vtxInfo->m_sdef.m_boneIndex.y;
+				const auto i0 = vtxInfo->m_sdef.m_boneIndex[0];
+				const auto i1 = vtxInfo->m_sdef.m_boneIndex[1];
 				const auto w0 = vtxInfo->m_sdef.m_boneWeight;
 				const auto w1 = 1.0f - w0;
 				const auto center = vtxInfo->m_sdef.m_sdefC;

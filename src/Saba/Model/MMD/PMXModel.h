@@ -140,13 +140,13 @@ namespace saba
 			{
 				struct
 				{
-					glm::ivec4	m_boneIndex;
-					glm::vec4	m_boneWeight;
+					int32_t	m_boneIndex[4];
+					float	m_boneWeight[4];
 				};
 				struct
 				{
-					glm::ivec2	m_boneIndex;
-					float		m_boneWeight;
+					int32_t	m_boneIndex[2];
+					float	m_boneWeight;
 
 					glm::vec3	m_sdefC;
 					glm::vec3	m_sdefR0;
