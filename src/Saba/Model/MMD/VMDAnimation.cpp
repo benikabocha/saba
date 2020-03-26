@@ -477,12 +477,6 @@ namespace saba
 		}
 
 		auto boundIt = FindBoundKey(m_keys, int32_t(t), m_startKeyIndex);
-		int32_t intTime = int32_t(t);
-		auto it = std::partition_point(
-			std::begin(m_keys),
-			std::end(m_keys),
-			[intTime](const VMDIKAnimationKey& key) {return key.m_time <= intTime;}
-		);
 		bool enable = true;
 		if (boundIt == std::end(m_keys))
 		{
@@ -493,7 +487,7 @@ namespace saba
 			enable = m_keys.begin()->m_enable;
 			if (boundIt != std::begin(m_keys))
 			{
-				const auto& key = *(it - 1);
+				const auto& key = *(boundIt - 1);
 				enable = key.m_enable;
 
 				m_startKeyIndex = std::distance(m_keys.cbegin(), boundIt);
