@@ -280,12 +280,24 @@ struct AppContext
 	GLuint	m_dummyColorTex = 0;
 	GLuint	m_dummyShadowDepthTex = 0;
 
+	bool		m_enableTransparentWindow = false;
+	uint32_t	m_transparentFboWidth = 0;
+	uint32_t	m_transparentFboHeight = 0;
+	GLuint	m_transparentFboColorTex = 0;
+	GLuint	m_transparentFboDepth = 0;
+	GLuint	m_transparentFbo = 0;
+	GLuint	m_copyTransparentWindowShader = 0;
+	GLint	m_copyTransparentWindowShaderTex = -1;
+	GLuint	m_copyTransparentWindowVAO = 0;
+
 	float	m_elapsed = 0.0f;
 	float	m_animTime = 0.0f;
 	std::unique_ptr<saba::VMDCameraAnimation>	m_vmdCameraAnim;
 
 	bool Setup();
 	void Clear();
+
+	void SetupTransparentFBO();
 
 	Texture GetTexture(const std::string& texturePath);
 };
@@ -369,6 +381,15 @@ bool AppContext::Setup()
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT16, 1, 1, 0, GL_DEPTH_COMPONENT, GL_FLOAT, nullptr);
 	glBindTexture(GL_TEXTURE_2D, 0);
 
+	m_copyTransparentWindowShader = CreateShaderProgram(
+		saba::PathUtil::Combine(m_shaderDir, "quad.vert"),
+		saba::PathUtil::Combine(m_shaderDir, "copy_transparent_window.frag")
+		);
+
+	m_copyTransparentWindowShaderTex = glGetUniformLocation(m_copyTransparentWindowShader, "u_Tex");
+
+	glGenVertexArrays(1, &m_copyTransparentWindowVAO);
+
 	return true;
 }
 
@@ -389,7 +410,59 @@ void AppContext::Clear()
 	m_dummyColorTex = 0;
 	m_dummyShadowDepthTex = 0;
 
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+	if (m_transparentFbo != 0) { glDeleteFramebuffers(1, &m_transparentFbo); }
+	if (m_transparentFboColorTex != 0) { glDeleteTextures(1, &m_transparentFboColorTex); }
+	if (m_transparentFboDepth != 0) { glDeleteRenderbuffers(1, &m_transparentFboDepth); }
+	if (m_copyTransparentWindowShader != 0) { glDeleteProgram(m_copyTransparentWindowShader); }
+	if (m_copyTransparentWindowVAO != 0) { glDeleteVertexArrays(1, &m_copyTransparentWindowVAO); }
+
 	m_vmdCameraAnim.reset();
+}
+
+void AppContext::SetupTransparentFBO()
+{
+	// Setup FBO
+	if (m_transparentFbo == 0)
+	{
+		glGenFramebuffers(1, &m_transparentFbo);
+		glGenTextures(1, &m_transparentFboColorTex);
+		glGenRenderbuffers(1, &m_transparentFboDepth);
+	}
+
+	if ((m_screenWidth != m_transparentFboWidth) || (m_screenHeight != m_transparentFboHeight))
+	{
+		glBindFramebuffer(GL_FRAMEBUFFER, 0);
+		glBindTexture(GL_TEXTURE_2D, m_transparentFboColorTex);
+		glTexImage2D(
+			GL_TEXTURE_2D, 0, GL_RGBA,
+			m_screenWidth,
+			m_screenHeight,
+			0, GL_RGBA, GL_UNSIGNED_BYTE, nullptr
+			);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+		glBindTexture(GL_TEXTURE_2D, 0);
+
+		glBindRenderbuffer(GL_RENDERBUFFER, m_transparentFboDepth);
+		glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, m_screenWidth, m_screenHeight);
+		glBindRenderbuffer(GL_RENDERBUFFER, 0);
+
+		glBindFramebuffer(GL_FRAMEBUFFER, m_transparentFbo);
+		glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, m_transparentFboColorTex, 0);
+		glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, m_transparentFboDepth);
+		auto status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
+		if (GL_FRAMEBUFFER_COMPLETE != status)
+		{
+			std::cout << "Faile to bind framebuffer.\n";
+		}
+		glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+		m_transparentFboWidth = m_screenWidth;
+		m_transparentFboHeight = m_screenHeight;
+	}
+
+	glBindFramebuffer(GL_FRAMEBUFFER, m_transparentFbo);
 }
 
 Texture AppContext::GetTexture(const std::string & texturePath)
@@ -879,14 +952,22 @@ void Model::Draw(const AppContext& appContext)
 			glCullFace(GL_BACK);
 		}
 
-		if (alphaBlend)
+		if (appContext.m_enableTransparentWindow)
 		{
 			glEnable(GL_BLEND);
-			glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+			glBlendFuncSeparate(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_ZERO, GL_ONE_MINUS_SRC_ALPHA);
 		}
 		else
 		{
-			glDisable(GL_BLEND);
+			if (alphaBlend)
+			{
+				glEnable(GL_BLEND);
+				glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+			}
+			else
+			{
+				glDisable(GL_BLEND);
+			}
 		}
 
 		glUniform1i(shader->m_uShadowMapEnabled, 0);
@@ -950,14 +1031,22 @@ void Model::Draw(const AppContext& appContext)
 		glEnable(GL_CULL_FACE);
 		glCullFace(GL_FRONT);
 
-		if (alphaBlend)
+		if (appContext.m_enableTransparentWindow)
 		{
 			glEnable(GL_BLEND);
-			glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+			glBlendFuncSeparate(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_ZERO, GL_ONE_MINUS_SRC_ALPHA);
 		}
 		else
 		{
-			glDisable(GL_BLEND);
+			if (alphaBlend)
+			{
+				glEnable(GL_BLEND);
+				glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+			}
+			else
+			{
+				glDisable(GL_BLEND);
+			}
 		}
 
 		size_t offset = subMesh.m_beginIndex * m_mmdModel->GetIndexElementSize();
@@ -997,10 +1086,10 @@ void Model::Draw(const AppContext& appContext)
 	auto wsvp = proj * view * shadow * world;
 
 	auto shadowColor = glm::vec4(0.4f, 0.2f, 0.2f, 0.7f);
-	if (shadowColor.a < 1.0f)
+	if (appContext.m_enableTransparentWindow)
 	{
 		glEnable(GL_BLEND);
-		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+		glBlendFuncSeparate(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_ZERO, GL_ONE_MINUS_SRC_ALPHA);
 
 		glStencilFuncSeparate(GL_FRONT_AND_BACK, GL_NOTEQUAL, 1, 1);
 		glStencilOp(GL_KEEP, GL_KEEP, GL_REPLACE);
@@ -1008,7 +1097,19 @@ void Model::Draw(const AppContext& appContext)
 	}
 	else
 	{
-		glDisable(GL_BLEND);
+		if (shadowColor.a < 1.0f)
+		{
+			glEnable(GL_BLEND);
+			glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+			glStencilFuncSeparate(GL_FRONT_AND_BACK, GL_NOTEQUAL, 1, 1);
+			glStencilOp(GL_KEEP, GL_KEEP, GL_REPLACE);
+			glEnable(GL_STENCIL_TEST);
+		}
+		else
+		{
+			glDisable(GL_BLEND);
+		}
 	}
 	glDisable(GL_CULL_FACE);
 
@@ -1057,6 +1158,7 @@ bool SampleMain(std::vector<std::string>& args)
 {
 	Input currentInput;
 	std::vector<Input> inputModels;
+	bool enableTransparentWindow = false;
 	for (auto argIt = args.begin(); argIt != args.end(); ++argIt)
 	{
 		const auto& arg = (*argIt);
@@ -1092,6 +1194,10 @@ bool SampleMain(std::vector<std::string>& args)
 			}
 			currentInput.m_vmdPaths.push_back((*argIt));
 		}
+		else if (arg == "-transparent")
+		{
+			enableTransparentWindow = true;
+		}
 	}
 	if (!currentInput.m_modelPath.empty())
 	{
@@ -1108,6 +1214,10 @@ bool SampleMain(std::vector<std::string>& args)
 	glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
 	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 	glfwWindowHint(GLFW_SAMPLES, 4);
+	if (enableTransparentWindow)
+	{
+		glfwWindowHint(GLFW_TRANSPARENT_FRAMEBUFFER, GL_TRUE);
+	}
 
 	auto window = glfwCreateWindow(1280, 800, "simple mmd viewer", nullptr, nullptr);
 	if (window == nullptr)
@@ -1132,6 +1242,8 @@ bool SampleMain(std::vector<std::string>& args)
 		std::cout << "Failed to setup AppContext.\n";
 		return false;
 	}
+
+	appContext.m_enableTransparentWindow = enableTransparentWindow;
 
 	// Load MMD model
 	std::vector<Model> models;
@@ -1221,8 +1333,17 @@ bool SampleMain(std::vector<std::string>& args)
 		appContext.m_elapsed = float(elapsed);
 		appContext.m_animTime += float(elapsed);
 
-		glClearColor(1.0f, 0.8f, 0.75f, 1);
-		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
+		if (enableTransparentWindow)
+		{
+			appContext.SetupTransparentFBO();
+			glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+			glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
+		}
+		else
+		{
+			glClearColor(1.0f, 0.8f, 0.75f, 1);
+			glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
+		}
 
 		int width, height;
 		glfwGetFramebufferSize(window, &width, &height);
@@ -1256,6 +1377,20 @@ bool SampleMain(std::vector<std::string>& args)
 
 			// Draw
 			model.Draw(appContext);
+		}
+
+		if (enableTransparentWindow)
+		{
+			glBindFramebuffer(GL_FRAMEBUFFER, 0);
+			glDisable(GL_DEPTH_TEST);
+			glBindVertexArray(appContext.m_copyTransparentWindowVAO);
+			glUseProgram(appContext.m_copyTransparentWindowShader);
+			glActiveTexture(GL_TEXTURE0);
+			glBindTexture(GL_TEXTURE_2D, appContext.m_transparentFboColorTex);
+			glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
+			glBindVertexArray(0);
+			glUseProgram(0);
+			glBindTexture(GL_TEXTURE_2D, 0);
 		}
 
 		glfwSwapBuffers(window);
