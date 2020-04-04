@@ -2,10 +2,11 @@ version: 0.0.1.{build}
 image:
 - Visual Studio 2017
 - Visual Studio 2015
+- Visual Studio 2019
 environment:
   GLFW_URL: https://github.com/glfw/glfw.git
   GLFW_ROOT: c:\projects\dep\glfw
-  GLFW_TAG: 3.2.1
+  GLFW_TAG: 3.3.2
   BULLET_URL: https://github.com/bulletphysics/bullet3.git
   BULLET_ROOT: c:\projects\dep\bullet
   BULLET_TAG: 2.86.1
@@ -16,6 +17,8 @@ install:
     if ($env:APPVEYOR_BUILD_WORKER_IMAGE -eq "Visual Studio 2015") { $GEN="Visual Studio 14 2015 Win64"}
 
     if ($env:APPVEYOR_BUILD_WORKER_IMAGE -eq "Visual Studio 2017") { $GEN="Visual Studio 15 2017 Win64"}
+
+    if ($env:APPVEYOR_BUILD_WORKER_IMAGE -eq "Visual Studio 2019") { $GEN="Visual Studio 16 2019"}
 
 
     if (-Not (Test-Path $env:GLFW_ROOT)) {
@@ -41,8 +44,8 @@ install:
         cd $env:APPVEYOR_BUILD_FOLDER
     }
 cache:
-- c:\projects\dep\glfw
-- c:\projects\dep\bullet
+- c:\projects\dep\glfw -> appveyor.yml
+- c:\projects\dep\bullet -> appveyor.yml
 build_script:
 - ps: >-
     $GEN=""
@@ -50,6 +53,8 @@ build_script:
     if ($env:APPVEYOR_BUILD_WORKER_IMAGE -eq "Visual Studio 2015") { $GEN="Visual Studio 14 2015 Win64"}
 
     if ($env:APPVEYOR_BUILD_WORKER_IMAGE -eq "Visual Studio 2017") { $GEN="Visual Studio 15 2017 Win64"}
+
+    if ($env:APPVEYOR_BUILD_WORKER_IMAGE -eq "Visual Studio 2019") { $GEN="Visual Studio 16 2019"}
 
 
     mkdir build

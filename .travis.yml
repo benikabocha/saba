@@ -73,7 +73,7 @@ before_install:
       export GLFW_ROOT="${TRAVIS_BUILD_DIR}/deps/glfw"
       if [[ -z "$(ls -A ${GLFW_ROOT})" ]]; then
         (
-          travis_retry git clone --depth 1 -b 3.2.1 https://github.com/glfw/glfw.git
+          travis_retry git clone --depth 1 -b 3.3.2 https://github.com/glfw/glfw.git
           cd glfw && mkdir build && cd build
           cmake -D GLFW_INSTALL=ON -D GLFW_BUILD_EXAMPLES=OFF \
             -D GLFW_BUILD_DOCS=OFF -D GLFW_BUILD_TESTS=OFF \
