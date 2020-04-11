@@ -280,12 +280,16 @@ struct AppContext
 	GLuint	m_dummyColorTex = 0;
 	GLuint	m_dummyShadowDepthTex = 0;
 
+	const int	m_msaaSamples = 4;
+
 	bool		m_enableTransparentWindow = false;
 	uint32_t	m_transparentFboWidth = 0;
 	uint32_t	m_transparentFboHeight = 0;
 	GLuint	m_transparentFboColorTex = 0;
-	GLuint	m_transparentFboDepth = 0;
 	GLuint	m_transparentFbo = 0;
+	GLuint	m_transparentFboMSAAColorRB = 0;
+	GLuint	m_transparentFboMSAADepthRB = 0;
+	GLuint	m_transparentMSAAFbo = 0;
 	GLuint	m_copyTransparentWindowShader = 0;
 	GLint	m_copyTransparentWindowShaderTex = -1;
 	GLuint	m_copyTransparentWindowVAO = 0;
@@ -412,8 +416,10 @@ void AppContext::Clear()
 
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 	if (m_transparentFbo != 0) { glDeleteFramebuffers(1, &m_transparentFbo); }
+	if (m_transparentMSAAFbo != 0) { glDeleteFramebuffers(1, &m_transparentMSAAFbo); }
 	if (m_transparentFboColorTex != 0) { glDeleteTextures(1, &m_transparentFboColorTex); }
-	if (m_transparentFboDepth != 0) { glDeleteRenderbuffers(1, &m_transparentFboDepth); }
+	if (m_transparentFboMSAAColorRB != 0) { glDeleteRenderbuffers(1, &m_transparentFboMSAAColorRB); }
+	if (m_transparentFboMSAADepthRB != 0) { glDeleteRenderbuffers(1, &m_transparentFboMSAADepthRB); }
 	if (m_copyTransparentWindowShader != 0) { glDeleteProgram(m_copyTransparentWindowShader); }
 	if (m_copyTransparentWindowVAO != 0) { glDeleteVertexArrays(1, &m_copyTransparentWindowVAO); }
 
@@ -426,8 +432,10 @@ void AppContext::SetupTransparentFBO()
 	if (m_transparentFbo == 0)
 	{
 		glGenFramebuffers(1, &m_transparentFbo);
+		glGenFramebuffers(1, &m_transparentMSAAFbo);
 		glGenTextures(1, &m_transparentFboColorTex);
-		glGenRenderbuffers(1, &m_transparentFboDepth);
+		glGenRenderbuffers(1, &m_transparentFboMSAAColorRB);
+		glGenRenderbuffers(1, &m_transparentFboMSAADepthRB);
 	}
 
 	if ((m_screenWidth != m_transparentFboWidth) || (m_screenHeight != m_transparentFboHeight))
@@ -444,13 +452,28 @@ void AppContext::SetupTransparentFBO()
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 		glBindTexture(GL_TEXTURE_2D, 0);
 
-		glBindRenderbuffer(GL_RENDERBUFFER, m_transparentFboDepth);
-		glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, m_screenWidth, m_screenHeight);
-		glBindRenderbuffer(GL_RENDERBUFFER, 0);
-
 		glBindFramebuffer(GL_FRAMEBUFFER, m_transparentFbo);
 		glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, m_transparentFboColorTex, 0);
-		glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, m_transparentFboDepth);
+		if (GL_FRAMEBUFFER_COMPLETE != glCheckFramebufferStatus(GL_FRAMEBUFFER))
+		{
+			std::cout << "Faile to bind framebuffer.\n";
+		}
+		glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+		glBindRenderbuffer(GL_RENDERBUFFER, m_transparentFboMSAAColorRB);
+		//glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, m_screenWidth, m_screenHeight);
+		glRenderbufferStorageMultisample(GL_RENDERBUFFER, m_msaaSamples, GL_RGBA, m_screenWidth, m_screenHeight);
+		glBindRenderbuffer(GL_RENDERBUFFER, 0);
+
+		glBindRenderbuffer(GL_RENDERBUFFER, m_transparentFboMSAADepthRB);
+		//glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, m_screenWidth, m_screenHeight);
+		glRenderbufferStorageMultisample(GL_RENDERBUFFER, m_msaaSamples, GL_DEPTH24_STENCIL8, m_screenWidth, m_screenHeight);
+		glBindRenderbuffer(GL_RENDERBUFFER, 0);
+
+		glBindFramebuffer(GL_FRAMEBUFFER, m_transparentMSAAFbo);
+		//glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, m_transparentFboColorTex, 0);
+		glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_RENDERBUFFER, m_transparentFboMSAAColorRB);
+		glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, m_transparentFboMSAADepthRB);
 		auto status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
 		if (GL_FRAMEBUFFER_COMPLETE != status)
 		{
@@ -462,7 +485,8 @@ void AppContext::SetupTransparentFBO()
 		m_transparentFboHeight = m_screenHeight;
 	}
 
-	glBindFramebuffer(GL_FRAMEBUFFER, m_transparentFbo);
+	glBindFramebuffer(GL_FRAMEBUFFER, m_transparentMSAAFbo);
+	glEnable(GL_MULTISAMPLE);
 }
 
 Texture AppContext::GetTexture(const std::string & texturePath)
@@ -1209,13 +1233,15 @@ bool SampleMain(std::vector<std::string>& args)
 	{
 		return false;
 	}
+	AppContext appContext;
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 2);
 	glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
 	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
-	glfwWindowHint(GLFW_SAMPLES, 4);
+	glfwWindowHint(GLFW_SAMPLES, appContext.m_msaaSamples);
 	if (enableTransparentWindow)
 	{
+		glfwWindowHint(GLFW_SAMPLES, 0);
 		glfwWindowHint(GLFW_TRANSPARENT_FRAMEBUFFER, GL_TRUE);
 	}
 
@@ -1236,7 +1262,6 @@ bool SampleMain(std::vector<std::string>& args)
 	glEnable(GL_MULTISAMPLE);
 
 	// Initialize application
-	AppContext appContext;
 	if (!appContext.Setup())
 	{
 		std::cout << "Failed to setup AppContext.\n";
@@ -1381,7 +1406,16 @@ bool SampleMain(std::vector<std::string>& args)
 
 		if (enableTransparentWindow)
 		{
+			glDisable(GL_MULTISAMPLE);
 			glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+			glBindFramebuffer(GL_DRAW_FRAMEBUFFER, appContext.m_transparentFbo);
+			glBindFramebuffer(GL_READ_FRAMEBUFFER, appContext.m_transparentMSAAFbo);
+			glDrawBuffer(GL_BACK);
+			glBlitFramebuffer(0, 0, width, height, 0, 0, width, height, GL_COLOR_BUFFER_BIT, GL_NEAREST);
+			glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
+			glBindFramebuffer(GL_READ_FRAMEBUFFER, 0);
+
 			glDisable(GL_DEPTH_TEST);
 			glBindVertexArray(appContext.m_copyTransparentWindowVAO);
 			glUseProgram(appContext.m_copyTransparentWindowShader);

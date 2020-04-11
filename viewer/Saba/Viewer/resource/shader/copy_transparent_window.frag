@@ -20,14 +20,3 @@ void main()
         fs_Color.a = invAlpha;
     }
 }
-
-// in vec2 vs_UV;
-
-
-// out vec4 fs_Color;
-
-// void main()
-// {
-// 	fs_Color.rgb = vec3(vs_UV, 0.0);
-// 	fs_Color.a = 1.0;
-// }
