@@ -8,14 +8,15 @@
 * [MMD](http://www.geocities.jp/higuchuu4/) (PMD/PMX/VMD) play and load library
 * Viewer (MMD/OBJ)
     * saba_viewer
-    ![saba_viewer](./images/saba_viewer_01.png)
-    © 2017 Pronama LLC
 * Example
     * simple_mmd_viewer_glfw (OpenGL 4.1)
     * simple_mmd_viewer_dx11 (DirectX 11)
     * simple_mmd_viewer_vulkan (Vulkan 1.0.65)
     * Transparent Window (GLFW 3.3.2 or higher, Windows)
-    ![transparent_sample](./images/transparent_sample.gif)
+
+![saba_viewer](./images/saba_viewer_01.png)
+![transparent_sample](./images/transparent_sample.gif)
+© 2017 Pronama LLC
 
 ## Important Changes
 [commit 7ba7020](https://github.com/benikabocha/saba/commit/7ba70208741d6cd5f0105f27a2264b555a5ce043)
