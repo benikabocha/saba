@@ -480,7 +480,7 @@ namespace saba
 		bool enable = true;
 		if (boundIt == std::end(m_keys))
 		{
-			m_ikSolver->Enable(m_keys.rbegin()->m_enable);
+			enable = m_keys.rbegin()->m_enable;
 		}
 		else
 		{
