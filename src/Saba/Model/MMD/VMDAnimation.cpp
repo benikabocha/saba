@@ -552,7 +552,7 @@ namespace saba
 		else
 		{
 			weight = (*boundIt).m_weight;
-			if (boundIt == std::begin(m_keys))
+			if (boundIt != std::begin(m_keys))
 			{
 				VMDMorphAnimationKey key0 = *(boundIt - 1);
 				VMDMorphAnimationKey key1 = *boundIt;
