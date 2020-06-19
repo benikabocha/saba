@@ -28,7 +28,8 @@ namespace saba
 
 		float FindBezierX(float time) const;
 
-		glm::vec2	m_cp[4];
+		glm::vec2	m_cp1;
+		glm::vec2	m_cp2;
 	};
 
 	struct VMDNodeAnimationKey

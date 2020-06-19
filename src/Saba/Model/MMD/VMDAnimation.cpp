@@ -24,10 +24,8 @@ namespace saba
 			int x1 = cp[8];
 			int y1 = cp[12];
 
-			bezier.m_cp[0] = glm::vec2(0, 0);
-			bezier.m_cp[1] = glm::vec2((float)x0 / 127.0f, (float)y0 / 127.0f);
-			bezier.m_cp[2] = glm::vec2((float)x1 / 127.0f, (float)y1 / 127.0f);
-			bezier.m_cp[3] = glm::vec2(1, 1);
+			bezier.m_cp1 = glm::vec2((float)x0 / 127.0f, (float)y0 / 127.0f);
+			bezier.m_cp2 = glm::vec2((float)x1 / 127.0f, (float)y1 / 127.0f);
 		}
 
 		glm::mat3 InvZ(const glm::mat3& m)
@@ -39,16 +37,16 @@ namespace saba
 
 	float VMDBezier::EvalX(float t) const
 	{
-		float t2 = t * t;
-		float t3 = t2 * t;
-		float it = 1.0f - t;
-		float it2 = it * it;
-		float it3 = it2 * it;
-		float x[4] = {
-			m_cp[0].x,
-			m_cp[1].x,
-			m_cp[2].x,
-			m_cp[3].x,
+		const float t2 = t * t;
+		const float t3 = t2 * t;
+		const float it = 1.0f - t;
+		const float it2 = it * it;
+		const float it3 = it2 * it;
+		const float x[4] = {
+			0,
+			m_cp1.x,
+			m_cp2.x,
+			1,
 		};
 
 		return t3 * x[3] + 3 * t2 * it * x[2] + 3 * t * it2 * x[1] + it3 * x[0];
@@ -56,16 +54,16 @@ namespace saba
 
 	float VMDBezier::EvalY(float t) const
 	{
-		float t2 = t * t;
-		float t3 = t2 * t;
-		float it = 1.0f - t;
-		float it2 = it * it;
-		float it3 = it2 * it;
-		float y[4] = {
-			m_cp[0].y,
-			m_cp[1].y,
-			m_cp[2].y,
-			m_cp[3].y,
+		const float t2 = t * t;
+		const float t3 = t2 * t;
+		const float it = 1.0f - t;
+		const float it2 = it * it;
+		const float it3 = it2 * it;
+		const float y[4] = {
+			0,
+			m_cp1.y,
+			m_cp2.y,
+			1,
 		};
 
 		return t3 * y[3] + 3 * t2 * it * y[2] + 3 * t * it2 * y[1] + it3 * y[0];
@@ -145,16 +143,15 @@ namespace saba
 				float timeRange = float(key1.m_time - key0.m_time);
 				float time = (t - float(key0.m_time)) / timeRange;
 				float tx_x = key0.m_txBezier.FindBezierX(time);
-				float ty_x = key0.m_txBezier.FindBezierX(time);
-				float tz_x = key0.m_txBezier.FindBezierX(time);
+				float ty_x = key0.m_tyBezier.FindBezierX(time);
+				float tz_x = key0.m_tzBezier.FindBezierX(time);
 				float rot_x = key0.m_rotBezier.FindBezierX(time);
 				float tx_y = key0.m_txBezier.EvalY(tx_x);
-				float ty_y = key0.m_txBezier.EvalY(ty_x);
-				float tz_y = key0.m_txBezier.EvalY(tz_x);
+				float ty_y = key0.m_tyBezier.EvalY(ty_x);
+				float tz_y = key0.m_tzBezier.EvalY(tz_x);
 				float rot_y = key0.m_rotBezier.EvalY(rot_x);
 
-				glm::vec3 dt = key1.m_translate - key0.m_translate;
-				vt = dt * glm::vec3(tx_y, ty_y, tz_y) + key0.m_translate;
+				vt = glm::mix(key0.m_translate, key1.m_translate, glm::vec3(tx_y, ty_y, tz_y));
 				q = glm::slerp(key0.m_rotate, key1.m_rotate, rot_y);
 
 				m_startKeyIndex = std::distance(m_keys.cbegin(), boundIt);

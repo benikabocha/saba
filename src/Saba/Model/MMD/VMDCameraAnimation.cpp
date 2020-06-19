@@ -14,10 +14,8 @@ namespace saba
 	{
 		void SetVMDBezier(VMDBezier& bezier, int x0, int x1, int y0, int y1)
 		{
-			bezier.m_cp[0] = glm::vec2(0, 0);
-			bezier.m_cp[1] = glm::vec2((float)x0 / 127.0f, (float)y0 / 127.0f);
-			bezier.m_cp[2] = glm::vec2((float)x1 / 127.0f, (float)y1 / 127.0f);
-			bezier.m_cp[3] = glm::vec2(1, 1);
+			bezier.m_cp1 = glm::vec2((float)x0 / 127.0f, (float)y0 / 127.0f);
+			bezier.m_cp2 = glm::vec2((float)x1 / 127.0f, (float)y1 / 127.0f);
 		}
 	} // namespace
 
