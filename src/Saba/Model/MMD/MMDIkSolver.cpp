@@ -17,6 +17,7 @@ namespace saba
 		, m_iterateCount(1)
 		, m_limitAngle(glm::pi<float>() * 2.0f)
 		, m_enable(true)
+		, m_baseAnimEnable(true)
 	{
 	}
 
@@ -348,11 +349,10 @@ namespace saba
 			auto cross = glm::normalize(glm::cross(chainTargetVec, chainIkVec));
 			auto rot = glm::rotate(glm::quat(1, 0, 0, 0), angle, cross);
 
-			auto chainRotM = glm::mat3_cast(chainNode->GetIKRotate())
-				* glm::mat3_cast(chainNode->AnimateRotate())
-				* glm::mat3_cast(rot);
+			auto chainRot = chainNode->GetIKRotate() * chainNode->AnimateRotate() * rot;
 			if (chain.m_enableAxisLimit)
 			{
+				auto chainRotM = glm::mat3_cast(chainRot);
 				auto rotXYZ = Decompose(chainRotM, chain.m_prevAngle);
 				glm::vec3 clampXYZ;
 				clampXYZ = glm::clamp(rotXYZ, chain.m_limitMin, chain.m_limitMax);
@@ -363,11 +363,12 @@ namespace saba
 				r = glm::rotate(r, clampXYZ.z, glm::vec3(0, 0, 1));
 				chainRotM = glm::mat3_cast(r);
 				chain.m_prevAngle = clampXYZ;
+
+				chainRot = glm::quat_cast(chainRotM);
 			}
 
-			auto ikRotM = chainRotM
-				* glm::inverse(glm::mat3_cast(chainNode->AnimateRotate()));
-			chainNode->SetIKRotate(glm::quat_cast(ikRotM));
+			auto ikRot = chainRot * glm::inverse(chainNode->AnimateRotate());
+			chainNode->SetIKRotate(ikRot);
 
 			chainNode->UpdateLocalTransform();
 			chainNode->UpdateGlobalTransform();
@@ -428,17 +429,6 @@ namespace saba
 		auto rot2 = glm::rotate(glm::quat(1, 0, 0, 0), -angle, RotateAxis);
 		auto targetVec2 = rot2 * chainTargetVec;
 		auto dot2 = glm::dot(targetVec2, chainIkVec);
-
-		if (iteration != 0)
-		{
-			// 初回以外は動かすかどうか判断する
-			// 回転面とボーンが平行ではないため、動かさないほうが良い場合がある
-			if (dot > dot1 && dot > dot2)
-			{
-				// 動かさないほうが差が小さい
-				return;
-			}
-		}
 
 		auto newAngle = chain.m_planeModeAngle;
 		if (dot1 > dot2)
