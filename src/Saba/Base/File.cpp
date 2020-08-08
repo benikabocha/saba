@@ -6,6 +6,8 @@
 #include "File.h"
 #include "UnicodeUtil.h"
 
+#include <iterator>
+
 namespace saba
 {
 	File::File()
