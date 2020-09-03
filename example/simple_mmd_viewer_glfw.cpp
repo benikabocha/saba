@@ -1239,11 +1239,13 @@ bool SampleMain(std::vector<std::string>& args)
 	glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
 	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 	glfwWindowHint(GLFW_SAMPLES, appContext.m_msaaSamples);
+#if defined(GLFW_TRANSPARENT_FRAMEBUFFER)
 	if (enableTransparentWindow)
 	{
 		glfwWindowHint(GLFW_SAMPLES, 0);
 		glfwWindowHint(GLFW_TRANSPARENT_FRAMEBUFFER, GL_TRUE);
 	}
+#endif // defined(GLFW_TRANSPARENT_FRAMEBUFFER)
 
 	auto window = glfwCreateWindow(1280, 800, "simple mmd viewer", nullptr, nullptr);
 	if (window == nullptr)
