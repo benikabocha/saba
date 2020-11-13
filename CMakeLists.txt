@@ -65,6 +65,10 @@ if(WIN32)
     ADD_DEFINITIONS(-D_UNICODE)
 endif(WIN32)
 
+if(MSVC)
+    ADD_DEFINITIONS(/MP)
+endif()
+
 add_subdirectory(external)
 
 add_subdirectory(src)
