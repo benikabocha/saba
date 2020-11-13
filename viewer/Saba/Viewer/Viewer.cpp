@@ -907,10 +907,7 @@ namespace saba
 		}
 		DrawCtrlUI();
 
-		ImGui::SetNextWindowPos(ImVec2(0, 0));
-		ImGui::Begin("BG", nullptr, ImGui::GetIO().DisplaySize, 0, ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoInputs | ImGuiWindowFlags_NoFocusOnAppearing | ImGuiWindowFlags_NoBringToFrontOnFocus);
 		DrawLightGuide();
-		ImGui::End();
 	}
 
 	namespace
@@ -972,7 +969,7 @@ namespace saba
 			return;
 		}
 		ImGui::SetNextWindowPos(ImVec2(10, 30));
-		if (!ImGui::Begin("Info", &m_enableCommandUI, ImVec2(0, 0), 0.3f, ImGuiWindowFlags_NoTitleBar /*| ImGuiWindowFlags_NoResize*/ | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_AlwaysAutoResize))
+		if (!ImGui::Begin("Info", &m_enableCommandUI, ImGuiWindowFlags_NoTitleBar /*| ImGuiWindowFlags_NoResize*/ | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_AlwaysAutoResize))
 		{
 			ImGui::End();
 			return;
@@ -1063,10 +1060,10 @@ namespace saba
 		float width = 500;
 		float height = 400;
 
-		ImGui::SetNextWindowSize(ImVec2(width, height), ImGuiSetCond_FirstUseEver);
+		ImGui::SetNextWindowSize(ImVec2(width, height), ImGuiCond_FirstUseEver);
 		ImGui::SetNextWindowPos(
 			ImVec2((float)(m_context.GetWindowWidth()) - width, (float)(m_context.GetWindowHeight()) - height - 80),
-			ImGuiSetCond_FirstUseEver
+			ImGuiCond_FirstUseEver
 		);
 		ImGui::Begin("Log", &m_enableLogUI);
 		ImGui::BeginChild("scrolling", ImVec2(0, 0), false, ImGuiWindowFlags_HorizontalScrollbar);
@@ -1130,10 +1127,10 @@ namespace saba
 		std::array<char, 256> inputBuffer;
 		inputBuffer.fill('\0');
 
-		ImGui::SetNextWindowSize(ImVec2(width, height), ImGuiSetCond_FirstUseEver);
+		ImGui::SetNextWindowSize(ImVec2(width, height), ImGuiCond_FirstUseEver);
 		ImGui::SetNextWindowPos(
 			ImVec2((float)m_context.GetWindowWidth() - width, (float)m_context.GetWindowHeight() - height - 60),
-			ImGuiSetCond_FirstUseEver
+			ImGuiCond_FirstUseEver
 		);
 		ImGui::Begin("Command", &m_enableCommandUI);
 		if (ImGui::InputText("Input", &inputBuffer[0], inputBuffer.size(), ImGuiInputTextFlags_EnterReturnsTrue, nullptr, nullptr))
@@ -1202,8 +1199,8 @@ namespace saba
 		float width = 300;
 		float height = 250;
 
-		ImGui::SetNextWindowSize(ImVec2(width, height), ImGuiSetCond_Once);
-		ImGui::SetNextWindowPos(ImVec2(0, 100 + 20), ImGuiSetCond_Once);
+		ImGui::SetNextWindowSize(ImVec2(width, height), ImGuiCond_Once);
+		ImGui::SetNextWindowPos(ImVec2(0, 100 + 20), ImGuiCond_Once);
 		ImGui::Begin("Control", &m_enableCtrlUI);
 
 		ImGui::PushID("Control UI");
@@ -1593,7 +1590,16 @@ namespace saba
 			const auto& view = m_context.GetCamera()->GetViewMatrix();
 			const auto& proj = m_context.GetCamera()->GetProjectionMatrix();
 
+			const ImU32 flags = ImGuiWindowFlags_NoTitleBar |
+				ImGuiWindowFlags_NoResize |
+				ImGuiWindowFlags_NoScrollbar |
+				ImGuiWindowFlags_NoInputs |
+				ImGuiWindowFlags_NoSavedSettings |
+				ImGuiWindowFlags_NoFocusOnAppearing |
+				ImGuiWindowFlags_NoBringToFrontOnFocus;
+			ImGui::Begin("LightDir", nullptr, flags);
 			auto drawList = ImGui::GetWindowDrawList();
+			ImGui::End();
 			auto wvp = proj * view * m_lgihtManipMat;
 			auto startPos = WorldToScreen(glm::vec3(0), wvp);
 			auto endPos = WorldToScreen(glm::vec3(0, 0, -m_sceneUnitScale), wvp);
