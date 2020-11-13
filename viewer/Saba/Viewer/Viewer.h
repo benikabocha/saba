@@ -69,7 +69,8 @@ namespace saba
 	private:
 		struct Mouse
 		{
-			Mouse();
+			Mouse() = default;
+
 			void Initialize(GLFWwindow* window);
 			void Update(GLFWwindow* window);
 			void SetScroll(double x, double y);
@@ -100,6 +101,45 @@ namespace saba
 			Lock,
 		};
 
+		enum class FPSMode
+		{
+			FPS30,
+			FPS60,
+		};
+
+		struct Command
+		{
+			std::string												m_name;
+			std::function<bool(const std::vector<std::string>&)>	m_commandFunc;
+		};
+
+		struct CustomCommand
+		{
+			std::string		m_name;
+			sol::function	m_commandFunc;
+			std::string		m_menuName;
+		};
+
+		using CustomCommandPtr = std::unique_ptr<CustomCommand>;
+
+		struct CustomCommandMenuItem
+		{
+			std::string										m_name;
+			std::map<std::string, CustomCommandMenuItem>	m_items;
+			CustomCommand* m_command = nullptr;
+
+			CustomCommandMenuItem& operator[] (const std::string& name)
+			{
+				return m_items[name];
+			}
+		};
+
+		struct MMDModelConfig
+		{
+			MMDModelConfig();
+			uint32_t	m_parallelUpdateCount;	//!< 0 - 16 (0:auto)
+		};
+
 	private:
 		using ModelDrawerPtr = std::shared_ptr<ModelDrawer>;
 
@@ -109,6 +149,8 @@ namespace saba
 		void Draw();
 		void DrawBegin();
 		void DrawEnd();
+		void DrawMenuBar();
+		void DrawCustomMenu(CustomCommandMenuItem* parentItem);
 		void DrawUI();
 		void DrawInfoUI();
 		void DrawLogUI();
@@ -175,46 +217,6 @@ namespace saba
 
 		static void OnDropStub(GLFWwindow* window, int count, const char** paths);
 		void OnDrop(int count, const char** paths);
-
-	private:
-		enum class FPSMode
-		{
-			FPS30,
-			FPS60,
-		};
-
-		struct Command
-		{
-			std::string												m_name;
-			std::function<bool(const std::vector<std::string>&)>	m_commandFunc;
-		};
-
-		struct CustomCommand
-		{
-			std::string		m_name;
-			sol::function	m_commandFunc;
-			std::string		m_menuName;
-		};
-
-		using CustomCommandPtr = std::unique_ptr<CustomCommand>;
-
-		struct CustomCommandMenuItem
-		{
-			std::string										m_name;
-			std::map<std::string, CustomCommandMenuItem>	m_items;
-			CustomCommand*									m_command;
-
-			CustomCommandMenuItem& operator[] (const std::string& name)
-			{
-				return m_items[name];
-			}
-		};
-
-		struct MMDModelConfig
-		{
-			MMDModelConfig();
-			uint32_t	m_parallelUpdateCount;	//!< 0 - 16 (0:auto)
-		};
 
 	private:
 		InitializeParameter	m_initParam;

@@ -352,102 +352,7 @@ namespace saba
 
 			if (m_context.IsUIEnabled())
 			{
-				if (ImGui::BeginMainMenuBar())
-				{
-					if (ImGui::BeginMenu("Window"))
-					{
-						ImGui::MenuItem("Info", nullptr, &m_enableInfoUI);
-						ImGui::MenuItem("More Info", nullptr, &m_enableMoreInfoUI);
-						ImGui::MenuItem("Log", nullptr, &m_enableLogUI);
-						ImGui::MenuItem("Command", nullptr, &m_enableCommandUI);
-						ImGui::MenuItem("Control", nullptr, &m_enableCtrlUI);
-						ImGui::EndMenu();
-					}
-					if (ImGui::BeginMenu("Edit"))
-					{
-						if (ImGui::MenuItem("Manipulater", nullptr, &m_enableManip))
-						{
-							if (m_enableManip)
-							{
-								m_enableLightManip = false;
-							}
-						}
-						ImGui::EndMenu();
-					}
-					if (ImGui::BeginMenu("Viewer"))
-					{
-						bool cameraOverride = m_cameraOverride;
-						bool cameraOverrideEnable = true;
-						if (m_cameraOverrider == nullptr)
-						{
-							cameraOverride = false;
-							cameraOverrideEnable = false;
-						}
-						ImGui::MenuItem("CameraOverride", nullptr, &cameraOverride, cameraOverrideEnable);
-						if (m_cameraOverrider != nullptr)
-						{
-							m_cameraOverride = cameraOverride;
-						}
-						ImGui::MenuItem("ClipElapsed", nullptr, &m_clipElapsed);
-						ImGui::MenuItem("Grid", nullptr, &m_gridEnabled);
-						ImGui::EndMenu();
-					}
-					if (ImGui::BeginMenu("Animation"))
-					{
-						if (ImGui::MenuItem("30 FPS", nullptr, m_animCtrlFPSMode == FPSMode::FPS30))
-						{
-							m_animCtrlFPSMode = FPSMode::FPS30;
-							m_animCtrlEditFPS = 30.0f;
-						}
-						if (ImGui::MenuItem("60 FPS", nullptr, m_animCtrlFPSMode == FPSMode::FPS60))
-						{
-							m_animCtrlFPSMode = FPSMode::FPS60;
-							m_animCtrlEditFPS = 60.0f;
-						}
-						if (ImGui::MenuItem("Fixed Animation", nullptr, m_animFixedUpdate))
-						{
-							m_animFixedUpdate = !m_animFixedUpdate;
-						}
-						ImGui::EndMenu();
-					}
-					if (ImGui::BeginMenu("CustomCommand"))
-					{
-						if (ImGui::MenuItem("RefreshCustomCommand"))
-						{
-							ViewerCommand cmd;
-							cmd.SetCommand("refreshCustomCommand");
-							ExecuteCommand(cmd);
-						}
-						ImGui::Separator();
-
-						auto addCustomMenu = [this](auto addCustomMenu, CustomCommandMenuItem* parentMenuItem) -> void
-						{
-							for (auto& menuItemPair : (*parentMenuItem).m_items)
-							{
-								if (menuItemPair.second.m_command == nullptr)
-								{
-									if (ImGui::BeginMenu(menuItemPair.first.c_str()))
-									{
-										addCustomMenu(addCustomMenu, &menuItemPair.second);
-									}
-								}
-								else
-								{
-									if (ImGui::MenuItem(menuItemPair.first.c_str()))
-									{
-										ViewerCommand cmd;
-										cmd.SetCommand(menuItemPair.second.m_command->m_name);
-										this->ExecuteCommand(cmd);
-									}
-								}
-							}
-							ImGui::EndMenu();
-						};
-
-						addCustomMenu(addCustomMenu, &m_customCommandMenuItemRoot);
-					}
-					ImGui::EndMainMenuBar();
-				}
+				DrawMenuBar();
 			}
 
 			Update();
@@ -501,7 +406,7 @@ namespace saba
 			for (int sjisSecond = SjisSecondBegin; sjisSecond <= SjisSecondEnd; sjisSecond++)
 			{
 				int ch = (sjisFirst << 8) | sjisSecond;
-				wcharTable.push_back((ImWchar)saba::ConvertSjisToU16Char(ch));\
+				wcharTable.push_back((ImWchar)saba::ConvertSjisToU16Char(ch));
 			}
 		}
 		for (int sjisFirst = SjisFirstBegin2; sjisFirst <= SjisFirstEnd2; sjisFirst++)
@@ -655,11 +560,11 @@ namespace saba
 		if (m_gridEnabled)
 		{
 			// Draw grid
-			auto world = glm::mat4(1.0);
-			auto view = m_context.GetCamera()->GetViewMatrix();
-			auto proj = m_context.GetCamera()->GetProjectionMatrix();
-			auto wv = view * world;
-			auto wvp = proj * view * world;
+			const auto world = glm::mat4(1.0);
+			const auto& view = m_context.GetCamera()->GetViewMatrix();
+			const auto& proj = m_context.GetCamera()->GetProjectionMatrix();
+			const auto wv = view * world;
+			const auto wvp = proj * view * world;
 			m_grid.SetWVPMatrix(wvp);
 			m_grid.Draw();
 		}
@@ -891,6 +796,106 @@ namespace saba
 		}
 	}
 
+	void Viewer::DrawMenuBar()
+	{
+		if (ImGui::BeginMainMenuBar())
+		{
+			if (ImGui::BeginMenu("Window"))
+			{
+				ImGui::MenuItem("Info", nullptr, &m_enableInfoUI);
+				ImGui::MenuItem("More Info", nullptr, &m_enableMoreInfoUI);
+				ImGui::MenuItem("Log", nullptr, &m_enableLogUI);
+				ImGui::MenuItem("Command", nullptr, &m_enableCommandUI);
+				ImGui::MenuItem("Control", nullptr, &m_enableCtrlUI);
+				ImGui::EndMenu();
+			}
+			if (ImGui::BeginMenu("Edit"))
+			{
+				if (ImGui::MenuItem("Manipulater", nullptr, &m_enableManip))
+				{
+					if (m_enableManip)
+					{
+						m_enableLightManip = false;
+					}
+				}
+				ImGui::EndMenu();
+			}
+			if (ImGui::BeginMenu("Viewer"))
+			{
+				bool cameraOverride = m_cameraOverride;
+				bool cameraOverrideEnable = true;
+				if (m_cameraOverrider == nullptr)
+				{
+					cameraOverride = false;
+					cameraOverrideEnable = false;
+				}
+				ImGui::MenuItem("CameraOverride", nullptr, &cameraOverride, cameraOverrideEnable);
+				if (m_cameraOverrider != nullptr)
+				{
+					m_cameraOverride = cameraOverride;
+				}
+				ImGui::MenuItem("ClipElapsed", nullptr, &m_clipElapsed);
+				ImGui::MenuItem("Grid", nullptr, &m_gridEnabled);
+				ImGui::EndMenu();
+			}
+			if (ImGui::BeginMenu("Animation"))
+			{
+				if (ImGui::MenuItem("30 FPS", nullptr, m_animCtrlFPSMode == FPSMode::FPS30))
+				{
+					m_animCtrlFPSMode = FPSMode::FPS30;
+					m_animCtrlEditFPS = 30.0f;
+				}
+				if (ImGui::MenuItem("60 FPS", nullptr, m_animCtrlFPSMode == FPSMode::FPS60))
+				{
+					m_animCtrlFPSMode = FPSMode::FPS60;
+					m_animCtrlEditFPS = 60.0f;
+				}
+				if (ImGui::MenuItem("Fixed Animation", nullptr, m_animFixedUpdate))
+				{
+					m_animFixedUpdate = !m_animFixedUpdate;
+				}
+				ImGui::EndMenu();
+			}
+			if (ImGui::BeginMenu("CustomCommand"))
+			{
+				if (ImGui::MenuItem("RefreshCustomCommand"))
+				{
+					ViewerCommand cmd;
+					cmd.SetCommand("refreshCustomCommand");
+					ExecuteCommand(cmd);
+				}
+				ImGui::Separator();
+
+				DrawCustomMenu(&m_customCommandMenuItemRoot);
+			}
+			ImGui::EndMainMenuBar();
+		}
+	}
+
+	void Viewer::DrawCustomMenu(CustomCommandMenuItem* parentItem)
+	{
+		for (auto& menuItemPair : (*parentItem).m_items)
+		{
+			if (menuItemPair.second.m_command == nullptr)
+			{
+				if (ImGui::BeginMenu(menuItemPair.first.c_str()))
+				{
+					DrawCustomMenu(&menuItemPair.second);
+				}
+			}
+			else
+			{
+				if (ImGui::MenuItem(menuItemPair.first.c_str()))
+				{
+					ViewerCommand cmd;
+					cmd.SetCommand(menuItemPair.second.m_command->m_name);
+					this->ExecuteCommand(cmd);
+				}
+			}
+		}
+		ImGui::EndMenu();
+	}
+
 	void Viewer::DrawUI()
 	{
 		DrawInfoUI();
@@ -978,7 +983,6 @@ namespace saba
 		PushPerfLap(m_perfFramerateLap, ImGui::GetIO().Framerate);
 		float aveFps = GetPerfLapAve(m_perfFramerateLap);
 		float minFps = GetPerfLapMin(m_perfFramerateLap);
-		m_perfFramerateLap.size();
 		if (m_enableMoreInfoUI)
 		{
 			ImGui::Text("FPS ave:%.2f min:%.2f max time:%.2f[ms]", aveFps, minFps, 1000.0f / minFps);
@@ -2839,12 +2843,6 @@ namespace saba
 			}
 			CmdOpen(args);
 		}
-	}
-
-	Viewer::Mouse::Mouse()
-		: m_dx(0)
-		, m_dy(0)
-	{
 	}
 
 	void Viewer::Mouse::Initialize(GLFWwindow * window)
