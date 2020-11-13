@@ -57,12 +57,12 @@ namespace saba
 			if (infoLength != 0)
 			{
 				std::vector<char> info;
-				info.reserve(infoLength + 1);
+				info.reserve(size_t(infoLength) + 1);
 				info.resize(infoLength);
 
 				GLsizei len;
 				glGetShaderInfoLog(shader, infoLength, &len, &info[0]);
-				if (info[infoLength - 1] != '\0')
+				if (info[size_t(infoLength) - 1] != '\0')
 				{
 					info.push_back('\0');
 				}
@@ -112,12 +112,12 @@ namespace saba
 		if (infoLength != 0)
 		{
 			std::vector<char> info;
-			info.reserve(infoLength + 1);
+			info.reserve(size_t(infoLength) + 1);
 			info.resize(infoLength);
 
 			GLsizei len;
 			glGetProgramInfoLog(prog, infoLength, &len, &info[0]);
-			if (info[infoLength - 1] != '\0')
+			if (info[size_t(infoLength) - 1] != '\0')
 			{
 				info.push_back('\0');
 			}
@@ -172,17 +172,17 @@ namespace saba
 		glUniformMatrix4fv(uniform, 1, GL_FALSE, &value[0][0]);
 	}
 
-	void SetUniform(GLint uniform, const GLint * values, size_t count)
+	void SetUniform(GLint uniform, const GLint * values, GLsizei count)
 	{
 		glUniform1iv(uniform, count, values);
 	}
 
-	void SetUniform(GLint uniform, const float * values, size_t count)
+	void SetUniform(GLint uniform, const float * values, GLsizei count)
 	{
 		glUniform1fv(uniform, count, values);
 	}
 
-	void SetUniform(GLint uniform, const glm::mat4 * values, size_t count)
+	void SetUniform(GLint uniform, const glm::mat4 * values, GLsizei count)
 	{
 		glUniformMatrix4fv(uniform, count, GL_FALSE, &values[0][0][0]);
 	}

@@ -12,7 +12,8 @@
 namespace saba
 {
 	MMDNode::MMDNode()
-		: m_enableIK(false)
+		: m_index(0)
+		, m_enableIK(false)
 		, m_parent(nullptr)
 		, m_child(nullptr)
 		, m_next(nullptr)

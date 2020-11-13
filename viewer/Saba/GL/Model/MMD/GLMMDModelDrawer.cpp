@@ -563,8 +563,8 @@ namespace saba
 				SetUniform(shader->m_uShadowMap1, shadowMapTexs[1]);
 				SetUniform(shader->m_uShadowMap2, shadowMapTexs[2]);
 				SetUniform(shader->m_uShadowMap3, shadowMapTexs[3]);
-				SetUniform(shader->m_uShadowMapSplitPositions, shadowMapSplitPositions, numShadowMapSplitPosition);
-				SetUniform(shader->m_uLightVP, shadowMapVPs, numShadowMap);
+				SetUniform(shader->m_uShadowMapSplitPositions, shadowMapSplitPositions, static_cast<GLsizei>(numShadowMapSplitPosition));
+				SetUniform(shader->m_uLightVP, shadowMapVPs, static_cast<GLsizei>(numShadowMap));
 			}
 			else
 			{

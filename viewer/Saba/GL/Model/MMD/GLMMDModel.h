@@ -141,11 +141,6 @@ namespace saba
 		std::vector<GLMMDMaterial>	m_materials;
 		std::vector<MMDSubMesh>		m_subMeshes;
 
-		//double						m_setupAnimTime;
-		//double						m_updateMorphAnimTime;
-		//double						m_updateNodeAnimTime;
-		//double						m_updatePhysicsAnimTime;
-		//double						m_updateTime;
 		PerfInfo					m_perfInfo;
 
 		bool	m_enablePhysics;

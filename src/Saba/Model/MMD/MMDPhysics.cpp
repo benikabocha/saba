@@ -125,7 +125,7 @@ namespace saba
 
 	float MMDPhysics::GetFPS() const
 	{
-		return m_fps;
+		return static_cast<float>(m_fps);
 	}
 
 	void MMDPhysics::SetMaxSubStepCount(int numSteps)
@@ -143,7 +143,7 @@ namespace saba
 	{
 		if (m_world != nullptr)
 		{
-			m_world->stepSimulation(time, m_maxSubStepCount, 1.0f / m_fps);
+			m_world->stepSimulation(time, m_maxSubStepCount, static_cast<btScalar>(1.0 / m_fps));
 		}
 	}
 
@@ -364,7 +364,8 @@ namespace saba
 	};
 
 	MMDRigidBody::MMDRigidBody()
-		: m_group(0)
+		: m_rigidBodyType(RigidBodyType::Kinematic)
+		, m_group(0)
 		, m_groupMask(0)
 		, m_node(0)
 		, m_offsetMat(1)

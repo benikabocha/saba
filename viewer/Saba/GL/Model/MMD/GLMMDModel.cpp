@@ -16,11 +16,14 @@
 namespace saba
 {
 	GLMMDModel::GLMMDModel()
+		: m_animTime(0)
+		, m_indexType(0)
+		, m_indexTypeSize(0)
+		, m_enablePhysics(true)
+		, m_enableEdge(true)
+		, m_enableGroundShadow(true)
 	{
 		m_perfInfo.Clear();
-		m_enablePhysics = true;
-		m_enableEdge = true;
-		m_enableGroundShadow = true;
 	}
 
 	GLMMDModel::~GLMMDModel()
@@ -268,7 +271,7 @@ namespace saba
 
 		private:
 			double	m_perfTime = 0;
-			double	m_startTime;
+			double	m_startTime = 0;
 		};
 	}
 	void GLMMDModel::UpdateAnimation(double animTime, double elapsed)

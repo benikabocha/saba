@@ -96,8 +96,8 @@ namespace saba
 
 		PMDMorph					m_baseMorph;
 
-		glm::vec3		m_bboxMin;
-		glm::vec3		m_bboxMax;
+		glm::vec3		m_bboxMin = glm::vec3(0);
+		glm::vec3		m_bboxMax = glm::vec3(0);
 
 		std::vector<MMDMaterial>	m_materials;
 		std::vector<MMDSubMesh>		m_subMeshes;

@@ -220,7 +220,9 @@ namespace saba
 				Read(&vertexCount, file);
 				morph.m_vertices.resize(vertexCount);
 
-				Read(&morph.m_morphType, file);
+				uint8_t morphType;
+				Read(&morphType, file);
+				morph.m_morphType = static_cast<PMDMorph::MorphType>(morphType);
 				for (auto& vtx : morph.m_vertices)
 				{
 					Read(&vtx.m_vertexIndex, file);
@@ -267,7 +269,7 @@ namespace saba
 			}
 
 			// ボーンの枠にはデフォルトでセンターが用意されているので、サイズを一つ多くする
-			pmdFile->m_boneDisplayLists.resize(displayListCount + 1);
+			pmdFile->m_boneDisplayLists.resize(size_t(displayListCount) + 1);
 			bool first = true;
 			for (auto& displayList : pmdFile->m_boneDisplayLists)
 			{

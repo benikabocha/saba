@@ -45,16 +45,16 @@ namespace saba
 	private:
 		struct MaterialShader
 		{
-			int					m_mmdMaterialIndex;
-			int					m_mmdShaderIndex;
+			int					m_mmdMaterialIndex = -1;
+			int					m_mmdShaderIndex = -1;
 			GLVertexArrayObject	m_mmdVao;
 
-			int					m_mmdEdgeShaderIndex;
+			int					m_mmdEdgeShaderIndex = -1;
 			GLVertexArrayObject	m_mmdEdgeVao;
 
 			GLVertexArrayObject	m_shadowVao;
 
-			int					m_mmdGroundShadowShaderIndex;
+			int					m_mmdGroundShadowShaderIndex = -1;
 			GLVertexArrayObject	m_mmdGroundShadowVao;
 		};
 
