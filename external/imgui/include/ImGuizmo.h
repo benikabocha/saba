@@ -24,7 +24,8 @@
 // SOFTWARE.
 //
 // -------------------------------------------------------------------------------------------
-// History : 
+// History :
+// 2019/11/03 View gizmo
 // 2016/09/11 Behind camera culling. Scaling Delta matrix not multiplied by source matrix scales. local/world rotation and translation fixed. Display message is incorrect (X: ... Y:...) in local mode.
 // 2016/09/09 Hatched negative axis. Snapping. Documentation update.
 // 2016/09/04 Axis switch and translation plan autohiding. Scale transform stability improved
@@ -113,7 +114,8 @@ void EditTransform(const Camera& camera, matrix_t& matrix)
 namespace ImGuizmo
 {
 	// call inside your own window and before Manipulate() in order to draw gizmo to that window.
-	IMGUI_API void SetDrawlist();
+	// Or pass a specific ImDrawList to draw to (e.g. ImGui::GetForegroundDrawList()).
+	IMGUI_API void SetDrawlist(ImDrawList* drawlist = nullptr);
 
 	// call BeginFrame right after ImGui_XXXX_NewFrame();
 	IMGUI_API void BeginFrame();
@@ -148,7 +150,7 @@ namespace ImGuizmo
 	IMGUI_API void SetOrthographic(bool isOrthographic);
 
 	// Render a cube with face color corresponding to face normal. Usefull for debug/tests
-	IMGUI_API void DrawCube(const float *view, const float *projection, const float *matrix);
+	IMGUI_API void DrawCubes(const float *view, const float *projection, const float *matrices, int matrixCount);
 	IMGUI_API void DrawGrid(const float *view, const float *projection, const float *matrix, const float gridSize);
 
 	// call it when you want a gizmo
@@ -169,5 +171,17 @@ namespace ImGuizmo
 		WORLD
 	};
 
-	IMGUI_API void Manipulate(const float *view, const float *projection, OPERATION operation, MODE mode, float *matrix, float *deltaMatrix = 0, float *snap = 0, float *localBounds = NULL, float *boundsSnap = NULL);
+	IMGUI_API bool Manipulate(const float *view, const float *projection, OPERATION operation, MODE mode, float *matrix, float *deltaMatrix = NULL, const float *snap = NULL, const float *localBounds = NULL, const float *boundsSnap = NULL);
+   //
+   // Please note that this cubeview is patented by Autodesk : https://patents.google.com/patent/US7782319B2/en
+   // It seems to be a defensive patent in the US. I don't think it will bring troubles using it as
+   // other software are using the same mechanics. But just in case, you are now warned!
+   //
+   IMGUI_API void ViewManipulate(float* view, float length, ImVec2 position, ImVec2 size, ImU32 backgroundColor);
+   
+   IMGUI_API void SetID(int id);
+   
+   // return true if the cursor is over the operation's gizmo
+   IMGUI_API bool IsOver(OPERATION op);
+	IMGUI_API void SetGizmoSizeClipSpace(float value);
 };
