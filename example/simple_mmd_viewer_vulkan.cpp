@@ -6,8 +6,9 @@
 #undef max
 #endif
 
-#define VULKAN_HPP_NO_SMART_HANDLE
-#define VULKAN_HPP_NO_EXCEPTIONS
+//#define VULKAN_HPP_NO_SMART_HANDLE
+//#define VULKAN_HPP_NO_EXCEPTIONS
+//#define VULKAN_HPP_DISABLE_ENHANCED_MODE
 #include <vulkan/vulkan.h>
 #include <vulkan/vulkan.hpp>
 #include <GLFW/glfw3.h>
@@ -225,6 +226,8 @@ struct MMDGroundShadowFragmentShaderUB
 
 struct SwapchainImageResource
 {
+	SwapchainImageResource() {}
+
 	vk::Image		m_image;
 	vk::ImageView	m_imageView;
 	vk::Framebuffer	m_framebuffer;
@@ -235,6 +238,8 @@ struct SwapchainImageResource
 
 struct Buffer
 {
+	Buffer() {}
+
 	vk::DeviceMemory	m_memory;
 	vk::Buffer			m_buffer;
 	vk::DeviceSize		m_memorySize = 0;
@@ -250,6 +255,8 @@ struct Buffer
 
 struct Texture
 {
+	Texture() {}
+
 	vk::Image		m_image;
 	vk::ImageView	m_imageView;
 	vk::ImageLayout	m_imageLayout = vk::ImageLayout::eUndefined;
@@ -264,6 +271,8 @@ struct Texture
 
 struct StagingBuffer
 {
+	StagingBuffer() {}
+
 	vk::DeviceMemory	m_memory;
 	vk::Buffer			m_buffer;
 
@@ -290,6 +299,8 @@ struct StagingBuffer
 
 struct AppContext
 {
+	AppContext() {}
+
 	std::string m_resourceDir;
 	std::string	m_shaderDir;
 	std::string	m_mmdDir;
@@ -323,6 +334,8 @@ struct AppContext
 	// Sync Objects
 	struct FrameSyncData
 	{
+		FrameSyncData() {}
+
 		vk::Fence		m_fence;
 		vk::Semaphore	m_presentCompleteSemaphore;
 		vk::Semaphore	m_renderCompleteSemaphore;
@@ -459,7 +472,7 @@ bool AppContext::Setup(vk::Instance inst, vk::SurfaceKHR surface, vk::PhysicalDe
 				selectGraphicsQueueFamilyIndex = i;
 			}
 			auto supported = gpu.getSurfaceSupportKHR(i, surface);
-			if (vk::Result::eSuccess == supported.result && supported.value)
+			if (supported)
 			{
 				selectGraphicsQueueFamilyIndex = i;
 				selectPresentQueueFamilyIndex = i;
@@ -477,7 +490,7 @@ bool AppContext::Setup(vk::Instance inst, vk::SurfaceKHR surface, vk::PhysicalDe
 		for (uint32_t i = 0; i < (uint32_t)queueFamilies.size(); i++)
 		{
 			auto supported = gpu.getSurfaceSupportKHR(i, surface);
-			if (vk::Result::eSuccess == supported.result && supported.value)
+			if (supported)
 			{
 				selectPresentQueueFamilyIndex = i;
 				break;
@@ -497,13 +510,8 @@ bool AppContext::Setup(vk::Instance inst, vk::SurfaceKHR surface, vk::PhysicalDe
 	m_device.getQueue(m_graphicsQueueFamilyIndex, 0, &m_graphicsQueue);
 
 	auto surfaceCaps = m_gpu.getSurfaceCapabilitiesKHR(m_surface);
-	if (vk::Result::eSuccess != surfaceCaps.result)
-	{
-		std::cout << "Failed to get Surface Capabilities.\n";
-		return false;
-	}
-	m_imageCount = std::max(surfaceCaps.value.minImageCount, uint32_t(2));
-	if (surfaceCaps.value.maxImageCount > DefaultImageCount)
+	m_imageCount = std::max(surfaceCaps.minImageCount, uint32_t(2));
+	if (surfaceCaps.maxImageCount > DefaultImageCount)
 	{
 		m_imageCount = DefaultImageCount;
 	}
@@ -517,7 +525,7 @@ bool AppContext::Setup(vk::Instance inst, vk::SurfaceKHR surface, vk::PhysicalDe
 	auto surfaceFormats = m_gpu.getSurfaceFormatsKHR(m_surface);
 	for (const auto& selectFmt : selectColorFormats)
 	{
-		for (const auto& surfaceFmt : surfaceFormats.value)
+		for (const auto& surfaceFmt : surfaceFormats)
 		{
 			if (selectFmt == surfaceFmt.format)
 			{
@@ -813,11 +821,6 @@ bool AppContext::PrepareBuffer()
 		m_swapchain;
 
 	auto surfaceCaps = m_gpu.getSurfaceCapabilitiesKHR(m_surface);
-	if (vk::Result::eSuccess != surfaceCaps.result)
-	{
-		std::cout << "Failed to get Surface Capabilities.\n";
-		return false;
-	}
 
 	vk::PresentModeKHR selectPresentModes[] = {
 		vk::PresentModeKHR::eMailbox,
@@ -829,7 +832,7 @@ bool AppContext::PrepareBuffer()
 	vk::PresentModeKHR selectPresentMode;
 	for (auto selectMode : selectPresentModes)
 	{
-		for (auto presentMode : presentModes.value)
+		for (auto presentMode : presentModes)
 		{
 			if (selectMode == presentMode)
 			{
@@ -851,16 +854,11 @@ bool AppContext::PrepareBuffer()
 	std::cout << "Select present mode [" << int(selectPresentMode) << "]\n";
 
 	auto formats = m_gpu.getSurfaceFormatsKHR(m_surface);
-	if (vk::Result::eSuccess != formats.result)
-	{
-		std::cout << "Failed to get Surface Formats.\n";
-		return false;
-	}
 	auto format = vk::Format::eB8G8R8A8Unorm;
 	uint32_t selectFmtIdx = UINT32_MAX;
-	for (uint32_t i = 0; i < (uint32_t)formats.value.size(); i++)
+	for (uint32_t i = 0; i < (uint32_t)formats.size(); i++)
 	{
-		if (formats.value[i].format == format)
+		if (formats[i].format == format)
 		{
 			selectFmtIdx = i;
 			break;
@@ -871,7 +869,7 @@ bool AppContext::PrepareBuffer()
 		std::cout << "Faild to find surface format.\n";
 		return false;
 	}
-	auto colorSpace = formats.value[selectFmtIdx].colorSpace;
+	auto colorSpace = formats[selectFmtIdx].colorSpace;
 
 	vk::CompositeAlphaFlagBitsKHR compositeAlpha = vk::CompositeAlphaFlagBitsKHR::eOpaque;
 	vk::CompositeAlphaFlagBitsKHR compositeAlphaFlags[] =
@@ -883,7 +881,7 @@ bool AppContext::PrepareBuffer()
 	};
 	for (const auto& flag : compositeAlphaFlags)
 	{
-		if (surfaceCaps.value.supportedCompositeAlpha & flag)
+		if (surfaceCaps.supportedCompositeAlpha & flag)
 		{
 			compositeAlpha = flag;
 			break;
@@ -908,7 +906,7 @@ bool AppContext::PrepareBuffer()
 		.setMinImageCount(m_imageCount)
 		.setImageFormat(format)
 		.setImageColorSpace(colorSpace)
-		.setImageExtent(surfaceCaps.value.currentExtent)
+		.setImageExtent(surfaceCaps.currentExtent)
 		.setImageArrayLayers(1)
 		.setImageUsage(vk::ImageUsageFlagBits::eColorAttachment)
 		.setImageSharingMode(sharingMode)
@@ -927,8 +925,8 @@ bool AppContext::PrepareBuffer()
 		std::cout << "Failed to create Swap Chain.\n";
 		return false;
 	}
-	m_screenWidth = surfaceCaps.value.currentExtent.width;
-	m_screenHeight = surfaceCaps.value.currentExtent.height;
+	m_screenWidth = surfaceCaps.currentExtent.width;
+	m_screenHeight = surfaceCaps.currentExtent.height;
 
 	m_swapchain = swapchain;
 	if (oldSwapchain)
@@ -937,19 +935,14 @@ bool AppContext::PrepareBuffer()
 	}
 
 	auto swapchainImages = m_device.getSwapchainImagesKHR(swapchain);
-	if (vk::Result::eSuccess != swapchainImages.result)
+	m_swapchainImageResouces.resize(swapchainImages.size());
+	for (size_t i = 0; i < swapchainImages.size(); i++)
 	{
-		std::cout << "Failed to get Swap Chain Images.\n";
-		return false;
-	}
-	m_swapchainImageResouces.resize(swapchainImages.value.size());
-	for (size_t i = 0; i < swapchainImages.value.size(); i++)
-	{
-		m_swapchainImageResouces[i].m_image = swapchainImages.value[i];
+		m_swapchainImageResouces[i].m_image = swapchainImages[i];
 		auto imageViewInfo = vk::ImageViewCreateInfo()
 			.setViewType(vk::ImageViewType::e2D)
 			.setFormat(format)
-			.setImage(swapchainImages.value[i])
+			.setImage(swapchainImages[i])
 			.setSubresourceRange(
 				vk::ImageSubresourceRange(vk::ImageAspectFlagBits::eColor, 0, 1, 0, 1)
 			);
@@ -1027,12 +1020,7 @@ bool AppContext::PrepareBuffer()
 	m_depthMem = depthMem;
 
 	// Bind thee Memory to the Depth Buffer
-	ret = m_device.bindImageMemory(depthImage, depthMem, 0);
-	if (vk::Result::eSuccess != ret)
-	{
-		std::cout << "Failed to bind Image Memory.\n";
-		return false;
-	}
+	m_device.bindImageMemory(depthImage, depthMem, 0);
 
 	// Create the Depth Image View
 	auto depthImageViewInfo = vk::ImageViewCreateInfo()
@@ -1100,12 +1088,7 @@ bool AppContext::PrepareBuffer()
 	m_msaaColorMem = msaaColorMem;
 
 	// Bind thee Memory to the MSAA Color Buffer
-	ret = m_device.bindImageMemory(msaaColorImage, msaaColorMem, 0);
-	if (vk::Result::eSuccess != ret)
-	{
-		std::cout << "Failed to bind MSAA Color Image Memory.\n";
-		return false;
-	}
+	m_device.bindImageMemory(msaaColorImage, msaaColorMem, 0);
 
 	// Create the msaa color Image View
 	auto msaaColorImageViewInfo = vk::ImageViewCreateInfo()
@@ -1172,12 +1155,7 @@ bool AppContext::PrepareBuffer()
 	m_msaaDepthMem = msaaDepthMem;
 
 	// Bind thee Memory to the MSAA Depth Buffer
-	ret = m_device.bindImageMemory(msaaDepthImage, msaaDepthMem, 0);
-	if (vk::Result::eSuccess != ret)
-	{
-		std::cout << "Failed to bind MSAA Depth Image Memory.\n";
-		return false;
-	}
+	m_device.bindImageMemory(msaaDepthImage, msaaDepthMem, 0);
 
 	// Create the MSAA Depth Image View
 	auto msaaDepthImageViewInfo = vk::ImageViewCreateInfo()
@@ -2317,12 +2295,7 @@ bool Buffer::Setup(
 	}
 
 	// Bind
-	ret = device.bindBufferMemory(m_buffer, m_memory, 0);
-	if (vk::Result::eSuccess != ret)
-	{
-		std::cout << "Failed to bind Buffer.\n";
-		return false;
-	}
+	device.bindBufferMemory(m_buffer, m_memory, 0);
 	m_memorySize = memSize;
 
 	return true;
@@ -2390,12 +2363,7 @@ bool Texture::Setup(AppContext& appContext, uint32_t width, uint32_t height, vk:
 		return false;
 	}
 
-	ret = device.bindImageMemory(m_image, m_memory, 0);
-	if (vk::Result::eSuccess != ret)
-	{
-		std::cout << "Failed to bind Image.\n";
-		return false;
-	}
+	device.bindImageMemory(m_image, m_memory, 0);
 
 	auto imageViewInfo = vk::ImageViewCreateInfo()
 		.setFormat(format)
@@ -2487,12 +2455,7 @@ bool StagingBuffer::Setup(AppContext& appContext, vk::DeviceSize size)
 		return false;
 	}
 
-	ret = device.bindBufferMemory(m_buffer, m_memory, 0);
-	if (vk::Result::eSuccess != ret)
-	{
-		std::cout << "Failed to bind Staging Buffer.\n";
-		return false;
-	}
+	device.bindBufferMemory(m_buffer, m_memory, 0);
 
 	m_memorySize = uint32_t(bufMemReq.size);
 
@@ -3893,14 +3856,9 @@ bool App::Run(const std::vector<std::string>& args)
 	if (enableValidation)
 	{
 		auto availableLayerProperties = vk::enumerateInstanceLayerProperties();
-		if (vk::Result::eSuccess != availableLayerProperties.result)
-		{
-			std::cout << "Failed to enumerate Instance Layer Properties.\n";
-			return false;
-		}
 		const char* validationLayerName = "VK_LAYER_LUNARG_standard_validation";
 		bool layerFound = false;
-		for (const auto layerProperties : availableLayerProperties.value)
+		for (const auto layerProperties : availableLayerProperties)
 		{
 			if (strcmp(validationLayerName, layerProperties.layerName) == 0)
 			{
@@ -3946,13 +3904,13 @@ bool App::Run(const std::vector<std::string>& args)
 
 	// Select physical device
 	auto physicalDevices = m_vkInst.enumeratePhysicalDevices();
-	if (physicalDevices.result != vk::Result::eSuccess || physicalDevices.value.empty())
+	if (physicalDevices.empty())
 	{
 		std::cout << "Failed to find vulkan physical device.\n";
 		return false;
 	}
 
-	m_gpu = physicalDevices.value[0];
+	m_gpu = physicalDevices[0];
 	auto queueFamilies = m_gpu.getQueueFamilyProperties();
 	if (queueFamilies.empty())
 	{
@@ -3972,7 +3930,7 @@ bool App::Run(const std::vector<std::string>& args)
 				selectGraphicsQueueFamilyIndex = i;
 			}
 			auto supported = m_gpu.getSurfaceSupportKHR(i, m_surface);
-			if (vk::Result::eSuccess == supported.result && supported.value)
+			if (supported)
 			{
 				selectGraphicsQueueFamilyIndex = i;
 				selectPresentQueueFamilyIndex = i;
@@ -3989,7 +3947,7 @@ bool App::Run(const std::vector<std::string>& args)
 		for (uint32_t i = 0; i < (uint32_t)queueFamilies.size(); i++)
 		{
 			auto supported = m_gpu.getSurfaceSupportKHR(i, m_surface);
-			if (vk::Result::eSuccess == supported.result && supported.value)
+			if (supported)
 			{
 				selectPresentQueueFamilyIndex = i;
 				break;
@@ -4007,18 +3965,13 @@ bool App::Run(const std::vector<std::string>& args)
 	std::vector<const char*> deviceExtensions;
 	{
 		auto availableExtProperties = m_gpu.enumerateDeviceExtensionProperties();
-		if (vk::Result::eSuccess != availableExtProperties.result)
-		{
-			std::cout << "Failed to enumerate Device Extension Properties.\n";
-			return false;
-		}
 		const char* checkExtensions[] = {
 			VK_KHR_SWAPCHAIN_EXTENSION_NAME,
 		};
 		for (const auto& checkExt : checkExtensions)
 		{
 			bool foundExt = false;
-			for (const auto& extProperties : availableExtProperties.value)
+			for (const auto& extProperties : availableExtProperties)
 			{
 				if (strcmp(checkExt, extProperties.extensionName) == 0)
 				{
