@@ -5,16 +5,17 @@ project(saba)
 
 set (CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 
-option (SABA_BULLET_ROOT "Bullet Root Directory" "")
+set (SABA_BULLET_ROOT "" CACHE PATH "Bullet Root Directory")
 option (SABA_ENABLE_TEST "Enable Google test." on)
 option (SABA_ENABLE_GL_TEST "OpenGL test." off)
 option (SABA_USE_GLSLANG "glsl Preprocessor : glslang lib" off)
 option (SABA_INSTALL "Saba install." off)
-option (SABA_GLFW_ROOT "GLFW Root Directory" "")
+set (SABA_GLFW_ROOT "" CACHE PATH "GLFW Root Directory")
 option (SABA_FORCE_GLFW_BUILD "Force glfw build." off)
 option (SABA_ENABLE_EXAMPLE_VULKAN "Build vulakn's example." off)
 
 set (BULLET_ROOT ${SABA_BULLET_ROOT})
+MESSAGE( STATUS "BULLET_ROOT=${BULLET_ROOT}")
 
 find_package (OpenGL REQUIRED)
 find_package (Bullet REQUIRED)
