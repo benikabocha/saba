@@ -215,7 +215,7 @@ bool MMD2Obj(const std::vector<std::string>& args)
 	const glm::vec2* uvs = mmdModel->GetUpdateUVs();
 	for (size_t i = 0; i < vtxCount; i++)
 	{
-		objFile << "vt " << uvs[i].x << " " << 1.0 - uvs[i].y << "\n";
+		objFile << "vt " << uvs[i].x << " " << uvs[i].y << "\n";
 	}
 
 	// Copy vertex indices.

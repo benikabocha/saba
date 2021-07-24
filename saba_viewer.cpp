@@ -8,7 +8,7 @@
 #include <Saba/Viewer/Viewer.h>
 #include <Saba/Viewer/ViewerCommand.h>
 
-#include <picojson.h>
+#include <nlohmann/json.hpp>
 #include <sol.hpp>
 #include <fstream>
 #include <vector>
@@ -16,7 +16,7 @@
 namespace
 {
 	/*
-	@brief	"init.json" から初期化設定を読み込む
+	@brief	Load initial setting from "init.json".
 	*/
 	void ReadInitParameterFromJson(
 		saba::Viewer::InitializeParameter&	viewerInitParam,
@@ -29,44 +29,42 @@ namespace
 		initJsonFile.open("init.json");
 		if (initJsonFile.is_open())
 		{
-			picojson::value val;
-			initJsonFile >> val;
+			nlohmann::json initJ;
+			initJsonFile >> initJ;
 			initJsonFile.close();
 
-			auto& init = val.get<picojson::object>();
-			if (init["MSAAEnable"].is<bool>())
+			if (initJ["MSAAEnable"].is_boolean())
 			{
-				viewerInitParam.m_msaaEnable = init["MSAAEnable"].get<bool>();
+				viewerInitParam.m_msaaEnable = initJ["MSAAEnable"].get<bool>();
 			}
-			if (init["MSAACount"].is<double>())
+
+			if (initJ["MSAACount"].is_number_integer())
 			{
-				double count = init["MSAACount"].get<double>();
-				viewerInitParam.m_msaaCount = (int)(count + 0.5);
+				viewerInitParam.m_msaaCount = initJ["MSAACount"].get<int>();
 			}
-			if (init["Commands"].is<picojson::array>())
+
+			if (initJ["Commands"].is_array())
 			{
 				viewerCommands.clear();
-				for (auto& command : init["Commands"].get<picojson::array>())
+				for (auto& commandJ : initJ["Commands"])
 				{
-					if (command.is<picojson::object>())
+					if (commandJ.is_object())
 					{
 						saba::ViewerCommand viewerCmd;
-						auto& cmdObj = command.get<picojson::object>();
-						if (cmdObj["Cmd"].is<std::string>())
+						if (commandJ["Cmd"].is_string())
 						{
-							viewerCmd.SetCommand(cmdObj["Cmd"].get<std::string>());
+							viewerCmd.SetCommand(commandJ["Cmd"].get<std::string>());
 						}
-						if (cmdObj["Args"].is<picojson::array>())
+						if (commandJ["Args"].is_array())
 						{
-							for (auto& arg : cmdObj["Args"].get<picojson::array>())
+							for (auto& argJ : commandJ["Args"])
 							{
-								if (arg.is<std::string>())
+								if (argJ.is_string())
 								{
-									viewerCmd.AddArg(arg.get<std::string>());
+									viewerCmd.AddArg(argJ.get<std::string>());
 								}
 							}
 						}
-						viewerCommands.emplace_back(std::move(viewerCmd));
 					}
 				}
 			}
@@ -74,7 +72,7 @@ namespace
 	}
 
 	/*
-	@brief	"init.lua" から初期化設定を読み込む
+	@brief	Load initial setting from "init.lua".
 	*/
 	void ReadInitParameterFromLua(
 		const std::vector<std::string>&		args,
