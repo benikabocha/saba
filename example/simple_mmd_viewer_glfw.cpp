@@ -1,5 +1,9 @@
 ﻿#include <GL/gl3w.h>
 #include <GLFW/glfw3.h>
+#if _WIN32
+#define  GLFW_EXPOSE_NATIVE_WIN32
+#include <GLFW/glfw3native.h>
+#endif // _WIN32
 
 #include <iostream>
 #include <fstream>
@@ -292,7 +296,9 @@ struct AppContext
 	GLuint	m_transparentMSAAFbo = 0;
 	GLuint	m_copyTransparentWindowShader = 0;
 	GLint	m_copyTransparentWindowShaderTex = -1;
-	GLuint	m_copyTransparentWindowVAO = 0;
+	GLuint	m_copyShader = 0;
+	GLint	m_copyShaderTex = -1;
+	GLuint	m_copyVAO = 0;
 
 	float	m_elapsed = 0.0f;
 	float	m_animTime = 0.0f;
@@ -385,6 +391,7 @@ bool AppContext::Setup()
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT16, 1, 1, 0, GL_DEPTH_COMPONENT, GL_FLOAT, nullptr);
 	glBindTexture(GL_TEXTURE_2D, 0);
 
+	// Create Copy Transparent Window Shader (only windows)
 	m_copyTransparentWindowShader = CreateShaderProgram(
 		saba::PathUtil::Combine(m_shaderDir, "quad.vert"),
 		saba::PathUtil::Combine(m_shaderDir, "copy_transparent_window.frag")
@@ -392,7 +399,15 @@ bool AppContext::Setup()
 
 	m_copyTransparentWindowShaderTex = glGetUniformLocation(m_copyTransparentWindowShader, "u_Tex");
 
-	glGenVertexArrays(1, &m_copyTransparentWindowVAO);
+	// Copy Shader
+	m_copyShader = CreateShaderProgram(
+		saba::PathUtil::Combine(m_shaderDir, "quad.vert"),
+		saba::PathUtil::Combine(m_shaderDir, "copy.frag")
+	);
+
+	m_copyShaderTex = glGetUniformLocation(m_copyShader, "u_Tex");
+
+	glGenVertexArrays(1, &m_copyVAO);
 
 	return true;
 }
@@ -421,7 +436,8 @@ void AppContext::Clear()
 	if (m_transparentFboMSAAColorRB != 0) { glDeleteRenderbuffers(1, &m_transparentFboMSAAColorRB); }
 	if (m_transparentFboMSAADepthRB != 0) { glDeleteRenderbuffers(1, &m_transparentFboMSAADepthRB); }
 	if (m_copyTransparentWindowShader != 0) { glDeleteProgram(m_copyTransparentWindowShader); }
-	if (m_copyTransparentWindowVAO != 0) { glDeleteVertexArrays(1, &m_copyTransparentWindowVAO); }
+	if (m_copyShader != 0) { glDeleteProgram(m_copyShader); }
+	if (m_copyVAO != 0) { glDeleteVertexArrays(1, &m_copyVAO); }
 
 	m_vmdCameraAnim.reset();
 }
@@ -1253,6 +1269,18 @@ bool SampleMain(std::vector<std::string>& args)
 		return false;
 	}
 
+#if _WIN32 && (GLFW_VERSION_MAJOR >= 3) && (GLFW_VERSION_MINOR >= 3) && (GLFW_VERSION_REVISION >= 3)
+	// The color key was removed from glfw3.3.3. (Windows)
+	if (enableTransparentWindow)
+	{
+		HWND hwnd = glfwGetWin32Window(window);
+		LONG exStyle = GetWindowLongW(hwnd, GWL_EXSTYLE);
+		exStyle |= WS_EX_LAYERED;
+		SetWindowLongW(hwnd, GWL_EXSTYLE, exStyle);
+		SetLayeredWindowAttributes(hwnd, RGB(255, 0, 255), 255, LWA_COLORKEY);
+	}
+#endif // _WIN32
+
 	glfwMakeContextCurrent(window);
 
 	if (gl3wInit() != 0)
@@ -1410,6 +1438,8 @@ bool SampleMain(std::vector<std::string>& args)
 		{
 			glDisable(GL_MULTISAMPLE);
 			glBindFramebuffer(GL_FRAMEBUFFER, 0);
+			glClearColor(0, 0, 0, 1);
+			glClear(GL_COLOR_BUFFER_BIT);
 
 			glBindFramebuffer(GL_DRAW_FRAMEBUFFER, appContext.m_transparentFbo);
 			glBindFramebuffer(GL_READ_FRAMEBUFFER, appContext.m_transparentMSAAFbo);
@@ -1419,8 +1449,14 @@ bool SampleMain(std::vector<std::string>& args)
 			glBindFramebuffer(GL_READ_FRAMEBUFFER, 0);
 
 			glDisable(GL_DEPTH_TEST);
-			glBindVertexArray(appContext.m_copyTransparentWindowVAO);
+			glBindVertexArray(appContext.m_copyVAO);
+#if _WIN32
 			glUseProgram(appContext.m_copyTransparentWindowShader);
+#else // !_WIN32
+			glUseProgram(appContext.m_copyShader);
+			glEnable(GL_BLEND);
+			glBlendFuncSeparate(GL_ONE, GL_ZERO, GL_ZERO, GL_ONE_MINUS_SRC_ALPHA);
+#endif
 			glActiveTexture(GL_TEXTURE0);
 			glBindTexture(GL_TEXTURE_2D, appContext.m_transparentFboColorTex);
 			glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
