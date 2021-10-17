@@ -1,0 +1,35 @@
+name: saba-build-actions
+on: [push]
+jobs:
+  build-gcc:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Install dependencies
+        run: |
+          sudo apt update
+          sudo apt install -y cmake libbullet-dev libglu1-mesa-dev libx11-dev libxxf86vm-dev libxrandr-dev libxinerama-dev libxcursor-dev libxi-dev libglfw3-dev
+      - name: build
+        run: |
+          mkdir build
+          cd build
+          cmake ..
+          make -j2
+
+  build-clang:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Install dependencies
+        run: |
+          sudo apt update
+          sudo apt install -y cmake libbullet-dev libglu1-mesa-dev libx11-dev libxxf86vm-dev libxrandr-dev libxinerama-dev libxcursor-dev libxi-dev libglfw3-dev
+      - name: build
+        env:
+          C_COMPILER: clang
+          CXX_COMPILER: clang++
+        run: |
+          mkdir build
+          cd build
+          cmake ..
+          make -j2
