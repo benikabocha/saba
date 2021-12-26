@@ -54,6 +54,22 @@ external ディレクトリに必要なライブラリはまとまっていま�
 * [Bullet Physics](http://bulletphysics.org/wordpress/)
 * [GLFW](http://www.glfw.org/)
 
+#### mingw
+
+`msys/cmake` は使用しないでください。
+`mingw64/mingw-w64-x86_64-cmake` を使用するようにしてください。
+
+https://gitlab.kitware.com/cmake/cmake/-/issues/21649
+
+mingw64 の環境は以下のように用意してください。
+
+```
+pacman -S base-devel mingw-w64-x86_64-toolchain
+pacman -S mingw-w64-x86_64-cmake
+pacman -S mingw-w64-x86_64-ninja
+pacman -S mingw-w64-x86_64-mesa
+```
+
 ### 1. Bullet Physics の準備
 
 #### Bullet Physics の準備 (Windows)
@@ -99,6 +115,12 @@ Arch linux:
 pacman -S bullet
 ```
 
+#### Bullet Physics の準備 (mingw)
+
+```
+pacman -S mingw-w64-x86_64-bullet
+```
+
 ### 2. GLFW の準備
 
 #### GLFW の準備 (Windows)
@@ -125,6 +147,12 @@ Arch linux:
 
 ```
 pacman -S glfw
+```
+
+#### GLFW の準備 (mingw)
+
+```
+pacman -S mingw-w64-x86_64-glfw
 ```
 
 ### 3. ソースコードのクローン
@@ -166,6 +194,16 @@ make -j4
 ```
 cmake -DCMAKE_BUILD_TYPE=RELEASE ..
 make -j4
+```
+
+#### CMake の実行とビルド (mingw)
+
+```
+mkdir build
+cd build
+cmake ..
+ninja
+./saba_viewer
 ```
 
 #### GLFW をビルドする場合 (Option)

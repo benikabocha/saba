@@ -55,6 +55,22 @@ Please prepare the following libraries.
 * [Bullet Physics](http://bulletphysics.org/wordpress/)
 * [GLFW](http://www.glfw.org/)
 
+#### mingw
+
+Do not use the `msys/cmake`.
+Pelase use the `mingw64/mingw-w64-x86_64-cmake`.
+
+https://gitlab.kitware.com/cmake/cmake/-/issues/21649
+
+Prepare the mingw64 environment as follows.
+
+```
+pacman -S base-devel mingw-w64-x86_64-toolchain
+pacman -S mingw-w64-x86_64-cmake
+pacman -S mingw-w64-x86_64-ninja
+pacman -S mingw-w64-x86_64-mesa
+```
+
 ### 1. Setup Bullet Physics
 
 #### Setup Bullet Physics (on Windows)
@@ -100,6 +116,12 @@ Arch linux:
 pacman -S bullet
 ```
 
+#### Setup Bullet Physics (on mingw)
+
+```
+pacman -S mingw-w64-x86_64-bullet
+```
+
 ### 2. Setup GLFW
 
 #### Setup GLFW (on Windows)
@@ -124,6 +146,12 @@ Arch linux:
 
 ```
 pacman -S glfw
+```
+
+#### Setup GLFW (on mingw)
+
+```
+pacman -S mingw-w64-x86_64-glfw
 ```
 
 ### 3. Clone Saba
@@ -165,6 +193,16 @@ If the operation is heavy, please try the following.
 ```
 cmake -DCMAKE_BUILD_TYPE=RELEASE ..
 make -j4
+```
+
+#### Run CMake and build (on mingw)
+
+```
+mkdir build
+cd build
+cmake ..
+ninja
+./saba_viewer
 ```
 
 ## Initial setting
