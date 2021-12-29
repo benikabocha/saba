@@ -661,14 +661,8 @@ namespace saba
 					auto* linkNode = m_nodeMan.GetNode(ikLink.m_ikBoneIndex);
 					if (ikLink.m_enableLimit)
 					{
-						glm::vec3 limitMax = ikLink.m_limitMin * glm::vec3(-1, -1, 1);
-						glm::vec3 limitMin = ikLink.m_limitMax * glm::vec3(-1, -1, 1);
-						limitMax.x = -ikLink.m_limitMin.x;
-						limitMax.y = -ikLink.m_limitMin.y;
-						limitMax.z = ikLink.m_limitMax.z;
-						limitMin.y = -ikLink.m_limitMax.y;
-						limitMin.x = -ikLink.m_limitMax.x;
-						limitMin.y = ikLink.m_limitMin.z;
+						glm::vec3 limitMax = ikLink.m_limitMin * glm::vec3(-1);
+						glm::vec3 limitMin = ikLink.m_limitMax * glm::vec3(-1);
 						solver->AddIKChain(linkNode, true, limitMin, limitMax);
 					}
 					else
