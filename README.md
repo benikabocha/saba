@@ -6,7 +6,7 @@
 
 [日本語(japanese)](./README.jp.md)
 
-* [MMD](http://www.geocities.jp/higuchuu4/) (PMD/PMX/VMD) play and load library
+* [MMD](https://sites.google.com/view/vpvp/) (PMD/PMX/VMD) play and load library
 * Viewer (MMD/OBJ)
     * saba_viewer
 * Example
