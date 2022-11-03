@@ -653,6 +653,12 @@ namespace saba
 				solver->SetIKNode(ikNode);
 				ikNode->SetIKSolver(solver);
 
+				if ((bone.m_ikTargetBoneIndex < 0) || (bone.m_ikTargetBoneIndex >= (int)m_nodeMan.GetNodeCount()))
+				{
+					SABA_ERROR("Wrong IK Target: bone={} target={}", i, bone.m_ikTargetBoneIndex);
+					continue;
+				}
+
 				auto* targetNode = m_nodeMan.GetNode(bone.m_ikTargetBoneIndex);
 				solver->SetTargetNode(targetNode);
 

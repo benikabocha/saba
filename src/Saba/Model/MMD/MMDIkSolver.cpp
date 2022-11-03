@@ -62,6 +62,13 @@ namespace saba
 		{
 			return;
 		}
+
+		if ((m_ikNode == nullptr) || (m_ikTarget == nullptr))
+		{
+			// wrong ik
+			return;
+		}
+
 		// Initialize IKChain
 		for (auto& chain : m_chains)
 		{
