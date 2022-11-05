@@ -828,7 +828,10 @@ namespace saba
 						else
 						{
 							groupMorphStack.push_back(morphIdx);
-							fixInifinitGropuMorph(groupMorph.m_morphIndex);
+							if (groupMorph.m_morphIndex>0)
+								fixInifinitGropuMorph(groupMorph.m_morphIndex);
+							else
+								SABA_ERROR("Invalid morph index: group={}, morph={}", groupMorph.m_morphIndex, morphIdx);
 							groupMorphStack.pop_back();
 						}
 					}
