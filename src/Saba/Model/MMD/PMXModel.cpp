@@ -585,9 +585,37 @@ namespace saba
 		}
 		for (size_t i = 0; i < pmx.m_bones.size(); i++)
 		{
-			const auto& bone = pmx.m_bones[i];
-			auto* node = m_nodeMan.GetNode(i);
+			int32_t boneIndex = (int32_t)(pmx.m_bones.size() - i - 1);
+			const auto& bone = pmx.m_bones[boneIndex];
+			auto* node = m_nodeMan.GetNode(boneIndex);
+
+			// Check if the node is looping
+			bool isLooping = false;
 			if (bone.m_parentBoneIndex != -1)
+			{
+				MMDNode* parent = m_nodeMan.GetNode(bone.m_parentBoneIndex);
+				while (parent != nullptr)
+				{
+					if (parent == node)
+					{
+						isLooping = true;
+						SABA_ERROR("This bone hierarchy is a loop: bone={}", boneIndex);
+						break;
+					}
+					parent = parent->GetParent();
+				}
+			}
+
+			// Check parent node index
+			if (bone.m_parentBoneIndex != -1)
+			{
+				if (bone.m_parentBoneIndex >= boneIndex)
+				{
+					SABA_WARN("The parent index of this node is big: bone={}", boneIndex);
+				}
+			}
+
+			if ((bone.m_parentBoneIndex != -1) && !isLooping)
 			{
 				const auto& parentBone = pmx.m_bones[bone.m_parentBoneIndex];
 				auto* parent = m_nodeMan.GetNode(bone.m_parentBoneIndex);
@@ -618,6 +646,10 @@ namespace saba
 			node->EnableAppendTranslate(appendTranslate);
 			if ((appendRotate || appendTranslate) && (bone.m_appendBoneIndex != -1))
 			{
+				if (bone.m_appendBoneIndex >= boneIndex)
+				{
+					SABA_WARN("The parent(morph assignment) index of this node is big: bone={}", boneIndex);
+				}
 				bool appendLocal = ((uint16_t)bone.m_boneFlag & (uint16_t)PMXBoneFlags::AppendLocal) != 0;
 				auto appendNode = m_nodeMan.GetNode(bone.m_appendBoneIndex);
 				float appendWeight = bone.m_appendWeight;
