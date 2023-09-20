@@ -562,11 +562,11 @@ namespace saba
 				for (auto& target : displayFrame.m_targets)
 				{
 					Read(&target.m_type, file);
-					if (target.m_type == PMXDispalyFrame::TargetType::BoneIndex)
+					if (target.m_type == PMXDisplayFrame::TargetType::BoneIndex)
 					{
 						ReadIndex(&target.m_index, pmx->m_header.m_boneIndexSize, file);
 					}
-					else if (target.m_type == PMXDispalyFrame::TargetType::MorphIndex)
+					else if (target.m_type == PMXDisplayFrame::TargetType::MorphIndex)
 					{
 						ReadIndex(&target.m_index, pmx->m_header.m_morphIndexSize, file);
 					}

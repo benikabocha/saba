@@ -366,7 +366,7 @@ namespace saba
 		std::vector<ImpulseMorph>	m_impulseMorph;
 	};
 
-	struct PMXDispalyFrame
+	struct PMXDisplayFrame
 	{
 
 		std::string	m_name;
@@ -587,7 +587,7 @@ namespace saba
 		std::vector<PMXMaterial>	m_materials;
 		std::vector<PMXBone>		m_bones;
 		std::vector<PMXMorph>		m_morphs;
-		std::vector<PMXDispalyFrame>	m_displayFrames;
+		std::vector<PMXDisplayFrame>	m_displayFrames;
 		std::vector<PMXRigidbody>	m_rigidbodies;
 		std::vector<PMXJoint>		m_joints;
 		std::vector<PMXSoftbody>	m_softbodies;

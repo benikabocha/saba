@@ -6,7 +6,6 @@
 #include "UnicodeUtil.h"
 
 #include <stdexcept>
-#include <stdint.h>
 
 namespace saba
 {

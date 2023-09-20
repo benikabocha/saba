@@ -127,7 +127,7 @@ namespace saba
 
 			if (!src.m_spTexture.empty())
 			{
-				dest.m_spTexture = CreateMMDTexture(texMan, src.m_spTexture);
+				dest.m_spTexture = CreateMMDTexture(texMan, src.m_spTexture, false, true);
 			}
 			dest.m_spTextureMode = src.m_spTextureMode;
 			dest.m_spTextureMulFactor = src.m_spTextureMulFactor;

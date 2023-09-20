@@ -552,7 +552,6 @@ namespace saba
 		glm::mat4 rbMat = InvZ(translateMat * rotMat);
 
 		MMDNode* kinematicNode = nullptr;
-		bool overrideNode = true;
 		if (node != nullptr)
 		{
 			m_offsetMat = glm::inverse(node->GetGlobalTransform()) * rbMat;
@@ -562,8 +561,7 @@ namespace saba
 		{
 			MMDNode* root = model->GetNodeManager()->GetMMDNode(0);
 			m_offsetMat = glm::inverse(root->GetGlobalTransform()) * rbMat;
-			kinematicNode = model->GetNodeManager()->GetMMDNode(0);
-			overrideNode = false;
+			kinematicNode = root;
 		}
 
 		btMotionState* MMDMotionState = nullptr;
