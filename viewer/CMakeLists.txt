@@ -143,13 +143,7 @@ if (SABA_USE_GLSLANG)
     target_compile_definitions(SabaViewer
         PRIVATE USE_GLSLANG=1
     )
-    list (APPEND SabaViewer_LIBRARIES
-        PRIVATE glslang
-        PRIVATE OSDependent
-        PRIVATE SPIRV
-        PRIVATE OGLCompiler
-        PRIVATE HLSL
-    )
+    list (APPEND SabaViewer_LIBRARIES PRIVATE glslang)
 endif()
 
-target_link_libraries(SabaViewer ${SabaViewer_LIBRARIES})
+target_link_libraries(SabaViewer PRIVATE ${SabaViewer_LIBRARIES})

@@ -266,6 +266,25 @@ namespace saba
 			/* .MaxCullDistances = */ 8,
 			/* .MaxCombinedClipAndCullDistances = */ 8,
 			/* .MaxSamples = */ 4,
+			/* .maxMeshOutputVerticesNV = */ 256,
+			/* .maxMeshOutputPrimitivesNV = */ 512,
+			/* .maxMeshWorkGroupSizeX_NV = */ 32,
+			/* .maxMeshWorkGroupSizeY_NV = */ 1,
+			/* .maxMeshWorkGroupSizeZ_NV = */ 1,
+			/* .maxTaskWorkGroupSizeX_NV = */ 32,
+			/* .maxTaskWorkGroupSizeY_NV = */ 1,
+			/* .maxTaskWorkGroupSizeZ_NV = */ 1,
+			/* .maxMeshViewCountNV = */ 4,
+			/* .maxMeshOutputVerticesEXT = */ 256,
+			/* .maxMeshOutputPrimitivesEXT = */ 256,
+			/* .maxMeshWorkGroupSizeX_EXT = */ 128,
+			/* .maxMeshWorkGroupSizeY_EXT = */ 128,
+			/* .maxMeshWorkGroupSizeZ_EXT = */ 128,
+			/* .maxTaskWorkGroupSizeX_EXT = */ 128,
+			/* .maxTaskWorkGroupSizeY_EXT = */ 128,
+			/* .maxTaskWorkGroupSizeZ_EXT = */ 128,
+			/* .maxMeshViewCountEXT = */ 4,
+			/* .maxDualSourceDrawBuffersEXT = */ 1,
 			/* .limits = */{
 				/* .nonInductiveForLoops = */ 1,
 				/* .whileLoops = */ 1,
@@ -286,28 +305,33 @@ namespace saba
 			{
 			}
 
-			virtual IncludeResult* include(
+			virtual IncludeResult* includeSystem(
 				const char* requested_source,
-				IncludeType type,
+				const char* requesting_source,
+				size_t inclusion_depth
+			) override
+			{
+				return new IncludeResult(std::string(""), "", 0, nullptr);
+			}
+
+			virtual IncludeResult* includeLocal(
+				const char* requested_source,
 				const char* requesting_source,
 				size_t inclusion_depth
 			) override
 			{
 				std::string path;
 				TextFileReader glslFile;
-				if (type == EIncludeRelative)
+				if (requesting_source[0] == '\0')
 				{
-					if (requesting_source[0] == '\0')
-					{
-						path = PathUtil::Combine(m_include.GetWorkDir(), requested_source);
-					}
-					else
-					{
-						std::string dir = PathUtil::GetDirectoryName(requesting_source);
-						path = PathUtil::Combine(dir, requested_source);
-					}
-					glslFile.Open(path);
+					path = PathUtil::Combine(m_include.GetWorkDir(), requested_source);
 				}
+				else
+				{
+					std::string dir = PathUtil::GetDirectoryName(requesting_source);
+					path = PathUtil::Combine(dir, requested_source);
+				}
+				glslFile.Open(path);
 
 				if (!glslFile.IsOpen())
 				{
@@ -315,7 +339,7 @@ namespace saba
 					{
 						path = PathUtil::Combine(dir, requested_source);
 						glslFile.Open(path);
-						if (!glslFile.IsOpen())
+						if (glslFile.IsOpen())
 						{
 							break;
 						}
@@ -346,9 +370,9 @@ namespace saba
 
 			virtual void releaseInclude(IncludeResult* result) override
 			{
-				if (result->user_data != nullptr)
+				if (result->userData != nullptr)
 				{
-					std::string* data = (std::string*)result->user_data;
+					std::string* data = (std::string*)result->userData;
 					delete data;
 				}
 				delete result;
